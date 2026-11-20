@@ -57,7 +57,7 @@ const H = (function () {
     ocorrencia: { nome: 'Ocorrência', tom: 'soon' },
     documental: { nome: 'Documentação', tom: 'late' }
   };
-  const EVENTOS_REPRO = ['Cobertura', 'Inseminação', 'Diagnóstico positivo', 'Diagnóstico negativo', 'Parto', 'Aborto'];
+  const EVENTOS_REPRO = ['Cio', 'Cobertura', 'Inseminação', 'Diagnóstico positivo', 'Diagnóstico negativo', 'Parto', 'Aborto'];
   const GESTACAO_DIAS = 340;
 
   const FAIXAS = [
@@ -110,7 +110,9 @@ const H = (function () {
     haras_criado: 'Haras criado', logo_alterado: 'Logotipo alterado', haras_alterado: 'Haras alterado', atualizacao_solicitada: 'Atualização solicitada', atualizacao_concluida: 'Atualização concluída',
     atualizacao_falhou: 'Atualização falhou', rollback_solicitado: 'Volta de versão solicitada', rollback_concluido: 'Volta de versão concluída',
     app_vinculo_gerado: 'QR Code do app gerado', app_vinculado: 'Celular vinculado', app_vinculo_falha: 'Vínculo do app recusado',
-    backup_solicitado: 'Backup solicitado', backup_concluido: 'Backup concluído', backup_falhou: 'Backup falhou'
+    backup_solicitado: 'Backup solicitado', backup_concluido: 'Backup concluído', backup_falhou: 'Backup falhou',
+    imagem_alterada: 'Imagem alterada', imagem_removida: 'Imagem removida', animal_baixa: 'Baixa de animal', animal_baixa_desfeita: 'Baixa desfeita',
+    relatorio_exportado: 'Relatório exportado'
   };
   const GLOSSARIO = [
     ['ABCCMM', 'Associação Brasileira dos Criadores do Cavalo Mangalarga Marchador, responsável pelo registro genealógico da raça.'],
@@ -125,6 +127,10 @@ const H = (function () {
     ['Reforço', 'Dose aplicada depois da série inicial, em geral anual ou semestral.'],
     ['Desmama', 'Separação do potro da mãe, por volta dos 6 meses. Marca a 1ª dose de rinopneumonite.'],
     ['Cobertura', 'Monta ou inseminação. Com o diagnóstico positivo, o sistema calcula a previsão de parto.'],
+    ['Cio', 'Período em que a égua aceita o garanhão, a cada 21 dias em média. O Haras360 prevê o próximo cio até o diagnóstico positivo.'],
+    ['Cio do potro', 'Primeiro cio depois do parto, em geral entre o 7º e o 12º dia.'],
+    ['Taxa de prenhez', 'Diagnósticos positivos divididos pelo total de diagnósticos do período.'],
+    ['Baixa', 'Saída do animal do plantel por venda, morte, doação ou transferência. O prontuário continua guardado.'],
     ['Vacina multivalente', 'Vacina que protege contra várias doenças em uma aplicação. No registro, marque todas as doenças cobertas.'],
     ['2FA', 'Verificação em duas etapas: além da senha, um código de 6 dígitos do aplicativo autenticador do celular.']
   ];

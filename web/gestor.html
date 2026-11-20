@@ -90,20 +90,20 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       { grupo: 'Sanidade', ic: 'escudo', itens: [{ id: 'sanidade', rotulo: 'Vacinas e manejos' }, { id: 'protocolos', rotulo: 'Protocolos' }] },
       { id: 'reproducao', rotulo: 'Reprodução', ic: 'repro' },
       { id: 'agenda', rotulo: 'Agenda', ic: 'agenda' },
-      { id: 'relatorios', rotulo: 'Relatórios', ic: 'graf', breve: true },
+      { id: 'relatorios', rotulo: 'Relatórios', ic: 'graf', off: !modOn('relatorios') },
       { grupo: 'Administração', ic: 'engr', itens: [{ id: 'equipe', rotulo: 'Equipe' }, { id: 'parametros', rotulo: 'Parametrizações', tambem: ['imagens'] }, { id: 'auditoria', rotulo: 'Auditoria' }, { id: 'assistente', rotulo: 'Assistente', off: !modOn('assistente') }, { id: 'plano', rotulo: 'Plano' }] },
       { grupo: 'Ajuda', ic: 'ajuda', itens: [{ id: 'sobre', rotulo: 'Sobre' }, { href: '/ajuda', rotulo: 'Manual' }, { id: 'glossario', rotulo: 'Glossário' }] }
     ];
   }
   const TITULOS = {
-    painel: ['Visão geral do rebanho, sanidade e reprodução', 'Dashboard'], animais: ['Animais', 'Plantel'], sanidade: ['Sanidade', 'Vacinas e manejos'], reproducao: ['Reprodução', 'Gestações e coberturas'], imagens: ['Parametrizações', 'Imagens do haras'], ficha: ['Ficha do animal', ''], importar: ['Plantel', 'Importar Relatório de Plantel'],
+    painel: ['Visão geral do rebanho, sanidade e reprodução', 'Dashboard'], animais: ['Animais', 'Plantel'], sanidade: ['Sanidade', 'Vacinas e manejos'], reproducao: ['Reprodução', 'Gestações, cios e coberturas'], relatorios: ['Desempenho do haras', 'Relatórios'], imagens: ['Parametrizações', 'Imagens do haras'], ficha: ['Ficha do animal', ''], importar: ['Plantel', 'Importar Relatório de Plantel'],
     agenda: ['Agenda', 'Próximos eventos e prazos'], protocolos: ['Sanidade', 'Protocolos e intervalos'], notificacoes: ['Alertas', 'Notificações'],
     equipe: ['Usuários, perfis e sessões', 'Equipe do haras'], assistente: ['Inteligência artificial', 'Assistente ABCCMM'], plano: ['Administração', 'Plano e cobrança'],
     parametros: ['Administração', 'Parametrizações do haras'], auditoria: ['Administração', 'Auditoria'], sobre: ['Ajuda', 'Sobre o Haras360'], glossario: ['Ajuda', 'Glossário']
   };
 
   function go(v, p) {
-    if ((v === 'importar' && !modOn('importacao')) || (v === 'assistente' && !modOn('assistente'))) { UI.toast('Este módulo não está incluído no plano do haras.'); return; }
+    if ((v === 'importar' && !modOn('importacao')) || (v === 'assistente' && !modOn('assistente')) || (v === 'relatorios' && !modOn('relatorios'))) { UI.toast('Este módulo não está incluído no plano do haras.'); return; }
     view = v; param = p || null; if (v === 'ficha' && !p) view = 'animais'; render(); window.scrollTo(0, 0);
   }
 
@@ -115,7 +115,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     const ti = ti0;
     $('#v-eyebrow').textContent = eb;
     $('#v-title').textContent = view === 'ficha' ? ((H.animal(S, param) || {}).nome || 'Animal') : ti;
-    $('#v-acts').hidden = ['parametros', 'auditoria', 'sobre', 'glossario', 'plano', 'equipe'].includes(view);
+    $('#v-acts').hidden = ['parametros', 'auditoria', 'sobre', 'glossario', 'plano', 'equipe', 'relatorios'].includes(view);
     document.title = 'Haras360 · ' + ($('#v-title').textContent || 'Gestor');
     const v = $('#view');
     v.classList.remove('view-in'); void v.offsetWidth; v.classList.add('view-in');
@@ -175,7 +175,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       '<div class="card"><div class="card-h"><h3>Últimos registros do campo</h3><span class="small muted">Caseiro</span></div>' + UI.linhaTempo(S, campo, { comAnimal: true }) + '</div>' +
       '</div>' +
       '<div class="banner">' + UI.fundo(S.imagens.banner, 'banner-img') + '<div class="banner-in"><span class="banner-ic">' + UI.ICON.graf + '</span><div><h2>Desempenho do haras</h2><p>Acompanhe a sanidade, a reprodução e o histórico de cada animal em um só lugar.</p></div>' +
-      '<button class="btn gold" data-act="em-breve" data-m="Relatórios">Relatórios em breve</button></div></div>' +
+      (modOn('relatorios') ? '<button class="btn gold" data-act="nav" data-v="relatorios">Ver relatórios</button>' : '') + '</div></div>' +
       '<p class="small muted">' + n + ' de ' + H.LIMITE_ANIMAIS + ' animais no plano ' + esc(S.plano.nome) + ' · mensalidade ' + (mensal(n) === null ? 'a definir' : H.moeda(mensal(n))) + ' · <a href="#" data-act="nav" data-v="plano">ver plano</a></p>' +
       '</div>';
   }
@@ -185,13 +185,14 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     const ativos = S.animais.filter(a => a.vivo);
     const gest = ativos.map(a => [a, H.gestacao(S, a)]).filter(x => x[1]).sort((x, y) => x[1].parto < y[1].parto ? -1 : 1);
     const ts = H.tarefas(S).filter(t => t.cat === 'reprodutivo' || t.parto);
+    const cios = ts.filter(t => t.cio);
     const regs = S.registros.filter(r => r.tipo === 'reprodutivo').sort((a, b) => a.data < b.data ? 1 : -1).slice(0, 12);
     return '<div class="sec">' +
       '<div class="card"><div class="card-h"><h3>' + UI.ICON.repro + 'Gestações</h3><span class="small muted">' + gest.length + ' em andamento</span></div>' +
       (gest.length ? gest.map(([a, g]) => gestBloco(a, g)).join('<hr class="div">') : '<p class="muted small">Nenhuma égua com diagnóstico positivo registrado.</p>') + '</div>' +
       '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><h3>Próximas etapas reprodutivas</h3></div><div class="tasks" style="padding:4px 18px 8px 0">' + (ts.length ? ts.slice(0, 10).map(t => UI.linhaTarefa(t)).join('') : '<div class="empty">Nada previsto.</div>') + '</div></div>' +
       '<div class="card"><div class="card-h"><h3>Últimos eventos</h3><button class="btn ghost sm" data-act="registrar">' + IC.plus + 'Registrar</button></div>' + UI.linhaTempo(S, regs, { comAnimal: true }) + '</div>' +
-      '<p class="small muted">Registro de cio e relatórios de fertilidade chegam na v1.4.0.</p></div>';
+      '<p class="small muted">' + (S.haras.previsaoCio ? 'Previsão do cio ligada: ciclo de ' + S.haras.cicloDias + ' dias e cio do potro do ' + S.haras.cioPotroDe + 'º ao ' + S.haras.cioPotroAte + 'º dia após o parto (' + cios.length + ' égua(s) com previsão). ' : 'Previsão do cio desligada. ') + 'Ajuste em <a href="#" data-act="nav" data-v="parametros">Parametrizações</a>.</p></div>';
   }
   function gestBloco(a, g) {
     return '<div class="gest"><div class="spread"><a href="#" data-act="ver-animal" data-id="' + a.id + '"><b>' + esc(a.nome) + '</b></a><span class="chip c-accent">' + g.mes + 'º mês · ' + g.dias + ' dias</span></div>' +
@@ -200,25 +201,93 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       '<p class="small muted">Parto previsto ' + H.relativo(g.parto) + (g.garanhao ? ' · garanhão ' + esc(g.garanhao) : '') + '</p></div>';
   }
 
+  /* ================= RELATÓRIOS (v1.4.0) ================= */
+  let relTipo = 'sanitario', relF = { de: '', ate: '', animal: '', categoria: '' }, relSeq = 0;
+  const REL_TABS = [['sanitario', 'Sanitário'], ['reprodutivo', 'Reprodutivo'], ['plantel', 'Plantel'], ['campo', 'Atividade do campo']];
+  const relQuery = () => new URLSearchParams(Object.entries(relF).filter(([, v]) => v)).toString();
+  function vRelatorios() {
+    const animais = S.animais.slice().sort((a, b) => a.nome < b.nome ? -1 : 1);
+    return '<div class="sec"><div class="card"><div class="tabs" role="tablist">' + REL_TABS.map(([k, l]) => '<button role="tab" aria-selected="' + (relTipo === k) + '" data-act="rel-tab" data-t="' + k + '">' + l + '</button>').join('') + '</div>' +
+      '<form id="rel-f" class="rel-filtros" novalidate>' +
+      '<div class="field"><label for="rf-de">De</label><input id="rf-de" type="date" class="inp" value="' + relF.de + '"></div>' +
+      '<div class="field"><label for="rf-ate">Até</label><input id="rf-ate" type="date" class="inp" value="' + relF.ate + '" max="' + H.iso(H.hoje()) + '"></div>' +
+      '<div class="field"><label for="rf-animal">Animal</label><select id="rf-animal" class="inp"><option value="">Todos</option>' + animais.map(a => '<option value="' + a.id + '"' + (relF.animal === a.id ? ' selected' : '') + '>' + esc(a.nome) + (a.baixa ? ' (baixado)' : '') + '</option>').join('') + '</select></div>' +
+      '<div class="field"><label for="rf-cat">Categoria</label><select id="rf-cat" class="inp">' + [['', 'Todas'], ['eguas', 'Éguas'], ['machos', 'Machos'], ['potros', 'Potros'], ['outros', 'Outros']].map(([k, l]) => '<option value="' + k + '"' + (relF.categoria === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></div>' +
+      '<div class="row rel-acoes"><button type="button" class="btn pri" data-act="rel-aplicar">Aplicar</button><button type="button" class="btn ghost" data-act="rel-limpar">Limpar</button>' +
+      '<a class="btn" id="rel-xlsx" download>' + IC.file + 'Excel</a><a class="btn" id="rel-csv" download>' + IC.file + 'CSV</a></div></form></div>' +
+      '<div id="rel-corpo"><div class="card empty">Carregando o relatório...</div></div></div>';
+  }
+  function lerFiltrosRel() { relF = { de: $('#rf-de').value, ate: $('#rf-ate').value, animal: $('#rf-animal').value, categoria: $('#rf-cat').value }; }
+  async function carregarRel() {
+    const seq = ++relSeq, q = relQuery();
+    $('#rel-xlsx').href = '/api/relatorios/' + relTipo + '/exportar?formato=xlsx' + (q ? '&' + q : '');
+    $('#rel-csv').href = '/api/relatorios/' + relTipo + '/exportar?formato=csv' + (q ? '&' + q : '');
+    try {
+      const r = await API.get('/api/relatorios/' + relTipo + (q ? '?' + q : ''));
+      if (seq !== relSeq || !$('#rel-corpo')) return;
+      if (!relF.de) $('#rf-de').value = r.periodo.de;
+      if (!relF.ate) $('#rf-ate').value = r.periodo.ate;
+      $('#rel-corpo').innerHTML = desenharRel(r);
+    } catch (e) { if ($('#rel-corpo')) $('#rel-corpo').innerHTML = '<div class="note bad">' + esc(e.message) + '</div>'; }
+  }
+  const CORES_G = ['#193D30', '#D5A064', '#4E8A66', '#82978A', '#8A5E26', '#6B4E8C', '#2C5B84'];
+  function grafico(g) {
+    const total = g.serie.reduce((s, x) => s + (+x.valor || 0), 0);
+    const aria = g.titulo + ': ' + g.serie.map(x => x.rotulo + ' ' + x.valor).join(', ');
+    let corpo;
+    if (!total) corpo = '<p class="muted small">Sem dados no período.</p>';
+    else if (g.tipo === 'rosca') {
+      const R0 = 52, C = 2 * Math.PI * R0; let acc = 0;
+      const arcos = g.serie.map((p, i) => { if (!p.valor) return ''; const l = C * p.valor / total; const a = '<circle cx="70" cy="70" r="' + R0 + '" fill="none" stroke="' + CORES_G[i % CORES_G.length] + '" stroke-width="18" stroke-dasharray="' + l.toFixed(2) + ' ' + (C - l).toFixed(2) + '" stroke-dashoffset="' + (-acc).toFixed(2) + '" transform="rotate(-90 70 70)"/>'; acc += l; return a; }).join('');
+      corpo = '<div class="rosca-w"><svg class="rosca" viewBox="0 0 140 140" role="img" aria-label="' + esc(aria) + '"><circle cx="70" cy="70" r="' + R0 + '" fill="none" stroke="var(--line-2)" stroke-width="18"/>' + arcos + '<text x="70" y="78" text-anchor="middle" class="rosca-n">' + total + '</text></svg>' +
+        '<ul class="leg">' + g.serie.map((p, i) => '<li><i style="background:' + CORES_G[i % CORES_G.length] + '"></i>' + esc(p.rotulo) + '<b>' + p.valor + ' <small>(' + Math.round(p.valor / total * 100) + '%)</small></b></li>').join('') + '</ul></div>';
+    } else if (g.tipo === 'linha') {
+      const n = g.serie.length, max = Math.max(...g.serie.map(x => x.valor), 1), W = 520, Hh = 160;
+      const px = i => 24 + (n > 1 ? i * (W - 48) / (n - 1) : (W - 48) / 2), py = v => Hh - 26 - v / max * (Hh - 56);
+      const pts = g.serie.map((x, i) => px(i).toFixed(1) + ',' + py(x.valor).toFixed(1)).join(' ');
+      const passo = Math.ceil(n / 7);
+      corpo = '<svg class="g-linha" viewBox="0 0 ' + W + ' ' + Hh + '" role="img" aria-label="' + esc(aria) + '"><line x1="24" y1="' + (Hh - 26) + '" x2="' + (W - 24) + '" y2="' + (Hh - 26) + '" class="g-eixo"/>' +
+        '<polyline points="' + pts + '" class="g-l"/>' + g.serie.map((x, i) => '<circle cx="' + px(i).toFixed(1) + '" cy="' + py(x.valor).toFixed(1) + '" r="3.5" class="g-p"><title>' + esc(x.rotulo) + ': ' + x.valor + '</title></circle>' +
+          (x.valor ? '<text x="' + px(i).toFixed(1) + '" y="' + (py(x.valor) - 9).toFixed(1) + '" text-anchor="middle" class="g-v">' + x.valor + '</text>' : '') +
+          (i % passo === 0 || i === n - 1 ? '<text x="' + px(i).toFixed(1) + '" y="' + (Hh - 6) + '" text-anchor="middle" class="g-x">' + esc(x.rotulo) + '</text>' : '')).join('') + '</svg>';
+    } else {
+      const max = Math.max(...g.serie.map(x => x.valor), 1);
+      corpo = '<div class="g-barras" role="img" aria-label="' + esc(aria) + '">' + g.serie.map(x => '<div class="g-b"><span>' + esc(x.rotulo) + '</span><div class="g-trilho"><i style="width:' + (x.valor / max * 100).toFixed(1) + '%"></i></div><b>' + x.valor + '</b></div>').join('') + '</div>';
+    }
+    return '<div class="card"><div class="card-h"><h3>' + esc(g.titulo) + '</h3></div>' + corpo + '</div>';
+  }
+  function desenharRel(r) {
+    const kpis = '<div class="rel-kpis">' + r.indicadores.map(i => '<div class="rel-kpi"><b>' + esc(String(i.valor)) + '</b><span>' + esc(i.rotulo) + '</span>' + (i.dica ? '<small>' + esc(i.dica) + '</small>' : '') + '</div>').join('') + '</div>';
+    const per = '<p class="small muted">' + esc(r.titulo) + ' · ' + br(r.periodo.de) + ' a ' + br(r.periodo.ate) + (r.filtros.animal ? ' · ' + esc(r.filtros.animal) : '') + (r.filtros.categoria ? ' · ' + esc(r.filtros.categoria) : '') + '</p>';
+    const grafs = '<div class="rel-grafs">' + r.graficos.map(grafico).join('') + '</div>';
+    const tabs = r.tabelas.map(t => '<div class="card flush"><div class="card-h" style="padding:16px 18px 6px"><h3>' + esc(t.nome) + '</h3><span class="small muted">' + t.linhas.length + ' linha(s)</span></div>' +
+      (t.linhas.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr>' + t.colunas.map(c => '<th>' + esc(c) + '</th>').join('') + '</tr></thead><tbody>' +
+        t.linhas.slice(0, 300).map((ln, i) => { const id = t.links && t.links[i]; return '<tr' + (id ? ' class="click" data-act="ver-animal" data-id="' + esc(id) + '"' : '') + '>' + ln.map(v => '<td>' + esc(String(v)) + '</td>').join('') + '</tr>'; }).join('') + '</tbody></table></div>' +
+        (t.linhas.length > 300 ? '<p class="small muted" style="padding:8px 18px">Mostrando 300 de ' + t.linhas.length + '. A planilha traz todas.</p>' : '') : '<div class="empty">Nada no período.</div>') + '</div>').join('');
+    return '<div class="stack">' + per + kpis + grafs + tabs + '</div>';
+  }
+
   /* ================= ANIMAIS ================= */
-  let busca = '', sexoF = '';
+  let busca = '', sexoF = '', sitF = 'ativos';
   function vAnimais() {
     return '<div class="sec"><div class="spread"><div class="row"><input id="busca" class="inp" style="width:min(320px,100%)" placeholder="Buscar por nome, registro ou chip" value="' + esc(busca) + '">' +
-      '<select id="sexoF" class="inp" style="width:auto"><option value="">Todos os sexos</option><option value="F"' + (sexoF === 'F' ? ' selected' : '') + '>Fêmeas</option><option value="M"' + (sexoF === 'M' ? ' selected' : '') + '>Machos</option></select></div>' +
+      '<select id="sexoF" class="inp" style="width:auto"><option value="">Todos os sexos</option><option value="F"' + (sexoF === 'F' ? ' selected' : '') + '>Fêmeas</option><option value="M"' + (sexoF === 'M' ? ' selected' : '') + '>Machos</option></select>' +
+      '<select id="sitF" class="inp" style="width:auto" aria-label="Situação">' + [['ativos', 'Plantel ativo'], ['baixados', 'Baixados'], ['todos', 'Todos']].map(([k, l]) => '<option value="' + k + '"' + (sitF === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></div>' +
       '<div class="row"><button class="btn" data-act="nav" data-v="importar">' + IC.upload + 'Importar PDF ABCCMM</button><button class="btn pri" data-act="novo-animal">' + IC.plus + 'Novo animal</button></div></div>' +
       '<div class="card flush"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Animal</th><th>Sexo</th><th>Idade</th><th>Livro</th><th>DNA</th><th>Situação</th><th>Próxima etapa</th></tr></thead><tbody id="tb-animais"></tbody></table></div></div></div>';
   }
   function linhasAnimais() {
     const q = H.norm(busca);
     const ts = H.tarefas(S);
-    const lst = S.animais.filter(a => (!sexoF || a.sexo === sexoF) && (!q || H.norm(a.nome + ' ' + a.registro + ' ' + a.chip).includes(q)));
+    const sit = a => sitF === 'todos' || (sitF === 'baixados' ? !!a.baixa : (a.vivo && !a.baixa));
+    const lst = S.animais.filter(a => sit(a) && (!sexoF || a.sexo === sexoF) && (!q || H.norm(a.nome + ' ' + a.registro + ' ' + a.chip).includes(q)));
     if (!lst.length) return '<tr><td colspan="7"><div class="empty">Nenhum animal encontrado.</div></td></tr>';
     return lst.map(a => {
       const t = ts.filter(x => x.animalId === a.id);
       const at = t.filter(x => x.status === 'atrasado').length, pd = t.filter(x => x.doc).length;
       const prox = t.find(x => !x.doc && x.status !== 'atrasado');
       const g = H.gestacao(S, a);
-      const sit = [!a.vivo ? '<span class="chip c-muted">Inativo</span>' : '', at ? '<span class="chip c-late">' + at + ' atrasado' + (at > 1 ? 's' : '') + '</span>' : '', pd ? '<span class="chip c-info">' + pd + ' pendência' + (pd > 1 ? 's' : '') + '</span>' : '', g ? '<span class="chip c-accent">Gestante ' + g.mes + 'º mês</span>' : '', (a.vivo && !at && !pd) ? '<span class="chip c-ok">Em dia</span>' : ''].join(' ');
+      const sit = [a.baixa ? '<span class="chip c-muted">' + esc(a.baixa.motivo) + ' em ' + H.br(a.baixa.data) + '</span>' : !a.vivo ? '<span class="chip c-muted">Inativo</span>' : '', at ? '<span class="chip c-late">' + at + ' atrasado' + (at > 1 ? 's' : '') + '</span>' : '', pd ? '<span class="chip c-info">' + pd + ' pendência' + (pd > 1 ? 's' : '') + '</span>' : '', g ? '<span class="chip c-accent">Gestante ' + g.mes + 'º mês</span>' : '', (a.vivo && !at && !pd) ? '<span class="chip c-ok">Em dia</span>' : ''].join(' ');
       return '<tr class="click" data-act="ver-animal" data-id="' + a.id + '"><td><b>' + esc(a.nome) + '</b><br><span class="mono muted">' + (a.registro ? 'Reg. ' + esc(a.registro) : 'Sem registro') + '</span></td><td>' + (a.sexo === 'F' ? 'Fêmea' : 'Macho') + '</td><td style="white-space:nowrap">' + H.idadeTxt(a.nascimento) + '</td><td class="small">' + esc(a.livro || '-') + '</td><td><span class="chip ' + (/sem/i.test(a.dna) ? 'c-late' : 'c-ok') + '">' + esc(a.dna || '-') + '</span></td><td><div class="row" style="gap:4px">' + sit + '</div></td><td class="small">' + (prox ? esc(prox.titulo) + '<br><span class="muted">' + H.br(prox.due) + '</span>' : '-') + '</td></tr>';
     }).join('');
   }
@@ -247,7 +316,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
         '<div class="field"><label for="d-nasc">Nascimento</label><input id="d-nasc" type="date" class="inp" value="' + esc(a.nascimento) + '"></div>' +
         f('chip', 'Microchip', a.chip) +
         '<div class="field"><label for="d-dna">DNA</label><select id="d-dna" class="inp">' + ['DNA - VP', 'Sem exame'].concat(['DNA - VP', 'Sem exame'].includes(a.dna) ? [] : [a.dna]).map(o => '<option' + (o === a.dna ? ' selected' : '') + '>' + esc(o) + '</option>').join('') + '</select></div>' +
-        '<div class="field"><label for="d-vivo">Situação</label><select id="d-vivo" class="inp"><option value="1"' + (a.vivo ? ' selected' : '') + '>Vivo, ativo no plantel</option><option value="0"' + (!a.vivo ? ' selected' : '') + '>Morto ou baixado</option></select></div>' +
+        (a.baixa ? '<div class="field"><span class="lbl">Situação</span><p class="small" style="margin:8px 0 0">Baixado: ' + esc(a.baixa.motivo.toLowerCase()) + ' em ' + br(a.baixa.data) + '</p><input id="d-vivo" type="hidden" value="0"></div>' :
+          '<div class="field"><label for="d-vivo">Situação</label><select id="d-vivo" class="inp"><option value="1"' + (a.vivo ? ' selected' : '') + '>Vivo, ativo no plantel</option><option value="0"' + (!a.vivo ? ' selected' : '') + '>Inativo (sem baixa registrada)</option></select></div>') +
         '<div class="field"><label for="d-bloq">Bloqueio ABCCMM</label><select id="d-bloq" class="inp"><option value="0"' + (!a.bloqueado ? ' selected' : '') + '>Não bloqueado</option><option value="1"' + (a.bloqueado ? ' selected' : '') + '>Bloqueado</option></select></div>' +
         '</div><div class="spread" style="margin-top:8px"><h3>Genealogia</h3><div class="row"><label class="btn sm" for="cert">' + IC.file + 'Importar certificado (PDF)</label><input id="cert" type="file" accept="application/pdf,.pdf" hidden></div></div>' +
         '<p class="small muted">O Relatório de Plantel não traz genealogia. Preencha à mão ou importe o certificado de registro, se houver. Os campos encontrados no PDF aparecem destacados para conferência.</p><p id="cert-st" class="note" hidden></p>' +
@@ -255,9 +325,10 @@ input[type=range]{width:100%;accent-color:var(--accent)}
         '<div class="row" style="justify-content:flex-end"><button type="button" class="btn pri" data-act="salvar-dados" data-id="' + a.id + '">' + IC.check + 'Salvar dados</button></div></form>';
     }
     const chips = [(a.sexo === 'F' ? 'Fêmea' : 'Macho'), H.idadeTxt(a.nascimento)].map(x => '<span class="chip nodot c-muted">' + x + '</span>').join(' ') +
-      (g ? ' <span class="chip c-accent">Gestante · ' + g.mes + 'º mês</span>' : '') + (!a.registro ? ' <span class="chip c-late">Sem registro</span>' : '') + (/sem/i.test(a.dna) ? ' <span class="chip c-late">DNA pendente</span>' : '') + (!a.vivo ? ' <span class="chip c-muted">Inativo</span>' : '');
-    return '<div class="sec"><div class="spread"><button class="btn ghost" data-act="nav" data-v="animais">' + IC.back + 'Voltar ao plantel</button><div class="row">' + chips + '</div></div>' +
-      '<div class="card"><dl class="facts"><div><dt>Registro</dt><dd class="mono">' + esc(a.registro || '-') + '</dd></div><div><dt>Livro</dt><dd>' + esc(a.livro || '-') + '</dd></div><div><dt>Nascimento</dt><dd>' + br(a.nascimento) + '</dd></div><div><dt>Microchip</dt><dd class="mono">' + esc(a.chip || '-') + '</dd></div><div><dt>DNA</dt><dd>' + esc(a.dna || '-') + '</dd></div><div><dt>Origem do cadastro</dt><dd>' + esc(a.origem || 'Manual') + (a.importadoEm ? ' · ' + br(a.importadoEm) : '') + '</dd></div></dl>' +
+      (g ? ' <span class="chip c-accent">Gestante · ' + g.mes + 'º mês</span>' : '') + (!a.registro ? ' <span class="chip c-late">Sem registro</span>' : '') + (/sem/i.test(a.dna) ? ' <span class="chip c-late">DNA pendente</span>' : '') + (a.baixa ? ' <span class="chip c-muted">Baixado</span>' : !a.vivo ? ' <span class="chip c-muted">Inativo</span>' : '');
+    const baixa = a.baixa ? '<div class="note warn spread" style="align-items:center"><span><b>Fora do plantel ativo.</b> ' + esc(a.baixa.motivo) + ' em ' + br(a.baixa.data) + (a.baixa.destino ? ' · destino: ' + esc(a.baixa.destino) : '') + (a.baixa.obs ? ' · ' + esc(a.baixa.obs) : '') + '. O prontuário continua guardado.</span><button class="btn sm" data-act="desfazer-baixa" data-id="' + a.id + '">Desfazer baixa</button></div>' : '';
+    return '<div class="sec"><div class="spread"><button class="btn ghost" data-act="nav" data-v="animais">' + IC.back + 'Voltar ao plantel</button><div class="row">' + chips + (a.baixa ? '' : ' <button class="btn ghost sm danger" data-act="dar-baixa" data-id="' + a.id + '">Dar baixa</button>') + '</div></div>' +
+      baixa + '<div class="card"><dl class="facts"><div><dt>Registro</dt><dd class="mono">' + esc(a.registro || '-') + '</dd></div><div><dt>Livro</dt><dd>' + esc(a.livro || '-') + '</dd></div><div><dt>Nascimento</dt><dd>' + br(a.nascimento) + '</dd></div><div><dt>Microchip</dt><dd class="mono">' + esc(a.chip || '-') + '</dd></div><div><dt>DNA</dt><dd>' + esc(a.dna || '-') + '</dd></div><div><dt>Origem do cadastro</dt><dd>' + esc(a.origem || 'Manual') + (a.importadoEm ? ' · ' + br(a.importadoEm) : '') + '</dd></div></dl>' +
       (g ? '<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line-2)">' + gestBloco(a, g) + '</div>' : '') + '</div>' +
       '<div class="card"><div class="tabs" role="tablist">' + tabs.map(([k, l]) => '<button role="tab" aria-selected="' + (fichaTab === k) + '" data-act="tab" data-t="' + k + '">' + l + '</button>').join('') + '</div><div style="padding-top:14px">' + corpo + '</div></div></div>';
   }
@@ -426,6 +497,11 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       '<div class="kv"><div><b>Reforço da vacina de raiva</b><p class="small muted">Em estados endêmicos para raiva o reforço passa a ser semestral.</p></div><div class="seg" role="group" aria-label="Reforço da raiva"><button data-act="pa-raiva" data-v="0" aria-pressed="' + !h.raivaSemestral + '">Anual</button><button data-act="pa-raiva" data-v="1" aria-pressed="' + !!h.raivaSemestral + '">Semestral</button></div></div>' +
       num('pa-gest', 'Dias de gestação', h.gestacaoDias, 'Usado na previsão de parto a partir da data da cobertura. Padrão: 340.', 300, 380) +
       num('pa-tol', 'Tolerância para reiniciar a primovacinação (dias)', h.toleranciaReinicio, 'Reforço vencido há mais dias que isso faz a vacina recomeçar pela 1ª dose. Padrão: 15.', 0, 90) +
+      '<h3 style="margin-top:8px">Reprodução</h3>' +
+      '<div class="kv"><div><b>Previsão do cio</b><p class="small muted">Cria a tarefa "Observar cio" a partir do último cio, cobertura ou inseminação, até o diagnóstico positivo.</p></div><div class="seg" role="group" aria-label="Previsão do cio"><button data-act="pa-cio" data-v="1" aria-pressed="' + !!h.previsaoCio + '">Ligada</button><button data-act="pa-cio" data-v="0" aria-pressed="' + !h.previsaoCio + '">Desligada</button></div></div>' +
+      num('pa-ciclo', 'Duração do ciclo (dias)', h.cicloDias, 'Intervalo entre um cio e o próximo. Padrão: 21.', 18, 25) +
+      num('pa-pde', 'Cio do potro: a partir do dia', h.cioPotroDe, 'Primeiro dia da janela depois do parto. Padrão: 7.', 5, 15) +
+      num('pa-pate', 'Cio do potro: até o dia', h.cioPotroAte, 'Último dia da janela depois do parto. Padrão: 12.', 6, 20) +
       '<p class="note">Intervalos de cada vacina, vermífugo, ferrageamento e validade dos exames AIE e Mormo ficam em <a href="#" data-act="nav" data-v="protocolos">Manejo › Protocolos</a>. Os canais dos alertas ficam em <a href="#" data-act="nav" data-v="notificacoes">Notificações</a>.</p></div>' +
       '<div class="row" style="justify-content:flex-end"><button class="btn pri" data-act="salvar-params">' + IC.check + 'Salvar parametrizações</button></div></div>';
   }
@@ -499,12 +575,14 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     $('#sim-out').innerHTML = '<b style="font-family:var(--f-display);font-size:2rem">' + (m === null ? 'A definir' : H.moeda(m)) + '</b>' + (m === null ? '' : '<span class="muted"> por mês</span>') + '<p class="small muted mono">' + parts.join(' + ') + '</p>';
   }
 
-  const VIEWS = { painel: vPainel, sanidade: vSanidade, reproducao: vReproducao, animais: vAnimais, ficha: vFicha, importar: vImportar, agenda: vAgenda, protocolos: vProtocolos, notificacoes: vNotificacoes, equipe: vEquipe, assistente: vAssistente, plano: vPlano, parametros: vParametros, auditoria: vAuditoria, sobre: vSobre, glossario: vGlossario };
+  const VIEWS = { relatorios: vRelatorios, painel: vPainel, sanidade: vSanidade, reproducao: vReproducao, animais: vAnimais, ficha: vFicha, importar: vImportar, agenda: vAgenda, protocolos: vProtocolos, notificacoes: vNotificacoes, equipe: vEquipe, assistente: vAssistente, plano: vPlano, parametros: vParametros, auditoria: vAuditoria, sobre: vSobre, glossario: vGlossario };
   const AFTER = {
+    relatorios() { carregarRel(); },
     animais() {
       $('#tb-animais').innerHTML = linhasAnimais();
       $('#busca').addEventListener('input', e => { busca = e.target.value; $('#tb-animais').innerHTML = linhasAnimais(); });
       $('#sexoF').addEventListener('change', e => { sexoF = e.target.value; $('#tb-animais').innerHTML = linhasAnimais(); });
+      $('#sitF').addEventListener('change', e => { sitF = e.target.value; $('#tb-animais').innerHTML = linhasAnimais(); });
     },
     ficha(id) {
       const fc = $('#filtroCat'); if (fc) fc.addEventListener('change', e => { filtroCat = e.target.value; render(); });
@@ -564,6 +642,27 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       const r = UI.lerRegistro(S); if (!r) return;
       if (await executar(el, () => API.post('/api/registros', r))) { UI.fechar(); render(); }
     },
+    'dar-baixa': el => {
+      const a = H.animal(S, el.dataset.id); if (!a) return;
+      UI.abrir({
+        titulo: 'Dar baixa em ' + esc(a.nome), corpo: '<form id="fb" class="fgrid" novalidate>' +
+          '<div class="field"><label for="b-data">Data</label><input id="b-data" type="date" class="inp" value="' + H.iso(H.hoje()) + '" max="' + H.iso(H.hoje()) + '"></div>' +
+          '<div class="field"><label for="b-motivo">Motivo</label><select id="b-motivo" class="inp">' + ['Venda', 'Morte', 'Doação', 'Transferência'].map(m => '<option>' + m + '</option>').join('') + '</select></div>' +
+          '<div class="field full"><label for="b-destino">Destino ou comprador (opcional)</label><input id="b-destino" class="inp" placeholder="Ex.: Haras Boa Esperança"></div>' +
+          '<div class="field full"><label for="b-obs">Observação</label><textarea id="b-obs" class="inp"></textarea></div>' +
+          '<p class="note full">O animal sai do plantel ativo, da agenda e do app do caseiro. O prontuário continua guardado e a baixa pode ser desfeita.</p></form>',
+        rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri danger" data-act="confirmar-baixa" data-id="' + a.id + '">Confirmar baixa</button>'
+      });
+    },
+    'confirmar-baixa': async el => {
+      const corpo = { data: $('#b-data').value, motivo: $('#b-motivo').value, destino: $('#b-destino').value, obs: $('#b-obs').value };
+      if (!corpo.data) { UI.toast('Informe a data da baixa.'); return; }
+      if (await executar(el, () => API.post('/api/animais/' + el.dataset.id + '/baixa', corpo))) { UI.fechar(); render(); }
+    },
+    'desfazer-baixa': el => confirmar(el, 'Confirmar: voltar ao plantel', async () => { if (await executar(el, () => API.del('/api/animais/' + el.dataset.id + '/baixa'))) render(); }),
+    'rel-tab': el => { relTipo = el.dataset.t; render(); },
+    'rel-aplicar': () => { lerFiltrosRel(); carregarRel(); },
+    'rel-limpar': () => { relF = { de: '', ate: '', animal: '', categoria: '' }; render(); },
     'excluir-reg': el => confirmar(el, 'Confirmar exclusão', async () => { if (await executar(el, () => API.del('/api/registros/' + el.dataset.id))) render(); }),
     'novo-animal': () => {
       if (S.animais.filter(a => a.vivo).length >= S.limiteAnimais) { UI.toast('Limite de ' + S.limiteAnimais + ' animais ativos atingido.'); return; }
@@ -634,7 +733,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     sair: async () => { try { await API.post('/api/logout'); } catch (e) { } location.href = '/entrar'; },
     sug: el => perguntar(el.dataset.q),
     'fora-plano': el => UI.toast(el.dataset.m + ' não está incluído no plano deste haras.'),
-    'em-breve': el => UI.toast(el.dataset.m + ' chega na próxima versão (v1.4.0).'),
+    'em-breve': el => UI.toast(el.dataset.m + ' chega em uma próxima versão.'),
     'recarregar-sessoes': () => carregarSessoes(),
     'vincular-celular': async el => {
       const u = (S.usuarios || []).find(x => String(x.id) === el.dataset.id);
@@ -655,13 +754,19 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     'gerar-codigos': async el => { try { el.disabled = true; const r = await API.post('/api/me/codigos-recuperacao', { senha: document.getElementById('nc-senha').value }); UI.fechar(); UI.mostrarCodigos(r.codigos); } catch (e) { el.disabled = false; UI.toast(e.message); } },
     'img-padrao': el => confirmar(el, 'Confirmar', async () => { if (await executar(el, () => API.del('/api/haras/imagens/' + el.dataset.tipo))) render(); }),
     'remover-logo': el => confirmar(el, 'Confirmar remoção', async () => { if (await executar(el, () => API.del('/api/haras/logo'))) render(); }),
+    'pa-cio': el => { document.querySelectorAll('[data-act="pa-cio"]').forEach(b => b.setAttribute('aria-pressed', String(b === el))); },
     'pa-raiva': el => { document.querySelectorAll('[data-act="pa-raiva"]').forEach(b => b.setAttribute('aria-pressed', String(b === el))); },
     'salvar-params': async el => {
       const g = Number($('#pa-gest').value), t = Number($('#pa-tol').value);
       if (!(g >= 300 && g <= 380)) { UI.toast('Dias de gestação devem ficar entre 300 e 380.'); return; }
       if (!(t >= 0 && t <= 90)) { UI.toast('A tolerância deve ficar entre 0 e 90 dias.'); return; }
+      const ci = Number($('#pa-ciclo').value), pd = Number($('#pa-pde').value), pa = Number($('#pa-pate').value);
+      if (!(ci >= 18 && ci <= 25)) { UI.toast('O ciclo deve ficar entre 18 e 25 dias.'); return; }
+      if (!(pd >= 5 && pd <= 15 && pa >= 6 && pa <= 20 && pd <= pa)) { UI.toast('Confira a janela do cio do potro: início entre 5 e 15, fim entre 6 e 20, e o início antes do fim.'); return; }
       const sem = document.querySelector('[data-act="pa-raiva"][aria-pressed="true"]').dataset.v === '1';
-      if (await executar(el, () => API.put('/api/haras', { nome: $('#pa-nome').value, municipio: $('#pa-mun').value, proprietario: $('#pa-prop').value, raivaSemestral: sem, gestacaoDias: g, toleranciaReinicio: t }))) render();
+      const cio = document.querySelector('[data-act="pa-cio"][aria-pressed="true"]').dataset.v === '1';
+      if (await executar(el, () => API.put('/api/haras', { nome: $('#pa-nome').value, municipio: $('#pa-mun').value, proprietario: $('#pa-prop').value, raivaSemestral: sem, gestacaoDias: g, toleranciaReinicio: t,
+        previsaoCio: cio, cicloDias: ci, cioPotroDe: pd, cioPotroAte: pa }))) render();
     }
   };
   document.addEventListener('click', e => {
@@ -683,6 +788,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     try {
       await recarregar();
       if (S.usuario.perfil !== 'gestor') { location.href = '/campo'; return; }
+      const alvo = new URLSearchParams(location.search).get('animal');
+      if (alvo && H.animal(S, alvo)) { history.replaceState(null, '', '/gestor'); view = 'ficha'; param = alvo; }
       render();
     } catch (e) {
       if (/usuários de um haras/.test(e.message)) { location.href = '/admin'; return; }

@@ -68,7 +68,7 @@ const UI = (function () {
     o = o || {};
     const quando = t.doc ? '<b>Pend.</b>doc.' : '<b>' + brCurta(t.due) + '</b>' + relativo(t.due);
     const animal = o.semAnimal ? '' : '<a href="#" data-act="ver-animal" data-id="' + t.animalId + '">' + esc(t.animal) + '</a> · ';
-    const acao = t.doc ? '' : t.parto ? '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(t.id) + '">Registrar parto</button>' : '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(t.id) + '">' + ICON.check + 'Registrar</button>';
+    const acao = t.doc ? '' : t.parto ? '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(t.id) + '">Registrar parto</button>' : t.cio ? '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(t.id) + '">Registrar cio</button>' : '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(t.id) + '">' + ICON.check + 'Registrar</button>';
     return '<div class="task ' + t.status + '"><span class="bar"></span><div class="when">' + quando + '</div><div class="what"><div class="row" style="gap:8px"><strong>' + esc(t.titulo) + '</strong><span class="chip nodot c-muted">' + esc(t.etapa) + '</span>' + (t.status === 'atrasado' ? '<span class="chip c-late">Atrasado</span>' : '') + '</div><div class="sub">' + animal + esc(t.nota || '') + '</div></div><div class="act">' + acao + '</div></div>';
   }
 
@@ -86,6 +86,10 @@ const UI = (function () {
       if (r.garanhao) meta.push('Garanhão: ' + esc(r.garanhao));
       if (r.dataCobertura && r.evento === 'Diagnóstico positivo') meta.push('Cobertura em ' + br(r.dataCobertura));
       if (r.gravidade) meta.push('Gravidade: ' + esc(r.gravidade));
+      if (r.sinais) meta.push('Sinais: ' + esc(r.sinais));
+      if (r.ovario) meta.push('Ovário ' + esc(r.ovario.toLowerCase()));
+      if (r.foliculo) meta.push('Folículo ' + esc(r.foliculo) + ' mm');
+      if (r.edema) meta.push('Edema ' + esc(r.edema));
       const fotos = (r.fotos || []).length ? '<div class="thumbs">' + r.fotos.map((f, i) => '<button data-act="ver-foto" data-r="' + r.id + '" data-i="' + i + '" aria-label="Ampliar foto ' + (i + 1) + '"><img src="' + f + '" alt=""></button>').join('') + '</div>' : '';
       const dur = r.audio ? Math.floor(r.audio.duracao / 60) + ':' + String(r.audio.duracao % 60).padStart(2, '0') : '';
       const audio = r.audio ? '<div class="audio-reg"><span class="small muted">' + ICON.mic + 'Áudio do campo · ' + dur + '</span><audio controls preload="none" src="' + esc(r.audio.url) + '"></audio></div>' : '';
@@ -178,7 +182,15 @@ const UI = (function () {
     }
     if (tipo === 'reprodutivo') {
       const machos = st.animais.filter(a => a.sexo === 'M').map(a => '<option value="' + esc(a.nome) + '">');
-      return '<div class="field"><label for="f-evento">Evento</label><select id="f-evento" class="inp">' + OPC(H.EVENTOS_REPRO, p.evento || 'Cobertura') + '</select></div><div class="field"><label for="f-garanhao">Garanhão</label><input id="f-garanhao" class="inp" list="dl-machos" value="' + esc(p.garanhao || '') + '"><datalist id="dl-machos">' + machos.join('') + '</datalist></div><div class="field"><label for="f-cob">Data da cobertura (diagnóstico positivo)</label><input id="f-cob" type="date" class="inp" value="' + esc(p.dataCobertura || '') + '"></div>';
+      const ev = p.evento || 'Cobertura', cio = ev === 'Cio';
+      // v1.4.0: o evento Cio mostra sinais e dados do exame; os demais, garanhão e cobertura
+      return '<div class="field"><label for="f-evento">Evento</label><select id="f-evento" class="inp">' + OPC(H.EVENTOS_REPRO, ev) + '</select></div>' +
+        '<div class="field" data-ev="outro"' + (cio ? ' hidden' : '') + '><label for="f-garanhao">Garanhão</label><input id="f-garanhao" class="inp" list="dl-machos" value="' + esc(p.garanhao || '') + '"><datalist id="dl-machos">' + machos.join('') + '</datalist></div>' +
+        '<div class="field" data-ev="outro"' + (cio ? ' hidden' : '') + '><label for="f-cob">Data da cobertura (diagnóstico positivo)</label><input id="f-cob" type="date" class="inp" value="' + esc(p.dataCobertura || '') + '"></div>' +
+        '<div class="field" data-ev="cio"' + (cio ? '' : ' hidden') + '><label for="f-sinais">Sinais observados</label><input id="f-sinais" class="inp" value="' + esc(p.sinais || '') + '" placeholder="Ex.: aceita o rufião, urina com frequência"></div>' +
+        '<div class="field" data-ev="cio"' + (cio ? '' : ' hidden') + '><label for="f-ovario">Ovário (exame)</label><select id="f-ovario" class="inp">' + OPC([['', 'Não examinado'], 'Esquerdo', 'Direito'], p.ovario || '') + '</select></div>' +
+        '<div class="field" data-ev="cio"' + (cio ? '' : ' hidden') + '><label for="f-foliculo">Folículo (mm)</label><input id="f-foliculo" type="number" min="5" max="80" class="inp" value="' + esc(p.foliculo || '') + '" placeholder="Ex.: 35"></div>' +
+        '<div class="field" data-ev="cio"' + (cio ? '' : ' hidden') + '><label for="f-edema">Edema uterino</label><select id="f-edema" class="inp">' + OPC([['', 'Não avaliado'], ['0', '0 (ausente)'], ['1', '1 (leve)'], ['2', '2 (moderado)'], ['3', '3 (intenso)']], p.edema || '') + '</select></div>';
     }
     if (tipo === 'ocorrencia') return '<div class="field"><label for="f-titulo">O que aconteceu</label><input id="f-titulo" class="inp" value="' + esc(p.titulo || '') + '" placeholder="Ex.: Mancando da pata traseira"></div><div class="field"><label for="f-grav">Gravidade</label><select id="f-grav" class="inp">' + OPC(['Leve', 'Moderada', 'Grave'], p.gravidade || 'Leve') + '</select></div>';
     return '';
@@ -187,7 +199,7 @@ const UI = (function () {
   function formRegistro(st, pre, ctx) {
     pre = pre || {}; fotosPend = [];
     const tipos = Object.keys(H.CATS).filter(k => k !== 'documental');
-    const animais = st.animais.filter(a => a.vivo);
+    const animais = st.animais.filter(a => a.vivo && !a.baixa);
     const tipo = pre.tipo || 'vacina';
     const corpo = '<form id="fr" class="stack" novalidate><div class="fgrid">' +
       '<div class="field"><label for="f-animal">Animal</label><select id="f-animal" class="inp">' + OPC(animais.map(a => [a.id, a.nome]), pre.animalId) + '</select></div>' +
@@ -199,6 +211,11 @@ const UI = (function () {
       '<p class="note" id="f-erro" hidden></p></form>';
     abrir({ titulo: pre.tituloModal || 'Novo registro no prontuário', corpo, rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-registro">' + ICON.check + 'Salvar registro</button>' });
     $('#f-tipo').addEventListener('change', e => { $('#f-extra').innerHTML = extras(st, e.target.value, {}); });
+    $('#f-extra').addEventListener('change', e => {
+      if (e.target.id !== 'f-evento') return;
+      const cio = e.target.value === 'Cio';
+      document.querySelectorAll('#f-extra [data-ev]').forEach(el => { el.hidden = (el.dataset.ev === 'cio') !== cio; });
+    });
     $('#f-fotos').addEventListener('change', async e => {
       const files = [...e.target.files].slice(0, 4 - fotosPend.length);
       for (const f of files) { try { fotosPend.push(await comprimir(f)); } catch (err) { toast(err.message); } }
@@ -231,9 +248,13 @@ const UI = (function () {
     else if (tipo === 'ferrageamento') { r.protocolos = ['ferrag']; r.ferrador = v('f-ferrador'); }
     else if (tipo === 'exame') { r.exame = v('f-exame'); r.resultado = v('f-res'); if (/AIE/.test(r.exame)) r.protocolos = ['aie']; if (/Mormo/.test(r.exame)) r.protocolos = ['mormo']; }
     else if (tipo === 'reprodutivo') {
-      r.evento = v('f-evento'); r.garanhao = v('f-garanhao').toUpperCase(); r.dataCobertura = v('f-cob');
+      r.evento = v('f-evento');
+      if (r.evento === 'Cio') {
+        r.sinais = v('f-sinais'); r.ovario = v('f-ovario'); r.foliculo = v('f-foliculo'); r.edema = v('f-edema');
+        if (r.foliculo && !(+r.foliculo >= 5 && +r.foliculo <= 80)) return erro('O folículo deve ficar entre 5 e 80 mm.');
+      } else { r.garanhao = v('f-garanhao').toUpperCase(); r.dataCobertura = v('f-cob'); }
       const a = H.animal(st, r.animalId);
-      if (a && a.sexo !== 'F' && r.evento !== 'Cobertura') return erro('Eventos de gestação só se aplicam a fêmeas.');
+      if (a && a.sexo !== 'F' && r.evento !== 'Cobertura') return erro(r.evento === 'Cio' ? 'O cio só se aplica a fêmeas.' : 'Eventos de gestação só se aplicam a fêmeas.');
       if (r.evento === 'Diagnóstico positivo' && !r.dataCobertura) return erro('Informe a data da cobertura para calcular a previsão de parto.');
     } else if (tipo === 'ocorrencia') { r.titulo = v('f-titulo'); r.gravidade = v('f-grav'); if (!r.titulo) return erro('Descreva a ocorrência em poucas palavras.'); }
     return r;
@@ -242,6 +263,7 @@ const UI = (function () {
   /* pré-preenche o formulário a partir de uma tarefa do motor de regras */
   function preDeTarefa(t) {
     if (t.parto) return { animalId: t.animalId, tipo: 'reprodutivo', evento: 'Parto', tituloModal: 'Registrar parto' };
+    if (t.cio) return { animalId: t.animalId, tipo: 'reprodutivo', evento: 'Cio', tituloModal: 'Registrar cio' };
     return { animalId: t.animalId, tipo: t.cat, protocolos: t.protocoloId ? [t.protocoloId] : [], dose: t.dose, tituloModal: 'Registrar ' + t.titulo.toLowerCase() };
   }
 

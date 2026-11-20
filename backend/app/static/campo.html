@@ -71,6 +71,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .btn.ghost:hover{background:var(--accent-soft)}
 .btn.sm{padding:5px 10px;font-size:.82rem}
 .btn.danger{color:var(--late)}
+.btn.pri.danger{background:var(--late);border-color:var(--late);color:#fff}
 .btn[disabled]{opacity:.5;cursor:not-allowed}
 .btn svg{width:16px;height:16px;flex:none}
 
@@ -352,6 +353,35 @@ hr.div{border:0;border-top:1px solid var(--line-2);margin:14px 0}
 .inp.sm{padding:5px 8px;font-size:.82rem;width:auto}
 .card h2>svg{width:22px;height:22px;vertical-align:-4px;margin-right:8px;color:var(--forest)}
 
+/* ---------- relatórios (v1.4.0) ---------- */
+.rel-filtros{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px;align-items:end}
+.rel-filtros .rel-acoes{grid-column:1/-1;gap:8px;flex-wrap:wrap}
+.rel-filtros .rel-acoes a.btn{text-decoration:none}
+.rel-filtros .rel-acoes .btn.pri+.btn.ghost{margin-right:auto}
+.rel-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px}
+.rel-kpi{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.rel-kpi b{font:800 1.7rem/1.1 var(--f-display);color:var(--forest);font-variant-numeric:tabular-nums}
+.rel-kpi span{font-size:.86rem;color:var(--ink);font-weight:600}
+.rel-kpi small{font-size:.76rem;color:var(--muted)}
+.rel-grafs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.g-barras{display:flex;flex-direction:column;gap:8px}
+.g-b{display:grid;grid-template-columns:minmax(90px,38%) 1fr 34px;gap:10px;align-items:center;font-size:.85rem}
+.g-b span{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g-b b{text-align:right;font-variant-numeric:tabular-nums}
+.g-trilho{height:12px;background:var(--line-2);border-radius:99px;overflow:hidden}
+.g-trilho i{display:block;height:100%;background:var(--forest);border-radius:99px;min-width:2px}
+.g-linha{width:100%;height:auto;display:block}
+.g-linha .g-eixo{stroke:var(--line);stroke-width:1}
+.g-linha .g-l{fill:none;stroke:var(--forest);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.g-linha .g-p{fill:var(--gold);stroke:var(--surface);stroke-width:1.5}
+.g-linha .g-v{font:600 11px var(--f-body,Inter,sans-serif);fill:var(--ink)}
+.g-linha .g-x{font:500 10.5px var(--f-body,Inter,sans-serif);fill:var(--muted)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .g-trilho i,:root:not([data-theme="light"]) .g-linha .g-l{background:var(--accent);stroke:var(--accent)}}
+:root[data-theme="dark"] .g-trilho i{background:var(--accent)} :root[data-theme="dark"] .g-linha .g-l{stroke:var(--accent)}
+:root[data-theme="dark"] .rel-kpi b{color:var(--accent)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .rel-kpi b{color:var(--accent)}}
+@media (max-width:760px){.rel-filtros{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 .hdr{position:relative;background:var(--forest);color:#fff;overflow:hidden}
 .hdr-fundo{position:absolute;inset:0}
 .hdr-fundo .cab-img{width:100%;height:100%;object-fit:cover;display:block}
@@ -514,7 +544,7 @@ const H = (function () {
     ocorrencia: { nome: 'Ocorrência', tom: 'soon' },
     documental: { nome: 'Documentação', tom: 'late' }
   };
-  const EVENTOS_REPRO = ['Cobertura', 'Inseminação', 'Diagnóstico positivo', 'Diagnóstico negativo', 'Parto', 'Aborto'];
+  const EVENTOS_REPRO = ['Cio', 'Cobertura', 'Inseminação', 'Diagnóstico positivo', 'Diagnóstico negativo', 'Parto', 'Aborto'];
   const GESTACAO_DIAS = 340;
 
   const FAIXAS = [
@@ -567,7 +597,9 @@ const H = (function () {
     haras_criado: 'Haras criado', logo_alterado: 'Logotipo alterado', haras_alterado: 'Haras alterado', atualizacao_solicitada: 'Atualização solicitada', atualizacao_concluida: 'Atualização concluída',
     atualizacao_falhou: 'Atualização falhou', rollback_solicitado: 'Volta de versão solicitada', rollback_concluido: 'Volta de versão concluída',
     app_vinculo_gerado: 'QR Code do app gerado', app_vinculado: 'Celular vinculado', app_vinculo_falha: 'Vínculo do app recusado',
-    backup_solicitado: 'Backup solicitado', backup_concluido: 'Backup concluído', backup_falhou: 'Backup falhou'
+    backup_solicitado: 'Backup solicitado', backup_concluido: 'Backup concluído', backup_falhou: 'Backup falhou',
+    imagem_alterada: 'Imagem alterada', imagem_removida: 'Imagem removida', animal_baixa: 'Baixa de animal', animal_baixa_desfeita: 'Baixa desfeita',
+    relatorio_exportado: 'Relatório exportado'
   };
   const GLOSSARIO = [
     ['ABCCMM', 'Associação Brasileira dos Criadores do Cavalo Mangalarga Marchador, responsável pelo registro genealógico da raça.'],
@@ -582,6 +614,10 @@ const H = (function () {
     ['Reforço', 'Dose aplicada depois da série inicial, em geral anual ou semestral.'],
     ['Desmama', 'Separação do potro da mãe, por volta dos 6 meses. Marca a 1ª dose de rinopneumonite.'],
     ['Cobertura', 'Monta ou inseminação. Com o diagnóstico positivo, o sistema calcula a previsão de parto.'],
+    ['Cio', 'Período em que a égua aceita o garanhão, a cada 21 dias em média. O Haras360 prevê o próximo cio até o diagnóstico positivo.'],
+    ['Cio do potro', 'Primeiro cio depois do parto, em geral entre o 7º e o 12º dia.'],
+    ['Taxa de prenhez', 'Diagnósticos positivos divididos pelo total de diagnósticos do período.'],
+    ['Baixa', 'Saída do animal do plantel por venda, morte, doação ou transferência. O prontuário continua guardado.'],
     ['Vacina multivalente', 'Vacina que protege contra várias doenças em uma aplicação. No registro, marque todas as doenças cobertas.'],
     ['2FA', 'Verificação em duas etapas: além da senha, um código de 6 dígitos do aplicativo autenticador do celular.']
   ];
@@ -801,7 +837,7 @@ const UI = (function () {
     o = o || {};
     const quando = t.doc ? '<b>Pend.</b>doc.' : '<b>' + brCurta(t.due) + '</b>' + relativo(t.due);
     const animal = o.semAnimal ? '' : '<a href="#" data-act="ver-animal" data-id="' + t.animalId + '">' + esc(t.animal) + '</a> · ';
-    const acao = t.doc ? '' : t.parto ? '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(t.id) + '">Registrar parto</button>' : '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(t.id) + '">' + ICON.check + 'Registrar</button>';
+    const acao = t.doc ? '' : t.parto ? '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(t.id) + '">Registrar parto</button>' : t.cio ? '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(t.id) + '">Registrar cio</button>' : '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(t.id) + '">' + ICON.check + 'Registrar</button>';
     return '<div class="task ' + t.status + '"><span class="bar"></span><div class="when">' + quando + '</div><div class="what"><div class="row" style="gap:8px"><strong>' + esc(t.titulo) + '</strong><span class="chip nodot c-muted">' + esc(t.etapa) + '</span>' + (t.status === 'atrasado' ? '<span class="chip c-late">Atrasado</span>' : '') + '</div><div class="sub">' + animal + esc(t.nota || '') + '</div></div><div class="act">' + acao + '</div></div>';
   }
 
@@ -819,6 +855,10 @@ const UI = (function () {
       if (r.garanhao) meta.push('Garanhão: ' + esc(r.garanhao));
       if (r.dataCobertura && r.evento === 'Diagnóstico positivo') meta.push('Cobertura em ' + br(r.dataCobertura));
       if (r.gravidade) meta.push('Gravidade: ' + esc(r.gravidade));
+      if (r.sinais) meta.push('Sinais: ' + esc(r.sinais));
+      if (r.ovario) meta.push('Ovário ' + esc(r.ovario.toLowerCase()));
+      if (r.foliculo) meta.push('Folículo ' + esc(r.foliculo) + ' mm');
+      if (r.edema) meta.push('Edema ' + esc(r.edema));
       const fotos = (r.fotos || []).length ? '<div class="thumbs">' + r.fotos.map((f, i) => '<button data-act="ver-foto" data-r="' + r.id + '" data-i="' + i + '" aria-label="Ampliar foto ' + (i + 1) + '"><img src="' + f + '" alt=""></button>').join('') + '</div>' : '';
       const dur = r.audio ? Math.floor(r.audio.duracao / 60) + ':' + String(r.audio.duracao % 60).padStart(2, '0') : '';
       const audio = r.audio ? '<div class="audio-reg"><span class="small muted">' + ICON.mic + 'Áudio do campo · ' + dur + '</span><audio controls preload="none" src="' + esc(r.audio.url) + '"></audio></div>' : '';
@@ -911,7 +951,15 @@ const UI = (function () {
     }
     if (tipo === 'reprodutivo') {
       const machos = st.animais.filter(a => a.sexo === 'M').map(a => '<option value="' + esc(a.nome) + '">');
-      return '<div class="field"><label for="f-evento">Evento</label><select id="f-evento" class="inp">' + OPC(H.EVENTOS_REPRO, p.evento || 'Cobertura') + '</select></div><div class="field"><label for="f-garanhao">Garanhão</label><input id="f-garanhao" class="inp" list="dl-machos" value="' + esc(p.garanhao || '') + '"><datalist id="dl-machos">' + machos.join('') + '</datalist></div><div class="field"><label for="f-cob">Data da cobertura (diagnóstico positivo)</label><input id="f-cob" type="date" class="inp" value="' + esc(p.dataCobertura || '') + '"></div>';
+      const ev = p.evento || 'Cobertura', cio = ev === 'Cio';
+      // v1.4.0: o evento Cio mostra sinais e dados do exame; os demais, garanhão e cobertura
+      return '<div class="field"><label for="f-evento">Evento</label><select id="f-evento" class="inp">' + OPC(H.EVENTOS_REPRO, ev) + '</select></div>' +
+        '<div class="field" data-ev="outro"' + (cio ? ' hidden' : '') + '><label for="f-garanhao">Garanhão</label><input id="f-garanhao" class="inp" list="dl-machos" value="' + esc(p.garanhao || '') + '"><datalist id="dl-machos">' + machos.join('') + '</datalist></div>' +
+        '<div class="field" data-ev="outro"' + (cio ? ' hidden' : '') + '><label for="f-cob">Data da cobertura (diagnóstico positivo)</label><input id="f-cob" type="date" class="inp" value="' + esc(p.dataCobertura || '') + '"></div>' +
+        '<div class="field" data-ev="cio"' + (cio ? '' : ' hidden') + '><label for="f-sinais">Sinais observados</label><input id="f-sinais" class="inp" value="' + esc(p.sinais || '') + '" placeholder="Ex.: aceita o rufião, urina com frequência"></div>' +
+        '<div class="field" data-ev="cio"' + (cio ? '' : ' hidden') + '><label for="f-ovario">Ovário (exame)</label><select id="f-ovario" class="inp">' + OPC([['', 'Não examinado'], 'Esquerdo', 'Direito'], p.ovario || '') + '</select></div>' +
+        '<div class="field" data-ev="cio"' + (cio ? '' : ' hidden') + '><label for="f-foliculo">Folículo (mm)</label><input id="f-foliculo" type="number" min="5" max="80" class="inp" value="' + esc(p.foliculo || '') + '" placeholder="Ex.: 35"></div>' +
+        '<div class="field" data-ev="cio"' + (cio ? '' : ' hidden') + '><label for="f-edema">Edema uterino</label><select id="f-edema" class="inp">' + OPC([['', 'Não avaliado'], ['0', '0 (ausente)'], ['1', '1 (leve)'], ['2', '2 (moderado)'], ['3', '3 (intenso)']], p.edema || '') + '</select></div>';
     }
     if (tipo === 'ocorrencia') return '<div class="field"><label for="f-titulo">O que aconteceu</label><input id="f-titulo" class="inp" value="' + esc(p.titulo || '') + '" placeholder="Ex.: Mancando da pata traseira"></div><div class="field"><label for="f-grav">Gravidade</label><select id="f-grav" class="inp">' + OPC(['Leve', 'Moderada', 'Grave'], p.gravidade || 'Leve') + '</select></div>';
     return '';
@@ -920,7 +968,7 @@ const UI = (function () {
   function formRegistro(st, pre, ctx) {
     pre = pre || {}; fotosPend = [];
     const tipos = Object.keys(H.CATS).filter(k => k !== 'documental');
-    const animais = st.animais.filter(a => a.vivo);
+    const animais = st.animais.filter(a => a.vivo && !a.baixa);
     const tipo = pre.tipo || 'vacina';
     const corpo = '<form id="fr" class="stack" novalidate><div class="fgrid">' +
       '<div class="field"><label for="f-animal">Animal</label><select id="f-animal" class="inp">' + OPC(animais.map(a => [a.id, a.nome]), pre.animalId) + '</select></div>' +
@@ -932,6 +980,11 @@ const UI = (function () {
       '<p class="note" id="f-erro" hidden></p></form>';
     abrir({ titulo: pre.tituloModal || 'Novo registro no prontuário', corpo, rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-registro">' + ICON.check + 'Salvar registro</button>' });
     $('#f-tipo').addEventListener('change', e => { $('#f-extra').innerHTML = extras(st, e.target.value, {}); });
+    $('#f-extra').addEventListener('change', e => {
+      if (e.target.id !== 'f-evento') return;
+      const cio = e.target.value === 'Cio';
+      document.querySelectorAll('#f-extra [data-ev]').forEach(el => { el.hidden = (el.dataset.ev === 'cio') !== cio; });
+    });
     $('#f-fotos').addEventListener('change', async e => {
       const files = [...e.target.files].slice(0, 4 - fotosPend.length);
       for (const f of files) { try { fotosPend.push(await comprimir(f)); } catch (err) { toast(err.message); } }
@@ -964,9 +1017,13 @@ const UI = (function () {
     else if (tipo === 'ferrageamento') { r.protocolos = ['ferrag']; r.ferrador = v('f-ferrador'); }
     else if (tipo === 'exame') { r.exame = v('f-exame'); r.resultado = v('f-res'); if (/AIE/.test(r.exame)) r.protocolos = ['aie']; if (/Mormo/.test(r.exame)) r.protocolos = ['mormo']; }
     else if (tipo === 'reprodutivo') {
-      r.evento = v('f-evento'); r.garanhao = v('f-garanhao').toUpperCase(); r.dataCobertura = v('f-cob');
+      r.evento = v('f-evento');
+      if (r.evento === 'Cio') {
+        r.sinais = v('f-sinais'); r.ovario = v('f-ovario'); r.foliculo = v('f-foliculo'); r.edema = v('f-edema');
+        if (r.foliculo && !(+r.foliculo >= 5 && +r.foliculo <= 80)) return erro('O folículo deve ficar entre 5 e 80 mm.');
+      } else { r.garanhao = v('f-garanhao').toUpperCase(); r.dataCobertura = v('f-cob'); }
       const a = H.animal(st, r.animalId);
-      if (a && a.sexo !== 'F' && r.evento !== 'Cobertura') return erro('Eventos de gestação só se aplicam a fêmeas.');
+      if (a && a.sexo !== 'F' && r.evento !== 'Cobertura') return erro(r.evento === 'Cio' ? 'O cio só se aplica a fêmeas.' : 'Eventos de gestação só se aplicam a fêmeas.');
       if (r.evento === 'Diagnóstico positivo' && !r.dataCobertura) return erro('Informe a data da cobertura para calcular a previsão de parto.');
     } else if (tipo === 'ocorrencia') { r.titulo = v('f-titulo'); r.gravidade = v('f-grav'); if (!r.titulo) return erro('Descreva a ocorrência em poucas palavras.'); }
     return r;
@@ -975,6 +1032,7 @@ const UI = (function () {
   /* pré-preenche o formulário a partir de uma tarefa do motor de regras */
   function preDeTarefa(t) {
     if (t.parto) return { animalId: t.animalId, tipo: 'reprodutivo', evento: 'Parto', tituloModal: 'Registrar parto' };
+    if (t.cio) return { animalId: t.animalId, tipo: 'reprodutivo', evento: 'Cio', tituloModal: 'Registrar cio' };
     return { animalId: t.animalId, tipo: t.cat, protocolos: t.protocoloId ? [t.protocoloId] : [], dose: t.dose, tituloModal: 'Registrar ' + t.titulo.toLowerCase() };
   }
 
