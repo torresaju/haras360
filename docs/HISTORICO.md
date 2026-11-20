@@ -12,6 +12,7 @@ Uma nota por versão, da mais recente para a mais antiga.
   * API (login, perfis, importação, registros com foto, validações, protocolos, troca de senha);
   * conferência de que as páginas montadas correspondem às fontes.
 * Especificação v1 aprovada em `docs/ESPECIFICACAO.md`.
+* Versionamento automático: a cada merge na `main`, o GitHub Actions lê o `VERSION` e, se a tag ainda não existir, cria a tag e a Release com esta nota.
 
 ## Antes do repositório
 * 01/10/2026: protótipo navegável publicado (Portal Gestor e Portal Campo) e validado.

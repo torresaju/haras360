@@ -51,3 +51,4 @@ SECRET_KEY=dev DB_URL=sqlite:///./dev.db uvicorn app.main:app --port 8090
 2. Uma branch `etapa/X.Y-nome` por etapa e um PR por entrega.
 3. Merge somente com autorização do Ricardo.
 4. Cada versão leva tag semântica (`vX.Y.Z`), linha nesta tabela e nota em `docs/HISTORICO.md`. O arquivo `VERSION` traz a versão atual.
+5. A tag e a Release são criadas pelo GitHub Actions (`.github/workflows/versao.yml`) no merge, a partir do `VERSION` e da seção correspondente do `docs/HISTORICO.md`.
