@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../regras_app.dart';
+import '../marca.dart';
 import '../tema.dart';
 
 class Secao extends StatelessWidget {
@@ -55,4 +56,29 @@ class LinhaTarefa extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Cabeçalho das abas (v1.3.0): verde haras com o logotipo do haras e o título.
+class CabecalhoAba extends StatelessWidget {
+  final String titulo;
+  final String? subtitulo;
+  final List<Widget> acoes;
+  const CabecalhoAba(this.titulo, {super.key, this.subtitulo, this.acoes = const []});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        color: Cores.floresta,
+        padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 12, 12, 16),
+        child: Row(children: [
+          const LogoHaras(tamanho: 38),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(titulo, style: const TextStyle(fontFamily: fonteTitulo, fontWeight: FontWeight.w800, fontSize: 21, color: Cores.florestaTinta)),
+              if (subtitulo != null) Text(subtitulo!, style: const TextStyle(color: Cores.florestaApagado, fontSize: 13)),
+            ]),
+          ),
+          ...acoes,
+        ]),
+      );
 }

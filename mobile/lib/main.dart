@@ -3,6 +3,7 @@ import 'package:workmanager/workmanager.dart';
 
 import 'banco.dart';
 import 'dados.dart';
+import 'marca.dart';
 import 'sincronizacao.dart';
 import 'tema.dart';
 import 'telas/inicio.dart';
@@ -13,6 +14,7 @@ Future<void> main() async {
   await Workmanager().initialize(callbackDispatcher);
   final cred = await Credenciais.ler();
   await dados.carregar();
+  await Marca.carregar();
   if (cred != null) {
     await Sincronizador.agendar();
   }

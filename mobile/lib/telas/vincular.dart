@@ -6,6 +6,7 @@ import '../banco.dart';
 import '../dados.dart';
 import '../regras_app.dart';
 import '../sincronizacao.dart';
+import '../marca.dart';
 import '../tema.dart';
 import 'inicio.dart';
 
@@ -78,14 +79,24 @@ class _TelaVincularState extends State<TelaVincular> {
   @override
   Widget build(BuildContext context) => Scaffold(
         backgroundColor: Cores.floresta,
-        body: SafeArea(
+        body: Stack(fit: StackFit.expand, children: [
+          const FundoMarca(),
+          const DecoratedBox(
+              decoration: BoxDecoration(
+                  gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xF2102419), Color(0x80102419), Color(0xF5102419)], stops: [0, .5, .85]))),
+          SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              const SizedBox(height: 24),
+              Center(child: Image.asset('recursos/logo-claro.png', width: 110, height: 110)),
+              const SizedBox(height: 8),
+              const Text.rich(TextSpan(children: [
+                TextSpan(text: 'Haras', style: TextStyle(color: Cores.florestaTinta)),
+                TextSpan(text: '360', style: TextStyle(color: Cores.dourado)),
+              ]), textAlign: TextAlign.center, style: TextStyle(fontFamily: fonteTitulo, fontSize: 38, fontWeight: FontWeight.w800)),
+              const Text('GESTÃO DE HARAS', textAlign: TextAlign.center, style: TextStyle(color: Cores.florestaApagado, fontSize: 12, letterSpacing: 4)),
               const Spacer(),
-              Center(child: ClipRRect(borderRadius: BorderRadius.circular(18), child: Image.asset('recursos/icone/mipmap-xxxhdpi/ic_launcher.png', width: 88, height: 88))),
-              const SizedBox(height: 16),
-              const Text('Haras360 Campo', textAlign: TextAlign.center, style: TextStyle(color: Cores.florestaTinta, fontSize: 28, fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
               const Text('Peça ao gestor o QR Code em Equipe › Vincular celular. Faça o vínculo no Wi-Fi do haras; depois o app funciona sem internet.',
                   textAlign: TextAlign.center, style: TextStyle(color: Cores.florestaApagado)),
@@ -98,8 +109,9 @@ class _TelaVincularState extends State<TelaVincular> {
                   child: Text(_erro!, style: const TextStyle(color: Cores.atrasado)),
                 ),
               FilledButton.icon(
+                style: FilledButton.styleFrom(backgroundColor: Cores.dourado, foregroundColor: Cores.tinta, minimumSize: const Size(48, 54)),
                 onPressed: _ocupado ? null : _lerQr,
-                icon: _ocupado ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.qr_code_scanner),
+                icon: _ocupado ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Cores.tinta)) : const Icon(Icons.qr_code_scanner),
                 label: Text(_ocupado ? 'Vinculando...' : 'Ler QR Code'),
               ),
               const SizedBox(height: 8),
@@ -110,7 +122,7 @@ class _TelaVincularState extends State<TelaVincular> {
             ]),
           ),
         ),
-      );
+      ]));
 }
 
 class _Leitor extends StatefulWidget {

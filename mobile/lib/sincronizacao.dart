@@ -8,6 +8,7 @@ import 'package:workmanager/workmanager.dart';
 import 'api.dart';
 import 'banco.dart';
 import 'config.dart';
+import 'marca.dart';
 
 class ResultadoSinc {
   final bool ok;
@@ -101,6 +102,9 @@ class Sincronizador {
       }
       final estado = await api.get('/api/app/sincronizar');
       await Banco.gravarEstado(estado);
+      try {
+        await Marca.atualizar(api, estado); // imagens do haras: falha aqui não impede o envio dos registros
+      } catch (_) {}
       await Banco.limparEnviados();
       await Banco.gravar('ultimoErro', '');
       final partes = [if (enviados > 0) '$enviados registro(s)', if (fotos > 0) '$fotos foto(s)', if (audios > 0) '$audios áudio(s)'];

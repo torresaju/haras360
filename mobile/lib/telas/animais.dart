@@ -24,7 +24,9 @@ class _TelaAnimaisState extends State<TelaAnimais> {
   Widget build(BuildContext context) {
     final ts = dados.tarefas;
     final lista = dados.animais.where((a) => _busca.isEmpty || _norm(a['nome'] as String).contains(_norm(_busca)) || '${a['registro']}'.contains(_busca)).toList();
-    return ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, 96), children: [
+    return Column(children: [
+      CabecalhoAba('Animais', subtitulo: '${dados.animais.length} no plantel'),
+      Expanded(child: ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, 96), children: [
       TextField(decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Buscar por nome ou registro'), onChanged: (v) => setState(() => _busca = v.trim())),
       const SizedBox(height: 12),
       Card(
@@ -39,7 +41,7 @@ class _TelaAnimaisState extends State<TelaAnimais> {
           if (lista.isEmpty) const Padding(padding: EdgeInsets.all(20), child: Text('Nenhum animal encontrado.', style: TextStyle(color: Cores.apagado))),
         ]),
       ),
-    ]);
+    ]))]);
   }
 
   Widget? _pend(List<Map<String, dynamic>> l) {

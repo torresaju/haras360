@@ -108,7 +108,13 @@ void main() {
     await esperar(t, find.textContaining('Vai para o servidor quando houver Wi-Fi'));
     await esperar(t, find.textContaining('aguardando o Wi-Fi'));
 
-    await aba(t, 'Envio');
+    await aba(t, 'Agenda');
+    await esperar(t, find.text('Próximos 30 dias'));
+    await captura(t, 'app-agenda');
+    await aba(t, 'Mais');
+    await esperar(t, find.text('Envio'));
+    await captura(t, 'app-mais');
+    await t.tap(find.text('Envio'));
     await esperar(t, find.text('Sincronizar agora'));
     await captura(t, 'app-envio-pendente');
 
@@ -122,7 +128,9 @@ void main() {
     expect(find.descendant(of: find.ancestor(of: find.text('Registros aguardando envio'), matching: find.byType(Row)), matching: find.text('0')), findsOneWidget);
     await captura(t, 'app-envio-ok');
 
-    await aba(t, 'Avisos');
+    await t.pageBack();
+    await t.pump(const Duration(milliseconds: 600));
+    await t.tap(find.text('Avisos'));
     await t.pump(const Duration(seconds: 1));
     await captura(t, 'app-avisos');
   });
