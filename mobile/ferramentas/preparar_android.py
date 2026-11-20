@@ -9,7 +9,7 @@ O que muda:
 * Assinatura de release pela chave Android do Ricardo, lida das variáveis H360_KEYSTORE,
   H360_KEYSTORE_SENHA, H360_CHAVE_ALIAS e H360_CHAVE_SENHA (vindas dos segredos do GitHub).
   Sem elas, o build usa a chave de depuração e o APK não deve ser publicado.
-* Permissões: internet, câmera e estado da rede. HTTP liberado porque o servidor ainda é
+* Permissões: internet, câmera, microfone (áudio nos registros) e estado da rede. HTTP liberado porque o servidor ainda é
   acessado por IP sem HTTPS (risco registrado na especificação).
 * Leitor de QR Code pelo Google Play Services (APK menor) e ícone do app.
 """
@@ -99,7 +99,7 @@ def manifesto():
     s = p.read_text(encoding="utf-8")
     if "usesCleartextTraffic" in s:
         return
-    perms = "\n".join(f'    <uses-permission android:name="android.permission.{x}"/>' for x in ("INTERNET", "CAMERA", "ACCESS_NETWORK_STATE"))
+    perms = "\n".join(f'    <uses-permission android:name="android.permission.{x}"/>' for x in ("INTERNET", "CAMERA", "ACCESS_NETWORK_STATE", "RECORD_AUDIO"))
     s = re.sub(r"(<manifest[^>]*>)", r"\1\n" + perms, s, count=1)
     s = re.sub(r'android:label="[^"]*"', 'android:label="Haras360"', s, count=1)
     s = s.replace("<application", '<application\n        android:usesCleartextTraffic="true"', 1)

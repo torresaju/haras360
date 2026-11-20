@@ -54,6 +54,31 @@ class Api {
         return http.Response.fromStream(await _c.send(req).timeout(const Duration(minutes: 2)));
       });
 
+  Future<Map<String, dynamic>> enviarAudio(String registroId, String audioId, int duracao, File arquivo) => _exec(() async {
+        final req = http.MultipartRequest('POST', _u('/api/app/audios'))
+          ..headers.addAll(_cab)
+          ..fields['registroId'] = registroId
+          ..fields['audioId'] = audioId
+          ..fields['duracao'] = '$duracao'
+          ..files.add(await http.MultipartFile.fromPath('arquivo', arquivo.path, filename: '$audioId.m4a'));
+        return http.Response.fromStream(await _c.send(req));
+      });
+
+  /// Baixa um arquivo protegido (áudio do prontuário) com o token do aparelho.
+  Future<List<int>> baixar(String caminho) async {
+    try {
+      final r = await _c.get(_u(caminho), headers: _cab).timeout(const Duration(minutes: 1));
+      if (r.statusCode != 200) throw ApiErro(r.statusCode, 'Não foi possível baixar o arquivo.');
+      return r.bodyBytes;
+    } on SocketException {
+      throw ApiErro(0, 'Sem conexão com o servidor.');
+    } on http.ClientException {
+      throw ApiErro(0, 'Sem conexão com o servidor.');
+    } on TimeoutException {
+      throw ApiErro(0, 'O servidor demorou a responder.');
+    }
+  }
+
   Future<Map<String, dynamic>> _exec(Future<http.Response> Function() f) async {
     http.Response r;
     try {

@@ -3,10 +3,13 @@
 //
 // flutter drive --driver=test_driver/integration_test.dart --target=integration_test/app_test.dart \
 //   --dart-define=SERVIDOR=http://10.0.2.2:8090 --dart-define=CODIGO=<código de haras360 vincular-celular>
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:haras360/main.dart' as app;
 import 'package:haras360/sincronizacao.dart';
+import 'package:haras360/telas/audio.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -88,6 +91,15 @@ void main() {
     await t.tap(find.text('BRISA DA SERRA AZUL').last);
     await t.pump(const Duration(milliseconds: 600));
     await t.enterText(find.widgetWithText(TextField, 'O que aconteceu'), 'Pisou em prego no piquete');
+    // áudio: o emulador não tem microfone, a gravação usa um arquivo M4A de teste
+    final simulado = File('${Directory.systemTemp.path}/simulado.m4a');
+    await simulado.writeAsBytes([0, 0, 0, 0x1c, ...'ftypM4A '.codeUnits, 0, 0, 2, 0, ...'M4A isommp42'.codeUnits, ...List.filled(4000, 0)]);
+    GravadorAudio.simulado = simulado;
+    await t.ensureVisible(find.text('Gravar áudio'));
+    await t.tap(find.text('Gravar áudio'));
+    await t.pump(const Duration(milliseconds: 2600));
+    await t.tap(find.text('Parar'));
+    await esperar(t, find.textContaining('Áudio · 0:0'));
     FocusManager.instance.primaryFocus?.unfocus();
     await t.pump(const Duration(milliseconds: 600));
     await captura(t, 'app-registro');
@@ -103,7 +115,7 @@ void main() {
     // de volta ao Wi-Fi da sede
     Sincronizador.redeForcada = true;
     await t.tap(find.text('Sincronizar agora'));
-    await esperar(t, find.textContaining('Enviado: 1 registro'), segundos: 90);
+    await esperar(t, find.textContaining('Enviado: 1 registro(s) e 1 áudio(s)'), segundos: 90);
     await t.pump(const Duration(seconds: 2));
     // a tela de envio acompanha o resultado: fila zerada
     expect(find.text('Registros aguardando envio'), findsOneWidget);

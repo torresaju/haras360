@@ -76,7 +76,7 @@ class _TelaInicioState extends State<TelaInicio> with WidgetsBindingObserver {
   Widget build(BuildContext context) => ListenableBuilder(
         listenable: dados,
         builder: (context, _) {
-          final pend = (dados.contagem['registros'] ?? 0) + (dados.contagem['fotos'] ?? 0);
+          final pend = (dados.contagem['registros'] ?? 0) + (dados.contagem['fotos'] ?? 0) + (dados.contagem['audios'] ?? 0);
           final telas = [TelaHoje(registrar: registrar), TelaAnimais(registrar: registrar), TelaAvisos(registrar: registrar), const TelaEnvio()];
           final nomeHaras = (dados.haras['nome'] as String?) ?? 'Haras360';
           return Scaffold(

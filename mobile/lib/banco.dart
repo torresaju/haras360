@@ -38,15 +38,21 @@ class Banco {
   static Future<Database> abrir() async {
     if (_db != null) return _db!;
     final caminho = p.join(await getDatabasesPath(), 'haras360.db');
-    _db = await openDatabase(caminho, version: 1, onCreate: (db, _) async {
+    _db = await openDatabase(caminho, version: 2, onCreate: (db, _) async {
       await db.execute('CREATE TABLE estado (chave TEXT PRIMARY KEY, valor TEXT NOT NULL)');
       await db.execute('CREATE TABLE fila (id TEXT PRIMARY KEY, corpo TEXT NOT NULL, criado TEXT NOT NULL, '
           'enviado INTEGER NOT NULL DEFAULT 0, erro TEXT)');
       await db.execute('CREATE TABLE fotos (id TEXT PRIMARY KEY, registro_id TEXT NOT NULL, caminho TEXT NOT NULL, '
           'ordem INTEGER NOT NULL, enviada INTEGER NOT NULL DEFAULT 0, erro TEXT)');
+      await _criarAudios(db);
+    }, onUpgrade: (db, antes, _) async {
+      if (antes < 2) await _criarAudios(db); // v1.2.0
     });
     return _db!;
   }
+
+  static Future<void> _criarAudios(Database db) => db.execute('CREATE TABLE IF NOT EXISTS audios (id TEXT PRIMARY KEY, '
+      'registro_id TEXT NOT NULL UNIQUE, caminho TEXT NOT NULL, duracao INTEGER NOT NULL, enviado INTEGER NOT NULL DEFAULT 0, erro TEXT)');
 
   // ---------- estado e preferências ----------
   static Future<String?> ler(String chave) async {
@@ -68,7 +74,7 @@ class Banco {
   }
 
   // ---------- fila de registros ----------
-  static Future<void> enfileirar(Map<String, dynamic> registro, List<File> fotos) async {
+  static Future<void> enfileirar(Map<String, dynamic> registro, List<File> fotos, {File? audio, int duracao = 0}) async {
     final db = await abrir();
     final pasta = Directory(p.join((await getApplicationDocumentsDirectory()).path, 'fotos'));
     await pasta.create(recursive: true);
@@ -80,18 +86,29 @@ class Banco {
         await fotos[i].copy(destino);
         await tx.insert('fotos', {'id': id, 'registro_id': registro['id'], 'caminho': destino, 'ordem': i});
       }
+      if (audio != null) {
+        final id = const Uuid().v4().replaceAll('-', '');
+        final destino = p.join(pasta.path, '$id.m4a');
+        await audio.copy(destino);
+        await tx.insert('audios', {'id': id, 'registro_id': registro['id'], 'caminho': destino, 'duracao': duracao});
+      }
     });
+    if (audio != null && await audio.exists()) await audio.delete();
   }
 
   /// Registros feitos no aparelho e ainda não refletidos no estado baixado do servidor.
   static Future<List<Map<String, dynamic>>> registrosLocais() async {
-    final r = await (await abrir()).query('fila', orderBy: 'criado');
+    final db = await abrir();
+    final r = await db.query('fila', orderBy: 'criado');
+    final au = {for (final a in await db.query('audios')) a['registro_id'] as String: a};
     return r.map((x) {
       final m = jsonDecode(x['corpo'] as String) as Map<String, dynamic>;
       m['_enviado'] = x['enviado'] == 1;
       m['_erro'] = x['erro'];
       m['autor'] = 'Você (neste celular)';
       m['origem'] = 'App';
+      final a = au[x['id']];
+      if (a != null) m['_audio'] = {'caminho': a['caminho'], 'duracao': a['duracao']};
       return m;
     }).toList();
   }
@@ -101,6 +118,21 @@ class Banco {
 
   static Future<List<Map<String, Object?>>> fotosPendentes() async => (await abrir()).rawQuery(
       'SELECT f.* FROM fotos f JOIN fila r ON r.id = f.registro_id WHERE f.enviada = 0 AND f.erro IS NULL AND r.enviado = 1 ORDER BY r.criado, f.ordem');
+
+  static Future<List<Map<String, Object?>>> audiosPendentes() async => (await abrir()).rawQuery(
+      'SELECT a.* FROM audios a JOIN fila r ON r.id = a.registro_id WHERE a.enviado = 0 AND a.erro IS NULL AND r.enviado = 1 ORDER BY r.criado');
+
+  static Future<void> marcarAudioEnviado(String id) async {
+    final db = await abrir();
+    final r = await db.query('audios', where: 'id = ?', whereArgs: [id]);
+    await db.update('audios', {'enviado': 1}, where: 'id = ?', whereArgs: [id]);
+    if (r.isNotEmpty) {
+      final f = File(r.first['caminho'] as String);
+      if (await f.exists()) await f.delete();
+    }
+  }
+
+  static Future<void> marcarAudioErro(String id, String erro) async => (await abrir()).update('audios', {'erro': erro}, where: 'id = ?', whereArgs: [id]);
 
   static Future<void> marcarEnviado(String id) async => (await abrir()).update('fila', {'enviado': 1, 'erro': null}, where: 'id = ?', whereArgs: [id]);
 
@@ -122,7 +154,9 @@ class Banco {
   static Future<void> limparEnviados() async {
     final db = await abrir();
     await db.rawDelete('DELETE FROM fotos WHERE enviada = 1 AND registro_id IN (SELECT id FROM fila WHERE enviado = 1)');
-    await db.rawDelete('DELETE FROM fila WHERE enviado = 1 AND id NOT IN (SELECT registro_id FROM fotos WHERE enviada = 0)');
+    await db.rawDelete('DELETE FROM audios WHERE enviado = 1 AND registro_id IN (SELECT id FROM fila WHERE enviado = 1)');
+    await db.rawDelete('DELETE FROM fila WHERE enviado = 1 AND id NOT IN (SELECT registro_id FROM fotos WHERE enviada = 0) '
+        'AND id NOT IN (SELECT registro_id FROM audios WHERE enviado = 0)');
   }
 
   /// Tenta de novo os itens recusados (por exemplo depois de o gestor cadastrar o animal).
@@ -130,6 +164,7 @@ class Banco {
     final db = await abrir();
     await db.update('fila', {'erro': null}, where: 'erro IS NOT NULL');
     await db.update('fotos', {'erro': null}, where: 'erro IS NOT NULL');
+    await db.update('audios', {'erro': null}, where: 'erro IS NOT NULL');
   }
 
   static Future<void> descartar(String id) async {
@@ -140,6 +175,11 @@ class Banco {
       if (await a.exists()) await a.delete();
     }
     await db.delete('fotos', where: 'registro_id = ?', whereArgs: [id]);
+    for (final a in await db.query('audios', where: 'registro_id = ?', whereArgs: [id])) {
+      final f = File(a['caminho'] as String);
+      if (await f.exists()) await f.delete();
+    }
+    await db.delete('audios', where: 'registro_id = ?', whereArgs: [id]);
     await db.delete('fila', where: 'id = ?', whereArgs: [id]);
   }
 
@@ -149,8 +189,10 @@ class Banco {
     return {
       'registros': n(await db.rawQuery('SELECT COUNT(*) FROM fila WHERE enviado = 0 AND erro IS NULL')),
       'fotos': n(await db.rawQuery('SELECT COUNT(*) FROM fotos WHERE enviada = 0 AND erro IS NULL')),
+      'audios': n(await db.rawQuery('SELECT COUNT(*) FROM audios WHERE enviado = 0 AND erro IS NULL')),
       'erros': n(await db.rawQuery('SELECT COUNT(*) FROM fila WHERE erro IS NOT NULL')) +
-          n(await db.rawQuery('SELECT COUNT(*) FROM fotos WHERE erro IS NOT NULL')),
+          n(await db.rawQuery('SELECT COUNT(*) FROM fotos WHERE erro IS NOT NULL')) +
+          n(await db.rawQuery('SELECT COUNT(*) FROM audios WHERE erro IS NOT NULL')),
     };
   }
 }

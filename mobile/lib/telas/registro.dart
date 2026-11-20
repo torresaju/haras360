@@ -9,6 +9,7 @@ import '../config.dart';
 import '../dados.dart';
 import '../regras_app.dart';
 import '../tema.dart';
+import 'audio.dart';
 
 /// Novo registro no prontuário. Grava no celular; o envio acontece no Wi-Fi.
 class TelaRegistro extends StatefulWidget {
@@ -36,6 +37,7 @@ class _TelaRegistroState extends State<TelaRegistro> {
   };
   DateTime? _cobertura;
   final List<File> _fotos = [];
+  AudioGravado? _audio;
   String? _erro;
   bool _salvando = false;
 
@@ -71,7 +73,7 @@ class _TelaRegistroState extends State<TelaRegistro> {
         },
       );
       setState(() => _salvando = true);
-      await Banco.enfileirar(r, _fotos);
+      await Banco.enfileirar(r, _fotos, audio: _audio?.arquivo, duracao: _audio?.duracao ?? 0);
       if (mounted) Navigator.of(context).pop(true);
     } on ErroValidacao catch (e) {
       setState(() => _erro = e.mensagem);
@@ -218,6 +220,10 @@ class _TelaRegistroState extends State<TelaRegistro> {
             OutlinedButton.icon(onPressed: () => _foto(ImageSource.gallery), icon: const Icon(Icons.photo_library_outlined), label: const Text('Galeria')),
           ],
         ]),
+        if (dados.audioLiberado) ...[
+          const SizedBox(height: 16),
+          GravadorAudio(maxSeg: dados.audioMaxSeg, aoMudar: (a) => _audio = a),
+        ],
         if (_erro != null)
           Container(
             margin: const EdgeInsets.only(top: 16),

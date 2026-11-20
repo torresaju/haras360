@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../dados.dart';
 import '../regras_app.dart';
 import '../tema.dart';
+import 'audio.dart';
 import 'comum.dart';
 
 class TelaAnimais extends StatefulWidget {
@@ -100,9 +103,15 @@ class TelaFicha extends StatelessWidget {
                   return ListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(tituloRegistro(r, dados.protocolos)),
-                    subtitle: Text([br(r['data'] as String?), if (doseTxt(r['dose']).isNotEmpty) doseTxt(r['dose']), '${r['autor'] ?? ''}', if ('${r['obs'] ?? ''}'.isNotEmpty) '${r['obs']}']
-                        .where((x) => x.isNotEmpty)
-                        .join(' · ')),
+                    subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text([br(r['data'] as String?), if (doseTxt(r['dose']).isNotEmpty) doseTxt(r['dose']), '${r['autor'] ?? ''}', if ('${r['obs'] ?? ''}'.isNotEmpty) '${r['obs']}']
+                          .where((x) => x.isNotEmpty)
+                          .join(' · ')),
+                      if (r['_audio'] is Map)
+                        TocadorAudio(arquivo: File((r['_audio'] as Map)['caminho'] as String), duracao: (r['_audio'] as Map)['duracao'] as int)
+                      else if (r['audio'] is Map)
+                        TocadorAudio(url: (r['audio'] as Map)['url'] as String, duracao: ((r['audio'] as Map)['duracao'] as num).toInt()),
+                    ]),
                     trailing: local
                         ? (r['_erro'] != null
                             ? const Etiqueta('Recusado', Cores.atrasado, Cores.atrasadoSuave)
