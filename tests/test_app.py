@@ -4,6 +4,7 @@ import json
 import uuid
 from datetime import datetime, timedelta
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app import regras as R
@@ -15,6 +16,14 @@ from test_api import H, PNG, entrar
 
 HA = {"X-Haras360": "1", "X-Portal": "app"}
 PNG_BYTES = base64.b64decode(PNG.split(",", 1)[1])
+
+
+@pytest.fixture(scope="module", autouse=True)
+def animal(base):
+    """Garante um animal no Haras Teste, mesmo rodando este arquivo sozinho."""
+    g = entrar("gestor@teste.com", "senha1234")
+    if not g.get("/api/estado").json()["animais"]:
+        assert g.post("/api/animais", json={"nome": "Estrela do App", "sexo": "F", "nascimento": "2018-03-10"}, headers=H).status_code == 200
 
 
 def _caseiro_id(g):
