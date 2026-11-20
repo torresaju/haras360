@@ -15,8 +15,8 @@ A especificação aprovada está em [`docs/ESPECIFICACAO.md`](docs/ESPECIFICACAO
 | v0.1.0 | 19/11/2026 | etapa/0.1-repositorio | Código de outubro no Git, testes automatizados, documentação | Publicada |
 | v1.0.0 | 19/11/2026 | etapa/1.0-vps | Portais e API na segunda VM micro, sem Docker, 2FA, auditoria, parametrizações, logotipo do haras, pacote assinado com volta automática, backup OCI | Publicada |
 | v1.1.0 | 20/11/2026 | etapa/1.1-app-android | App Android do caseiro: offline, envio só no Wi-Fi, vínculo por QR Code, APK assinado servido pelo próprio servidor | Publicada |
-| v1.1.1 | 20/11/2026 | etapa/1.1.1-instalador | Instalador em VM compartilhada (porta livre, Caddy preservado, fuso), QR Code do 2FA, botão do app, tela de Administradores | Em teste (PR) |
-| v1.2.0 | | etapa/1.2-audio | Áudio nos registros do caseiro | Planejada |
+| v1.1.1 | 20/11/2026 | etapa/1.1.1-instalador | Instalador em VM compartilhada (porta livre, Caddy preservado, fuso), QR Code do 2FA, botão do app, tela de Administradores | Publicada |
+| v1.2.0 | 20/11/2026 | etapa/1.2-audio | Áudio nos registros do caseiro; chave pública no pacote; erro de atualização visível; SHA-256 em HTTP | Em teste (PR) |
 
 Notas de cada versão: [`docs/HISTORICO.md`](docs/HISTORICO.md).
 

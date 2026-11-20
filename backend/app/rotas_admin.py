@@ -286,6 +286,8 @@ async def enviar_pacote(request: Request, pacote: UploadFile = File(...), assina
     (destino / "pacote.sig").write_bytes(sig)
     calc = h.hexdigest()
     if sha256 and sha256.strip().lower() != calc:
+        (destino / "pacote.tar.gz").unlink(missing_ok=True)
+        (destino / "pacote.sig").unlink(missing_ok=True)
         erro(400, "O SHA-256 informado não confere com o arquivo enviado. Baixe o pacote de novo.")
     S.gravar_pedido("atualizar", u.email, versao=versao, sha256=calc)
     auditar(db, "atualizacao_solicitada", usuario=u, alvo=f"{versao} (de {VERSAO})", detalhe={"sha256": calc, "bytes": tam}, request=request)

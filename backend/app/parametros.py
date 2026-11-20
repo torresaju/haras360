@@ -13,6 +13,7 @@ MODULOS = {
     "importacao": "Importação ABCCMM",
     "assistente": "Assistente ABCCMM",
     "caseiro": "Usuário caseiro (app e Portal Campo)",
+    "audio": "Áudio nos registros do app",
 }
 
 PADRAO_GLOBAL = {
@@ -31,6 +32,7 @@ PADRAO_GLOBAL = {
     "login_janela_min": 15,
     "sessao_dias": 7,
     "sessao_app_dias": 90,
+    "audio_max_seg": 120,
     "smtp": {"host": "", "porta": 587, "usuario": "", "senha": "", "remetente": "", "tls": True},
     "email_contato": "",
 }
@@ -45,6 +47,7 @@ LIMITES = {
     "login_janela_min": (1, 1440),
     "sessao_dias": (1, 90),
     "sessao_app_dias": (7, 365),
+    "audio_max_seg": (15, 300),
     "gestacaoDias": (300, 380),
     "toleranciaReinicio": (0, 90),
 }
@@ -117,7 +120,7 @@ def _int(chave, v):
 
 def validar_global(body, atual):
     novo = {}
-    for k in ("login_tentativas", "login_janela_min", "sessao_dias", "sessao_app_dias"):
+    for k in ("login_tentativas", "login_janela_min", "sessao_dias", "sessao_app_dias", "audio_max_seg"):
         if k in body:
             novo[k] = _int(k, body[k])
     if "email_contato" in body:

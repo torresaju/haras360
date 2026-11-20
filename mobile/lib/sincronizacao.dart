@@ -45,7 +45,7 @@ class Sincronizador {
     _rodando = true;
     await Banco.gravar('travaSinc', DateTime.now().toIso8601String());
     final api = Api(cred.servidor, token: cred.token);
-    var enviados = 0, fotos = 0;
+    var enviados = 0, fotos = 0, audios = 0;
     try {
       for (final item in await Banco.filaPendente()) {
         final id = item['id'] as String;
@@ -80,11 +80,30 @@ class Sincronizador {
           rethrow;
         }
       }
+      for (final a in await Banco.audiosPendentes()) {
+        final id = a['id'] as String;
+        final arq = File(a['caminho'] as String);
+        if (!await arq.exists()) {
+          await Banco.marcarAudioErro(id, 'Arquivo do áudio não encontrado no celular.');
+          continue;
+        }
+        try {
+          await api.enviarAudio(a['registro_id'] as String, id, a['duracao'] as int, arq);
+          await Banco.marcarAudioEnviado(id);
+          audios++;
+        } on ApiErro catch (e) {
+          if (e.recusado || e.status == 403) {
+            await Banco.marcarAudioErro(id, e.mensagem);
+            continue;
+          }
+          rethrow;
+        }
+      }
       final estado = await api.get('/api/app/sincronizar');
       await Banco.gravarEstado(estado);
       await Banco.limparEnviados();
       await Banco.gravar('ultimoErro', '');
-      final partes = [if (enviados > 0) '$enviados registro(s)', if (fotos > 0) '$fotos foto(s)'];
+      final partes = [if (enviados > 0) '$enviados registro(s)', if (fotos > 0) '$fotos foto(s)', if (audios > 0) '$audios áudio(s)'];
       return ResultadoSinc(true, partes.isEmpty ? 'Tudo em dia.' : 'Enviado: ${partes.join(' e ')}.', enviados: enviados, fotos: fotos);
     } on ApiErro catch (e) {
       await Banco.gravar('ultimoErro', e.mensagem);

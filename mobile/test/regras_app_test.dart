@@ -132,6 +132,13 @@ void main() {
       expect(haAtualizacao(null, 10100), isFalse);
     });
 
+    test('duração do áudio', () {
+      expect(duracaoTxt(0), '0:00');
+      expect(duracaoTxt(42), '0:42');
+      expect(duracaoTxt(120), '2:00');
+      expect(duracaoTxt(-3), '0:00');
+    });
+
     test('título do registro', () {
       final prots = [
         {'id': 'raiva', 'nome': 'Raiva'},

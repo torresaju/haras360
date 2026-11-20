@@ -9,7 +9,7 @@ import 'sincronizacao.dart';
 class Dados extends ChangeNotifier {
   Map<String, dynamic>? estado;
   List<Map<String, dynamic>> locais = [];
-  Map<String, int> contagem = {'registros': 0, 'fotos': 0, 'erros': 0};
+  Map<String, int> contagem = {'registros': 0, 'fotos': 0, 'audios': 0, 'erros': 0};
   DateTime? ultimaSinc;
   String ultimoErro = '';
   bool sincronizando = false;
@@ -24,6 +24,10 @@ class Dados extends ChangeNotifier {
       .toList();
   Map get haras => (estado?['haras'] as Map?) ?? const {};
   Map? get app => estado?['app'] as Map?;
+
+  /// Áudio nos registros: liberado pelo plano e duração máxima (parametrização global).
+  bool get audioLiberado => (estado?['audio'] as Map?)?['liberado'] != false;
+  int get audioMaxSeg => ((estado?['audio'] as Map?)?['maxSeg'] as int?) ?? 120;
   bool get atualizacaoDisponivel => haAtualizacao(app, appCodigo);
 
   List<Map<String, dynamic>> get tarefas => tarefasPendentes((estado?['tarefas'] as List?) ?? const [], locais.where((r) => r['_erro'] == null).toList());

@@ -251,3 +251,9 @@ bool haAtualizacao(Map? app, int codigoAtual) {
   final c = app['codigo'];
   return c is int && c > codigoAtual;
 }
+
+/// Duração no formato m:ss (áudio dos registros).
+String duracaoTxt(int segundos) {
+  final s = segundos < 0 ? 0 : segundos;
+  return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
+}

@@ -13,7 +13,7 @@ from sqlalchemy import func, select
 
 from . import parametros as P
 from .config import APP_DIR, FOTOS_DIR
-from .db import Foto, Haras, Registro, Sessao, Usuario, VinculoApp
+from .db import Audio, Foto, Haras, Registro, Sessao, Usuario, VinculoApp
 from .rotas_haras import ASSINATURAS, estado
 from .seguranca import (auditar, checar_limite, criar_sessao, do_haras, erro, gestor, get_db, ip_de, limpar_falhas, qr_svg, registrar_falha)
 
@@ -127,6 +127,7 @@ def sincronizar(request: Request, u: Usuario = Depends(do_haras), db=Depends(get
     for k in ("usuarios", "plano", "notifPrefs"):
         e.pop(k, None)
     e["app"] = info_apk()
+    e["audio"] = {"liberado": P.modulo_liberado(db, db.get(Haras, u.haras_id), "audio"), "maxSeg": int(P.ler(db, "audio_max_seg"))}
     e["sincronizadoEm"] = datetime.now().isoformat(timespec="seconds")
     return e
 
@@ -168,6 +169,55 @@ async def enviar_foto(request: Request, registroId: str = Form(...), fotoId: str
         (pasta / arq).unlink(missing_ok=True)
         raise
     return {"id": fid}
+
+
+def _e_m4a(raw: bytes):
+    """Áudio AAC em contêiner MP4/M4A (o que o app grava): caixa 'ftyp' no início do arquivo."""
+    return len(raw) > 12 and raw[4:8] == b"ftyp" and raw[8:12] in (b"M4A ", b"mp42", b"isom", b"mp41", b"3gp4", b"3gp5", b"iso2", b"dash")
+
+
+@r.post("/api/app/audios")
+async def enviar_audio(request: Request, registroId: str = Form(...), audioId: str = Form(...), duracao: int = Form(0),
+                       arquivo: UploadFile = File(...), u: Usuario = Depends(do_haras), db=Depends(get_db)):
+    aid = audioId.strip().lower()
+    if not FOTO_ID.match(aid):
+        erro(400, "Identificador de áudio inválido.")
+    ja = db.get(Audio, aid)
+    if ja:
+        if ja.haras_id != u.haras_id:
+            erro(409, "Identificador de áudio em uso.")
+        return {"id": aid, "duplicado": True}
+    h = db.get(Haras, u.haras_id)
+    if not P.modulo_liberado(db, h, "audio"):
+        erro(403, "O áudio nos registros não está incluído no plano deste haras.")
+    rg = db.get(Registro, registroId.strip()[:40])
+    if not rg or rg.haras_id != u.haras_id:
+        erro(404, "Registro não encontrado. Envie o registro antes do áudio.")
+    if u.perfil == "operador" and rg.autor_id != u.id:
+        erro(403, "Só é possível anexar áudio aos próprios registros.")
+    if db.scalar(select(Audio).where(Audio.registro_id == rg.id)):
+        erro(409, "Este registro já tem um áudio.")
+    max_seg = int(P.ler(db, "audio_max_seg"))
+    if duracao < 0 or duracao > max_seg + 5:
+        erro(400, f"O áudio pode ter no máximo {max_seg} segundos.")
+    limite = max(1024 * 1024, max_seg * 6000)
+    raw = await arquivo.read(limite + 1)
+    if len(raw) > limite:
+        erro(400, f"O áudio pode ter no máximo {limite // 1024} KB.")
+    if not _e_m4a(raw):
+        erro(400, "O arquivo enviado não é um áudio válido.")
+    pasta = Path(FOTOS_DIR) / str(u.haras_id)
+    pasta.mkdir(parents=True, exist_ok=True)
+    arq = f"{aid}.m4a"
+    (pasta / arq).write_bytes(raw)
+    try:
+        db.add(Audio(id=aid, registro_id=rg.id, haras_id=u.haras_id, arquivo=arq, duracao=max(0, int(duracao))))
+        db.commit()
+    except Exception:
+        db.rollback()
+        (pasta / arq).unlink(missing_ok=True)
+        raise
+    return {"id": aid}
 
 
 # ---------------- APK ----------------

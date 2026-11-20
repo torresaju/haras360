@@ -25,7 +25,9 @@ rm -f deploy/assinar-pacote.py.bak
 
 # Conferência mínima: páginas montadas presentes e chave pública, se houver, em formato PEM.
 for p in entrar gestor campo admin ajuda; do [ -s "backend/app/static/$p.html" ] || { echo "Falta backend/app/static/$p.html (rode python web/build.py)" >&2; exit 1; }; done
-if [ -f deploy/chave-publica.pem ]; then grep -q "BEGIN PUBLIC KEY" deploy/chave-publica.pem || { echo "deploy/chave-publica.pem inválida" >&2; exit 1; }; fi
+# A chave pública de atualização precisa ir no pacote: sem ela, o servidor recusa todas as atualizações.
+[ -f deploy/chave-publica.pem ] || { echo "deploy/chave-publica.pem ausente do commit (confira o .gitignore)" >&2; exit 1; }
+grep -q "BEGIN PUBLIC KEY" deploy/chave-publica.pem || { echo "deploy/chave-publica.pem inválida" >&2; exit 1; }
 
 if [ -n "${APK_DIR:-}" ]; then
   [ -s "$APK_DIR/haras360.apk" ] && [ -s "$APK_DIR/versao.json" ] || { echo "APK_DIR sem haras360.apk e versao.json" >&2; exit 1; }

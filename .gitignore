@@ -25,3 +25,4 @@ mobile/android/key.properties
 mobile/android/
 mobile/.metadata
 mobile/pubspec.lock
+!deploy/chave-publica.pem

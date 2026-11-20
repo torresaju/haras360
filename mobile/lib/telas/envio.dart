@@ -50,6 +50,7 @@ class TelaEnvio extends StatelessWidget {
             const SizedBox(height: 12),
             _linha('Registros aguardando envio', '${c['registros']}'),
             _linha('Fotos aguardando envio', '${c['fotos']}'),
+            _linha('Áudios aguardando envio', '${c['audios'] ?? 0}'),
             _linha('Última sincronização', dados.ultimaSinc == null ? 'nunca' : quando(dados.ultimaSinc!)),
             if (dados.ultimoErro.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: Text('Último problema: ${dados.ultimoErro}', style: const TextStyle(color: Cores.atrasado))),
             const SizedBox(height: 12),

@@ -171,6 +171,9 @@ jobs:
           n = db.execute("select count(*) from registros where origem = 'App' and dados like '%Pisou em prego%'").fetchone()[0]
           print("Registros do app no servidor:", n)
           assert n == 1, "o registro do app não chegou ao servidor"
+          au = db.execute("select count(*) from audios a join registros r on r.id = a.registro_id where r.origem = 'App' and r.dados like '%Pisou em prego%' and a.duracao >= 1").fetchone()[0]
+          print("Áudios do app no servidor:", au)
+          assert au == 1, "o áudio do app não chegou ao servidor"
           acoes = [r[0] for r in db.execute("select acao from auditoria")]
           assert "app_vinculado" in acoes, acoes
           PY

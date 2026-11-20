@@ -2,6 +2,17 @@
 
 Uma nota por versão, da mais recente para a mais antiga.
 
+## v1.2.0 · 20/11/2026 · Áudio nos registros do caseiro
+* **App:** botão Gravar áudio no registro (até 2 minutos, AAC mono a 32 kbps, cerca de 250 KB por minuto), com contador, ouvir e apagar antes de salvar. Funciona sem internet: o áudio entra na fila e vai só no Wi-Fi, depois do registro e das fotos. A ficha do animal toca os áudios, inclusive os que ainda estão no celular.
+* **Servidor:** `POST /api/app/audios` (um por registro, tipo conferido pelo conteúdo, idempotente), `/audios/{id}` só para o mesmo haras, exclusão junto com o registro e migração 003.
+* **Portal do gestor:** player no prontuário e nos últimos registros do campo do Painel.
+* **Parametrização:** módulo "Áudio nos registros do app" na grade de planos e duração máxima em Parametrizações › App do caseiro (15 a 300 segundos, padrão 120).
+* **Correções da primeira atualização real:**
+  * a chave pública de atualização (a do Journey) ficava fora do pacote por uma regra do `.gitignore`; agora vai no pacote, o pacote não é gerado sem ela e o teste de instalação confere a impressão digital;
+  * uma atualização recusada antes de começar agora aparece na tela, em vez de "Nenhuma";
+  * o campo SHA-256 da tela de atualização funciona em HTTP (a conferência fica no servidor).
+* **Testes:** 6 testes da API de áudio, teste de unidade da duração e teste no emulador com áudio numa ocorrência sem Wi-Fi, conferido no servidor.
+
 ## v1.1.1 · 20/11/2026 · Instalação em VM compartilhada e tela de Administradores
 Correções vindas da primeira instalação real, na VM que já roda a plataforma de reservatórios.
 * **Instalador convive com outra aplicação:**

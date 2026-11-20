@@ -183,3 +183,14 @@ class VinculoApp(Base):
     criado_em: Mapped[datetime] = mapped_column(DateTime, default=agora)
     expira_em: Mapped[datetime] = mapped_column(DateTime)
     usado_em: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+
+
+class Audio(Base):
+    """Áudio gravado no app do caseiro, um por registro (v1.2.0)."""
+    __tablename__ = "audios"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    registro_id: Mapped[str] = mapped_column(ForeignKey("registros.id", ondelete="CASCADE"), unique=True)
+    haras_id: Mapped[int] = mapped_column(Integer, index=True)
+    arquivo: Mapped[str] = mapped_column(String(60))
+    duracao: Mapped[int] = mapped_column(Integer, default=0)
+    criado_em: Mapped[datetime] = mapped_column(DateTime, default=agora)

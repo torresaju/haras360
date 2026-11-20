@@ -88,6 +88,26 @@ def criar(db, gestor_email, gestor_senha, caseiro_email, caseiro_senha):
     nasc4 = R.d("2026-02-20")
     reg("d4", R.iso(R.add_meses(nasc4, 3)), "vacina", protocolos=tri, dose=1, produto="Trivalente", lote="LT0401")
     reg("d4", R.iso(R.add_meses(nasc4, 4)), "vacina", protocolos=tri, dose=2, produto="Trivalente", lote="LT0401")
-    reg("d4", a(1), "ocorrencia", C, titulo="Potro com leve secreção nasal", gravidade="Moderada")
+    reg("d4", a(1), "ocorrencia", ("Caseiro Demonstração", "App"), titulo="Potro com leve secreção nasal", gravidade="Moderada",
+        obs="Gravei um áudio explicando.")
+    db.flush()
+    _audio_demo(db, h.id)
     db.commit()
     return h
+
+
+def _audio_demo(db, hid):
+    """Áudio de exemplo (tom de 6 segundos) no último registro feito pelo app (v1.2.0)."""
+    import shutil
+    from pathlib import Path
+
+    from .config import FOTOS_DIR
+    from .db import Audio
+    rg = db.scalar(select(Registro).where(Registro.haras_id == hid, Registro.origem == "App").order_by(Registro.id.desc()))
+    if not rg:
+        return
+    pasta = Path(FOTOS_DIR) / str(hid)
+    pasta.mkdir(parents=True, exist_ok=True)
+    aid = "d" * 8 + "0" * 24
+    shutil.copy(Path(__file__).parent / "recursos" / "demo-audio.m4a", pasta / f"{aid}.m4a")
+    db.add(Audio(id=aid, registro_id=rg.id, haras_id=hid, arquivo=f"{aid}.m4a", duracao=6))
