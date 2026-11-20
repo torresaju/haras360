@@ -79,8 +79,10 @@ def gerar_vinculo(uid: int, request: Request, u: Usuario = Depends(gestor), db=D
     db.commit()
     servidor = _base_url(request)
     link = link_vinculo(servidor, codigo)
+    apk = info_apk()
+    instalar = {"link": servidor + apk["url"], "qr": qr_svg(servidor + apk["url"]), "versao": apk["versao"]} if apk else None
     return {"qr": qr_svg(link), "link": link, "servidor": servidor, "codigo": codigo, "minutos": VALIDADE_VINCULO_MIN,
-            "expira": expira.isoformat(timespec="minutes"), "caseiro": alvo.nome}
+            "expira": expira.isoformat(timespec="minutes"), "caseiro": alvo.nome, "instalar": instalar}
 
 
 @r.post("/api/app/vincular")

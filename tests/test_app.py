@@ -35,6 +35,7 @@ def _vincular(g, aparelho="Moto G (teste)"):
     assert r.status_code == 200, r.text
     q = r.json()
     assert q["link"].startswith("haras360://vincular?s=") and "<svg" in q["qr"] and q["minutos"] == 10
+    assert "viewBox" in q["qr"] and "width=" not in q["qr"].split(">", 1)[0]  # escala sem cortar (v1.1.1)
     r = TestClient(app).post("/api/app/vincular", json={"codigo": q["codigo"], "aparelho": aparelho}, headers=HA)
     assert r.status_code == 200, r.text
     return q, r.json()
@@ -147,6 +148,9 @@ def test_apk_servido_pelo_servidor(base):
         assert v["disponivel"] and v["versao"] == "1.1.0" and v["codigo"] == 10100 and v["url"] == "/app/haras360.apk"
         r = c.get("/app/haras360.apk")
         assert r.status_code == 200 and r.headers["content-type"] == "application/vnd.android.package-archive"
+        g = entrar("gestor@teste.com", "senha1234")
+        ins = g.post(f"/api/usuarios/{_caseiro_id(g)}/vinculo", headers=H).json()["instalar"]
+        assert ins["link"].endswith("/app/haras360.apk") and "<svg" in ins["qr"] and ins["versao"] == "1.1.0"
         k = entrar("caseiro@teste.com", "campo1234", {"X-Haras360": "1", "X-Portal": "campo"})
         i = k.get("/api/app/instalar").json()
         assert i["link"].endswith("/app/haras360.apk") and "<svg" in i["qr"]

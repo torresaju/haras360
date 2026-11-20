@@ -265,6 +265,9 @@ main.wrapm{padding-inline:clamp(16px,3vw,32px);padding-block:24px 72px;max-width
 /* QR Codes (vínculo do app e instalação) */
 .qr-box{display:flex;justify-content:center;padding:12px;background:#fff;border:1px solid var(--line);border-radius:10px}
 .qr-box svg{width:min(240px,70vw);height:auto;display:block}
+.qr-pequeno svg{width:min(160px,50vw)}
+details.instalar-app{border:1px dashed var(--line);border-radius:10px;padding:10px 12px}
+details.instalar-app[open]{display:flex;flex-direction:column;gap:8px}
 ol.passos{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
 
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px 20px}
@@ -1458,7 +1461,10 @@ const UI = (function () {
     'vincular-celular': async el => {
       const u = (S.usuarios || []).find(x => String(x.id) === el.dataset.id);
       let r; try { el.disabled = true; r = await API.post('/api/usuarios/' + u.id + '/vinculo'); } catch (e) { UI.toast(e.message); return; } finally { el.disabled = false; }
-      UI.abrir({ titulo: 'Vincular o celular de ' + esc(u.nome), corpo: '<div class="stack"><ol class="passos"><li>No celular do caseiro, instale o app: no Portal Campo, toque em <b>Instalar o app Android</b>.</li><li>Abra o app e toque em <b>Ler QR Code</b>.</li><li>Aponte a câmera para o código abaixo.</li></ol>' +
+      UI.abrir({ titulo: 'Vincular o celular de ' + esc(u.nome), corpo: '<div class="stack">' +
+        (r.instalar ? '<details class="instalar-app"><summary><b>1. O app ainda não está no celular?</b> Toque aqui</summary><p class="small">Leia este código com a <b>câmera</b> do celular do caseiro (ou abra <a class="mono" href="' + esc(r.instalar.link) + '">' + esc(r.instalar.link) + '</a>) e instale. Se o Android pedir, permita instalar apps desta origem.</p><div class="qr-box qr-pequeno">' + r.instalar.qr + '</div></details>'
+          : '<p class="small muted">O APK ainda não está neste servidor: ele chega com o pacote de atualização da versão.</p>') +
+        '<ol class="passos" start="2"><li>Abra o app Haras360 e toque em <b>Ler QR Code</b>.</li><li>Aponte o celular para o código abaixo.</li></ol>' +
         '<div class="qr-box">' + r.qr + '</div><p class="small muted">Vale por ' + r.minutos + ' minutos e uma única vez. Gerar outro invalida este.</p>' +
         '<details><summary class="small">Sem câmera? Digite no app</summary><p class="small">Servidor: <span class="mono">' + esc(r.servidor) + '</span><br>Código: <span class="mono">' + esc(r.codigo) + '</span></p></details>' +
         '<p class="note">O celular aparece em Sessões e aparelhos ativos, onde você pode encerrá-lo a qualquer momento.</p></div>',

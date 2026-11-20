@@ -1,0 +1,22 @@
+# Haras360 · site gerado pelo instalador (importado pelo /etc/caddy/Caddyfile).
+# Acesso por IP e porta, sem HTTPS (fase de testes).
+:__PORTA__ {
+	encode gzip
+	request_body {
+		max_size 110MB
+	}
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+	}
+	reverse_proxy 127.0.0.1:__PORTA_APP__ {
+		header_up X-Forwarded-For {remote_host}
+	}
+	log {
+		output file /var/log/caddy/haras360.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+	}
+}

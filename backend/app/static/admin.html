@@ -265,6 +265,9 @@ main.wrapm{padding-inline:clamp(16px,3vw,32px);padding-block:24px 72px;max-width
 /* QR Codes (vínculo do app e instalação) */
 .qr-box{display:flex;justify-content:center;padding:12px;background:#fff;border:1px solid var(--line);border-radius:10px}
 .qr-box svg{width:min(240px,70vw);height:auto;display:block}
+.qr-pequeno svg{width:min(160px,50vw)}
+details.instalar-app{border:1px dashed var(--line);border-radius:10px;padding:10px 12px}
+details.instalar-app[open]{display:flex;flex-direction:column;gap:8px}
 ol.passos{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
 
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px 20px;margin:0}
@@ -923,17 +926,17 @@ const UI = (function () {
   }
   const menu = () => [
     { id: 'haras', rotulo: 'Haras' },
-    { grupo: 'Administração', itens: [{ id: 'parametros', rotulo: 'Parametrizações', desc: 'Planos, preços, login e e-mail' }, { id: 'auditoria', rotulo: 'Auditoria' }, { id: 'atualizacao', rotulo: 'Atualização e backup' }] },
+    { grupo: 'Administração', itens: [{ id: 'administradores', rotulo: 'Administradores', desc: 'Quem administra a plataforma' }, { id: 'parametros', rotulo: 'Parametrizações', desc: 'Planos, preços, login e e-mail' }, { id: 'auditoria', rotulo: 'Auditoria' }, { id: 'atualizacao', rotulo: 'Atualização e backup' }] },
     { grupo: 'Ajuda', itens: [{ id: 'sobre', rotulo: 'Sobre' }, { href: '/ajuda', rotulo: 'Manual', desc: 'Abre em nova aba' }, { id: 'glossario', rotulo: 'Glossário' }] }
   ];
-  const TITULOS = { haras: ['Plataforma', 'Haras e gestores'], parametros: ['Administração', 'Parametrizações globais'], auditoria: ['Administração', 'Auditoria'], atualizacao: ['Administração', 'Atualização e backup'], sobre: ['Ajuda', 'Sobre o Haras360'], glossario: ['Ajuda', 'Glossário'] };
+  const TITULOS = { haras: ['Plataforma', 'Haras e gestores'], administradores: ['Administração', 'Administradores da plataforma'], parametros: ['Administração', 'Parametrizações globais'], auditoria: ['Administração', 'Auditoria'], atualizacao: ['Administração', 'Atualização e backup'], sobre: ['Ajuda', 'Sobre o Haras360'], glossario: ['Ajuda', 'Glossário'] };
   function go(v) { view = v; render(); window.scrollTo(0, 0); }
   function render() {
     $('#topbar').innerHTML = UI.topbar({ menu: menu(), atual: view, home: '/admin', sub: 'Administração da plataforma', usuario: S.usuario, perfilTxt: 'Administrador',
       usuarioItens: [{ act: 'minha-senha', rotulo: 'Alterar minha senha' }, { act: 'novos-codigos', rotulo: 'Novos códigos de recuperação do 2FA' }] });
     const [eb, ti] = TITULOS[view];
     $('#v-eyebrow').textContent = eb; $('#v-title').textContent = ti; document.title = 'Haras360 · ' + ti;
-    $('#v-acts').innerHTML = view === 'haras' ? '<button class="btn pri" data-act="novo-haras">' + IC.plus + 'Novo haras</button>' : '';
+    $('#v-acts').innerHTML = view === 'haras' ? '<button class="btn pri" data-act="novo-haras">' + IC.plus + 'Novo haras</button>' : view === 'administradores' ? '<button class="btn pri" data-act="novo-admin">' + IC.plus + 'Novo administrador</button>' : '';
     const v = $('#view'); v.classList.remove('view-in'); void v.offsetWidth; v.classList.add('view-in');
     v.innerHTML = VIEWS[view]();
     if (AFTER[view]) AFTER[view]();
@@ -959,6 +962,20 @@ const UI = (function () {
 
   /* ================= PARAMETRIZAÇÕES ================= */
   let planosEd = null, faixasEd = null;
+  function vAdministradores() {
+    const ativos = S.administradores.filter(a => a.ativo).length;
+    return '<div class="stack"><p class="small muted">Administradores têm acesso total: haras, planos, parametrizações, atualização e backup. Toda ação aqui pede a sua senha e fica na auditoria. A plataforma nunca fica sem administrador ativo.</p>' +
+      '<div class="card flush"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Nome</th><th>E-mail</th><th>2FA</th><th>Situação</th><th></th></tr></thead><tbody>' +
+      S.administradores.map(a => '<tr><td><b>' + esc(a.nome) + '</b>' + (a.eu ? ' <span class="chip nodot c-info">Você</span>' : '') + '</td><td class="small">' + esc(a.email) + '</td>' +
+        '<td>' + (a.doisFatores ? '<span class="chip c-ok">Ativo</span>' : '<span class="chip c-soon">Pendente</span>') + '</td>' +
+        '<td>' + (a.ativo ? '<span class="chip c-ok">Ativo</span>' : '<span class="chip c-muted">Desativado</span>') + '</td>' +
+        '<td class="num">' + (a.eu ? '<span class="small muted">Use o menu com o seu nome</span>' : '<div class="row" style="gap:4px;justify-content:flex-end">' +
+          '<button class="btn ghost sm" data-act="adm-senha" data-id="' + a.id + '">Redefinir senha</button>' +
+          (a.doisFatores ? '<button class="btn ghost sm" data-act="adm-2fa" data-id="' + a.id + '">Redefinir 2FA</button>' : '') +
+          (a.ativo && ativos < 2 ? '' : '<button class="btn ghost sm' + (a.ativo ? ' danger' : '') + '" data-act="adm-ativo" data-id="' + a.id + '">' + (a.ativo ? 'Desativar' : 'Reativar') + '</button>') +
+          '</div>') + '</td></tr>').join('') + '</tbody></table></div></div></div>';
+  }
+
   function vParametros() {
     const p = S.parametros;
     planosEd = JSON.parse(JSON.stringify(p.planos)); faixasEd = JSON.parse(JSON.stringify(p.faixas));
@@ -1051,7 +1068,7 @@ const UI = (function () {
   const vSobre = () => '<div class="sec" style="max-width:760px"><div class="card stack"><h2>Haras360</h2><p>Plataforma de gestão de haras para criadores de Mangalarga Marchador.</p><dl class="facts"><div><dt>Versão</dt><dd class="mono">' + esc(S.versao) + '</dd></div><div><dt>Migração do banco</dt><dd class="mono">' + S.versaoBanco + '</dd></div><div><dt>Haras</dt><dd>' + S.haras.length + '</dd></div></dl><div class="row"><a class="btn" href="/ajuda" target="_blank" rel="noopener">Abrir o manual</a></div></div></div>';
   const vGlossario = () => '<div class="sec" style="max-width:760px"><div class="card"><dl class="glos" style="margin:0">' + H.GLOSSARIO.map(([t, d]) => '<dt>' + esc(t) + '</dt><dd>' + esc(d) + '</dd>').join('') + '</dl></div></div>';
 
-  const VIEWS = { haras: vHaras, parametros: vParametros, auditoria: vAuditoria, atualizacao: vAtualizacao, sobre: vSobre, glossario: vGlossario };
+  const VIEWS = { haras: vHaras, administradores: vAdministradores, parametros: vParametros, auditoria: vAuditoria, atualizacao: vAtualizacao, sobre: vSobre, glossario: vGlossario };
   const AFTER = {
     parametros() { desenharPlanos(); desenharFaixas(); },
     auditoria() {
@@ -1079,6 +1096,8 @@ const UI = (function () {
     }
   };
 
+  const minhaSenhaForm = () => '<div class="field"><label for="ms">Sua senha, para confirmar</label><input id="ms" type="password" class="inp" autocomplete="current-password"></div>';
+  const admPor = el => S.administradores.find(x => String(x.id) === el.dataset.id);
   const senhaForm = (id, rot) => '<div class="field"><label for="' + id + '">' + rot + '</label><input id="' + id + '" type="password" class="inp" autocomplete="new-password" minlength="8"></div>';
   const ACT = {
     nav: el => go(el.dataset.v),
@@ -1109,6 +1128,14 @@ const UI = (function () {
     'remover-logo': el => UI.confirmar(el, 'Confirmar remoção', async () => { if (await executar(el, () => API.patch('/api/admin/haras/' + el.dataset.id, { logo: null }), 'Logotipo removido.')) render(); }),
     rollback: el => UI.confirmar(el, 'Confirmar volta', async () => { if (await executar(el, () => API.post('/api/admin/rollback', { versao: el.dataset.v }))) render(); }),
     'backup-agora': async el => { if (await executar(el, () => API.post('/api/admin/backup'))) render(); },
+    'novo-admin': () => UI.abrir({ titulo: 'Novo administrador', corpo: '<form class="stack" novalidate><div class="field"><label for="na-nome">Nome</label><input id="na-nome" class="inp"></div><div class="field"><label for="na-email">E-mail (login)</label><input id="na-email" type="email" class="inp"></div>' + senhaForm('na-senha', 'Senha inicial (mín. 8)') + minhaSenhaForm() + '</form><p class="small muted">No primeiro acesso ele cadastra o 2FA.</p>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="criar-admin">Criar administrador</button>' }),
+    'criar-admin': async el => { if (await executar(el, () => API.post('/api/admin/administradores', { nome: $('#na-nome').value, email: $('#na-email').value, senha: $('#na-senha').value, minhaSenha: $('#ms').value }))) { UI.fechar(); render(); } },
+    'adm-senha': el => { const a = admPor(el); UI.abrir({ titulo: 'Redefinir a senha de ' + esc(a.nome), corpo: '<form class="stack" novalidate>' + senhaForm('as-senha', 'Nova senha (mín. 8)') + minhaSenhaForm() + '</form><p class="small muted">As sessões dele são encerradas.</p>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="adm-senha-ok" data-id="' + a.id + '">Redefinir</button>' }); },
+    'adm-senha-ok': async el => { if (await executar(el, () => API.post('/api/admin/administradores/' + el.dataset.id + '/senha', { senha: $('#as-senha').value, minhaSenha: $('#ms').value }))) { UI.fechar(); render(); } },
+    'adm-2fa': el => { const a = admPor(el); UI.abrir({ titulo: 'Redefinir o 2FA de ' + esc(a.nome), corpo: '<form class="stack" novalidate><p>Ele perde o autenticador atual e os códigos de recuperação, e cadastra o 2FA de novo no próximo acesso.</p>' + minhaSenhaForm() + '</form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri danger" data-act="adm-2fa-ok" data-id="' + a.id + '">Redefinir 2FA</button>' }); },
+    'adm-2fa-ok': async el => { if (await executar(el, () => API.post('/api/admin/administradores/' + el.dataset.id + '/2fa/redefinir', { minhaSenha: $('#ms').value }))) { UI.fechar(); render(); } },
+    'adm-ativo': el => { const a = admPor(el); UI.abrir({ titulo: (a.ativo ? 'Desativar ' : 'Reativar ') + esc(a.nome), corpo: '<form class="stack" novalidate><p>' + (a.ativo ? 'Ele deixa de entrar na plataforma e as sessões dele são encerradas.' : 'Ele volta a entrar com a senha e o 2FA que já tinha.') + '</p>' + minhaSenhaForm() + '</form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri' + (a.ativo ? ' danger' : '') + '" data-act="adm-ativo-ok" data-id="' + a.id + '" data-ativo="' + (a.ativo ? '0' : '1') + '">' + (a.ativo ? 'Desativar' : 'Reativar') + '</button>' }); },
+    'adm-ativo-ok': async el => { if (await executar(el, () => API.patch('/api/admin/administradores/' + el.dataset.id, { ativo: el.dataset.ativo === '1', minhaSenha: $('#ms').value }))) { UI.fechar(); render(); } },
     'minha-senha': () => UI.abrir({ titulo: 'Alterar minha senha', corpo: '<form class="stack" novalidate><div class="field"><label for="m-atual">Senha atual</label><input id="m-atual" type="password" class="inp" autocomplete="current-password"></div>' + senhaForm('m-nova', 'Nova senha (mín. 8)') + '</form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-minha-senha">Alterar</button>' }),
     'salvar-minha-senha': async el => { if (await executar(el, () => API.post('/api/me/senha', { atual: $('#m-atual').value, nova: $('#m-nova').value }))) UI.fechar(); },
     'novos-codigos': () => UI.abrir({ titulo: 'Novos códigos de recuperação', corpo: '<form class="stack" novalidate><p>Os códigos atuais deixam de valer. Confirme sua senha.</p><div class="field"><label for="nc-senha">Senha</label><input id="nc-senha" type="password" class="inp" autocomplete="current-password"></div></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="gerar-codigos">Gerar</button>' }),

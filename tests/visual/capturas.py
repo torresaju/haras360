@@ -134,7 +134,7 @@ with sync_playwright() as pw:
     entrar(a, "admin@demonstracao.local")
     a.wait_for_selector(".hcard")
     foto(a, "admin-haras")
-    for v, nome in (("parametros", "admin-parametros"), ("atualizacao", "admin-atualizacao"), ("auditoria", None), ("sobre", None), ("glossario", None)):
+    for v, nome in (("administradores", "admin-administradores"), ("parametros", "admin-parametros"), ("atualizacao", "admin-atualizacao"), ("auditoria", None), ("sobre", None), ("glossario", None)):
         ir(a, v)
         if v == "auditoria":
             a.wait_for_selector("#aud-t table")
