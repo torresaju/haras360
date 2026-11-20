@@ -85,18 +85,19 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   const modOn = m => !S.plano || S.plano.modulos[m] !== false;
   function menu() {
     return [
-      { id: 'painel', rotulo: 'Painel' },
-      { grupo: 'Plantel', itens: [{ id: 'animais', rotulo: 'Animais', tambem: ['ficha'] }, { id: 'importar', rotulo: 'Importar ABCCMM', off: !modOn('importacao') }] },
-      { grupo: 'Manejo', itens: [{ id: 'agenda', rotulo: 'Agenda sanitária' }, { id: 'protocolos', rotulo: 'Protocolos' }] },
-      { id: 'equipe', rotulo: 'Equipe' },
-      { id: 'assistente', rotulo: 'Assistente', off: !modOn('assistente') },
-      { grupo: 'Administração', itens: [{ id: 'parametros', rotulo: 'Parametrizações' }, { id: 'auditoria', rotulo: 'Auditoria' }, { id: 'plano', rotulo: 'Plano' }] },
-      { grupo: 'Ajuda', itens: [{ id: 'sobre', rotulo: 'Sobre' }, { href: '/ajuda', rotulo: 'Manual', desc: 'Abre em nova aba' }, { id: 'glossario', rotulo: 'Glossário' }] }
+      { id: 'painel', rotulo: 'Dashboard', ic: 'dash' },
+      { grupo: 'Animais', ic: 'cavalo', itens: [{ id: 'animais', rotulo: 'Plantel', tambem: ['ficha'] }, { id: 'importar', rotulo: 'Importar ABCCMM', off: !modOn('importacao') }] },
+      { grupo: 'Sanidade', ic: 'escudo', itens: [{ id: 'sanidade', rotulo: 'Vacinas e manejos' }, { id: 'protocolos', rotulo: 'Protocolos' }] },
+      { id: 'reproducao', rotulo: 'Reprodução', ic: 'repro' },
+      { id: 'agenda', rotulo: 'Agenda', ic: 'agenda' },
+      { id: 'relatorios', rotulo: 'Relatórios', ic: 'graf', breve: true },
+      { grupo: 'Administração', ic: 'engr', itens: [{ id: 'equipe', rotulo: 'Equipe' }, { id: 'parametros', rotulo: 'Parametrizações', tambem: ['imagens'] }, { id: 'auditoria', rotulo: 'Auditoria' }, { id: 'assistente', rotulo: 'Assistente', off: !modOn('assistente') }, { id: 'plano', rotulo: 'Plano' }] },
+      { grupo: 'Ajuda', ic: 'ajuda', itens: [{ id: 'sobre', rotulo: 'Sobre' }, { href: '/ajuda', rotulo: 'Manual' }, { id: 'glossario', rotulo: 'Glossário' }] }
     ];
   }
   const TITULOS = {
-    painel: ['Visão geral', ''], animais: ['Plantel', 'Animais'], ficha: ['Ficha do animal', ''], importar: ['Plantel', 'Importar Relatório de Plantel'],
-    agenda: ['Manejo', 'Agenda sanitária'], protocolos: ['Manejo', 'Protocolos e intervalos'], notificacoes: ['Alertas', 'Notificações'],
+    painel: ['Visão geral do rebanho, sanidade e reprodução', 'Dashboard'], animais: ['Animais', 'Plantel'], sanidade: ['Sanidade', 'Vacinas e manejos'], reproducao: ['Reprodução', 'Gestações e coberturas'], imagens: ['Parametrizações', 'Imagens do haras'], ficha: ['Ficha do animal', ''], importar: ['Plantel', 'Importar Relatório de Plantel'],
+    agenda: ['Agenda', 'Próximos eventos e prazos'], protocolos: ['Sanidade', 'Protocolos e intervalos'], notificacoes: ['Alertas', 'Notificações'],
     equipe: ['Usuários, perfis e sessões', 'Equipe do haras'], assistente: ['Inteligência artificial', 'Assistente ABCCMM'], plano: ['Administração', 'Plano e cobrança'],
     parametros: ['Administração', 'Parametrizações do haras'], auditoria: ['Administração', 'Auditoria'], sobre: ['Ajuda', 'Sobre o Haras360'], glossario: ['Ajuda', 'Glossário']
   };
@@ -108,10 +109,10 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 
   function render() {
     const nl = naoLidas().length;
-    $('#topbar').innerHTML = UI.topbar({ menu: menu(), atual: view, home: '/gestor', sub: S.haras.nome, logo: S.haras.logo, usuario: S.usuario, perfilTxt: 'Gestor', sino: { view: 'notificacoes', n: nl },
+    $('#topbar').innerHTML = UI.topbar({ menu: menu(), atual: view, home: '/gestor', sub: S.haras.nome, haras: S.haras, marca: S.imagens.logo, cabecalho: S.imagens.cabecalho, usuario: S.usuario, perfilTxt: 'Gestor', sino: { view: 'notificacoes', n: nl },
       usuarioItens: [{ act: 'minha-senha', rotulo: 'Alterar minha senha' }, { act: 'novos-codigos', rotulo: 'Novos códigos de recuperação do 2FA' }] });
     const [eb, ti0] = TITULOS[view] || ['', ''];
-    const ti = view === 'painel' ? S.haras.nome : ti0;
+    const ti = ti0;
     $('#v-eyebrow').textContent = eb;
     $('#v-title').textContent = view === 'ficha' ? ((H.animal(S, param) || {}).nome || 'Animal') : ti;
     $('#v-acts').hidden = ['parametros', 'auditoria', 'sobre', 'glossario', 'plano', 'equipe'].includes(view);
@@ -123,35 +124,74 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   }
 
   /* ================= PAINEL ================= */
+  const SANITARIOS = ['vacina', 'vermifugacao', 'exame', 'odontologia', 'ferrageamento'];
+  function categoriasRebanho(ativos) {
+    const c = { eguas: 0, machos: 0, potros: 0, outros: 0 };
+    ativos.forEach(a => { if (!a.nascimento) c.outros++; else if (H.idadeMeses(a.nascimento) < 24) c.potros++; else if (a.sexo === 'F') c.eguas++; else c.machos++; });
+    return c;
+  }
+  function rosca(partes, total) {
+    const R0 = 52, C = 2 * Math.PI * R0; let acc = 0;
+    const arcos = partes.filter(p => p.n).map(p => { const l = C * p.n / total; const a = '<circle cx="70" cy="70" r="' + R0 + '" fill="none" stroke="' + p.cor + '" stroke-width="18" stroke-dasharray="' + l.toFixed(2) + ' ' + (C - l).toFixed(2) + '" stroke-dashoffset="' + (-acc).toFixed(2) + '" transform="rotate(-90 70 70)"/>'; acc += l; return a; }).join('');
+    return '<svg class="rosca" viewBox="0 0 140 140" role="img" aria-label="' + partes.map(p => p.rot + ': ' + p.n).join(', ') + '"><circle cx="70" cy="70" r="' + R0 + '" fill="none" stroke="var(--line-2)" stroke-width="18"/>' + arcos +
+      '<text x="70" y="70" text-anchor="middle" class="rosca-n">' + total + '</text><text x="70" y="90" text-anchor="middle" class="rosca-t">Animais</text></svg>';
+  }
   function vPainel() {
     const ts = H.tarefas(S);
-    const atras = ts.filter(t => t.status === 'atrasado'), semana = ts.filter(t => t.status === 'hoje' || t.status === 'semana'), pend = ts.filter(t => t.doc);
-    const ativos = S.animais.filter(a => a.vivo);
-    const h = new Date().getHours(); const sauda = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
-    const foco = atras.concat(semana, pend).slice(0, 10);
+    const atras = ts.filter(t => t.status === 'atrasado'), pend = ts.filter(t => t.doc);
+    const vacAtr = atras.filter(t => t.cat === 'vacina'), vac7 = ts.filter(t => t.cat === 'vacina' && (t.status === 'hoje' || t.status === 'semana'));
+    const ativos = S.animais.filter(a => a.vivo), n = ativos.length;
     const gest = ativos.map(a => [a, H.gestacao(S, a)]).filter(x => x[1]);
+    const lim30 = H.iso(H.addDias(H.hoje(), 30)), hojeIso = H.iso(H.hoje());
+    const partos = gest.filter(([, g]) => g.parto >= hojeIso && g.parto <= lim30);
+    const proximos = ts.filter(t => !t.doc && t.status !== 'atrasado').slice(0, 6);
     const campo = S.registros.filter(r => r.origem !== 'Portal Gestor').sort((a, b) => a.data < b.data ? 1 : -1).slice(0, 4);
-    const fem = ativos.filter(a => a.sexo === 'F').length, potros = ativos.filter(a => a.nascimento && H.idadeMeses(a.nascimento) < 12).length;
-    const n = ativos.length;
+    const mes = hojeIso.slice(0, 7);
+    const repMes = S.registros.filter(r => r.tipo === 'reprodutivo' && (r.data || '').startsWith(mes));
+    const conta = ev => repMes.filter(r => r.evento === ev).length;
+    const cat = categoriasRebanho(ativos);
+    const partes = [{ rot: 'Éguas', n: cat.eguas, cor: '#193D30' }, { rot: 'Machos', n: cat.machos, cor: '#4E8A66' }, { rot: 'Potros', n: cat.potros, cor: '#D5A064' }, { rot: 'Outros', n: cat.outros, cor: '#82978A' }];
+    const pct = x => n ? Math.round(x / n * 100) + '%' : '0%';
+    const kpi = (cls, ic, num, rot, act) => '<button class="kpi2 ' + cls + '" ' + act + '><span class="kpi-ic">' + UI.ICON[ic] + '</span><span><b>' + num + '</b><span>' + rot + '</span></span></button>';
+    const evento = t => { const dd = t.due || ''; return '<button class="ev" data-act="ver-animal" data-id="' + t.animalId + '"><span class="ev-d"><b>' + dd.slice(8, 10) + '</b><small>' + (H.brCurta(dd).split(' ')[1] || '').toUpperCase() + '</small></span><span class="ev-ic">' + UI.ICON[t.cat === 'vacina' ? 'vacina' : t.cat === 'reprodutivo' ? 'repro' : 'escudo'] + '</span><span class="ev-t"><b>' + esc(t.titulo) + '</b><small>' + esc(t.animal) + (t.status === 'hoje' ? ' · hoje' : '') + '</small></span></button>'; };
     return '<div class="sec">' +
-      '<p class="muted">' + sauda + ', ' + esc(primeiroNome()) + '. Hoje é ' + new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }) + '.</p>' +
-      '<div class="kpis">' +
-      '<button class="kpi" data-act="nav" data-v="animais"><span>Animais ativos</span><b>' + n + '</b><span>de ' + H.LIMITE_ANIMAIS + ' no plano</span></button>' +
-      '<button class="kpi late" data-act="agenda-ir" data-f="aberto"><span>Atrasados</span><b>' + atras.length + '</b><span>procedimentos vencidos</span></button>' +
-      '<button class="kpi soon" data-act="agenda-ir" data-f="aberto"><span>Próximos 7 dias</span><b>' + semana.length + '</b><span>procedimentos previstos</span></button>' +
-      '<button class="kpi info" data-act="agenda-ir" data-f="aberto"><span>Pendências ABCCMM</span><b>' + pend.length + '</b><span>registro, DNA ou bloqueio</span></button>' +
+      '<div class="spread"><p class="muted">' + saudacao() + ', ' + esc(primeiroNome()) + '.</p><span class="data-chip">' + UI.ICON.agenda + new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + '</span></div>' +
+      '<div class="kpis5">' +
+      kpi('k-ok', 'cavalo', n, 'Animais', 'data-act="nav" data-v="animais"') +
+      kpi('k-late', 'escudo', vacAtr.length, 'Vacinas vencidas', 'data-act="nav" data-v="sanidade"') +
+      kpi('k-soon', 'agenda', vac7.length, 'Vacinas (7 dias)', 'data-act="nav" data-v="sanidade"') +
+      kpi('k-repro', 'repro', gest.length, 'Gestações ativas', 'data-act="nav" data-v="reproducao"') +
+      kpi('k-info', 'cavalo', partos.length, 'Previsão de parto (30 dias)', 'data-act="nav" data-v="reproducao"') +
+      '</div>' +
+      '<div class="grid3">' +
+      '<div class="card"><div class="card-h"><h3>' + UI.ICON.agenda + 'Próximos eventos</h3><button class="btn ghost sm" data-act="nav" data-v="agenda">Ver agenda →</button></div>' + (proximos.length ? '<div class="evs">' + proximos.map(evento).join('') + '</div>' : '<p class="muted small">Nada previsto.</p>') + '</div>' +
+      '<div class="card"><div class="card-h"><h3>Rebanho por categoria</h3></div><div class="rosca-w">' + rosca(partes, n) + '<ul class="leg">' + partes.map(p => '<li><i style="background:' + p.cor + '"></i>' + p.rot + '<b>' + p.n + ' <small>(' + pct(p.n) + ')</small></b></li>').join('') + '</ul></div><p class="small muted">Potros: até 2 anos. Outros: sem data de nascimento.</p></div>' +
+      '<div class="card"><div class="card-h"><h3>' + UI.ICON.repro + 'Situação reprodutiva</h3></div><dl class="lst">' +
+      '<div><dt>Gestações ativas</dt><dd>' + gest.length + '</dd></div><div><dt>Coberturas no mês</dt><dd>' + conta('Cobertura') + '</dd></div><div><dt>Inseminações no mês</dt><dd>' + conta('Inseminação') + '</dd></div><div><dt>Previsão de parto (30 dias)</dt><dd>' + partos.length + '</dd></div></dl></div>' +
       '</div>' +
       '<div class="grid2">' +
-      '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><h2>Atenção agora</h2><button class="btn ghost sm" data-act="nav" data-v="agenda">Agenda completa</button></div>' +
-      '<div class="tasks" style="padding:4px 18px 8px 0">' + (foco.length ? foco.map(t => UI.linhaTarefa(t)).join('') : '<div class="empty">Nenhum procedimento atrasado ou previsto para os próximos 7 dias.</div>') + '</div></div>' +
-      '<div class="stack" style="gap:20px">' +
-      '<div class="card"><div class="card-h"><h3>Gestações</h3><span class="small muted">' + gest.length + ' em andamento</span></div>' +
-      (gest.length ? gest.map(([a, g]) => gestBloco(a, g)).join('<hr style="border:0;border-top:1px solid var(--line-2);margin:14px 0">') : '<p class="muted small">Nenhuma égua com diagnóstico positivo registrado.</p>') + '</div>' +
-      '<div class="card"><div class="card-h"><h3>Plantel e plano</h3><button class="btn ghost sm" data-act="nav" data-v="plano">Ver plano</button></div>' +
-      '<dl class="facts" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div><dt>Fêmeas</dt><dd>' + fem + '</dd></div><div><dt>Machos</dt><dd>' + (n - fem) + '</dd></div><div><dt>Potros</dt><dd>' + potros + '</dd></div></dl>' +
-      '<div style="margin-top:14px" class="stack"><div class="meter" role="img" aria-label="' + n + ' de ' + H.LIMITE_ANIMAIS + ' animais"><i style="width:' + Math.min(100, n / H.LIMITE_ANIMAIS * 100) + '%"></i></div><p class="small muted">' + n + ' de ' + H.LIMITE_ANIMAIS + ' animais · plano ' + esc(S.plano.nome) + ' · mensalidade <b style="color:var(--ink)">' + (mensal(n) === null ? 'a definir' : H.moeda(mensal(n))) + '</b></p></div></div>' +
-      '<div class="card"><div class="card-h"><h3>Últimos registros do campo</h3><span class="small muted">Caseiro / operador</span></div>' + UI.linhaTempo(S, campo, { comAnimal: true }) + '</div>' +
-      '</div></div></div>';
+      '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><h3>Atenção agora</h3><span class="small muted">' + atras.length + ' atrasado' + (atras.length === 1 ? '' : 's') + ' · ' + pend.length + ' pendência' + (pend.length === 1 ? '' : 's') + ' ABCCMM</span></div>' +
+      '<div class="tasks" style="padding:4px 18px 8px 0">' + (atras.length + pend.length ? atras.concat(pend).slice(0, 8).map(t => UI.linhaTarefa(t)).join('') : '<div class="empty">Nada atrasado nem pendente. Bom trabalho.</div>') + '</div></div>' +
+      '<div class="card"><div class="card-h"><h3>Últimos registros do campo</h3><span class="small muted">Caseiro</span></div>' + UI.linhaTempo(S, campo, { comAnimal: true }) + '</div>' +
+      '</div>' +
+      '<div class="banner">' + UI.fundo(S.imagens.banner, 'banner-img') + '<div class="banner-in"><span class="banner-ic">' + UI.ICON.graf + '</span><div><h2>Desempenho do haras</h2><p>Acompanhe a sanidade, a reprodução e o histórico de cada animal em um só lugar.</p></div>' +
+      '<button class="btn gold" data-act="em-breve" data-m="Relatórios">Relatórios em breve</button></div></div>' +
+      '<p class="small muted">' + n + ' de ' + H.LIMITE_ANIMAIS + ' animais no plano ' + esc(S.plano.nome) + ' · mensalidade ' + (mensal(n) === null ? 'a definir' : H.moeda(mensal(n))) + ' · <a href="#" data-act="nav" data-v="plano">ver plano</a></p>' +
+      '</div>';
+  }
+  function saudacao() { const h = new Date().getHours(); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; }
+  function vSanidade() { return vAgenda('sanidade'); }
+  function vReproducao() {
+    const ativos = S.animais.filter(a => a.vivo);
+    const gest = ativos.map(a => [a, H.gestacao(S, a)]).filter(x => x[1]).sort((x, y) => x[1].parto < y[1].parto ? -1 : 1);
+    const ts = H.tarefas(S).filter(t => t.cat === 'reprodutivo' || t.parto);
+    const regs = S.registros.filter(r => r.tipo === 'reprodutivo').sort((a, b) => a.data < b.data ? 1 : -1).slice(0, 12);
+    return '<div class="sec">' +
+      '<div class="card"><div class="card-h"><h3>' + UI.ICON.repro + 'Gestações</h3><span class="small muted">' + gest.length + ' em andamento</span></div>' +
+      (gest.length ? gest.map(([a, g]) => gestBloco(a, g)).join('<hr class="div">') : '<p class="muted small">Nenhuma égua com diagnóstico positivo registrado.</p>') + '</div>' +
+      '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><h3>Próximas etapas reprodutivas</h3></div><div class="tasks" style="padding:4px 18px 8px 0">' + (ts.length ? ts.slice(0, 10).map(t => UI.linhaTarefa(t)).join('') : '<div class="empty">Nada previsto.</div>') + '</div></div>' +
+      '<div class="card"><div class="card-h"><h3>Últimos eventos</h3><button class="btn ghost sm" data-act="registrar">' + IC.plus + 'Registrar</button></div>' + UI.linhaTempo(S, regs, { comAnimal: true }) + '</div>' +
+      '<p class="small muted">Registro de cio e relatórios de fertilidade chegam na v1.4.0.</p></div>';
   }
   function gestBloco(a, g) {
     return '<div class="gest"><div class="spread"><a href="#" data-act="ver-animal" data-id="' + a.id + '"><b>' + esc(a.nome) + '</b></a><span class="chip c-accent">' + g.mes + 'º mês · ' + g.dias + ' dias</span></div>' +
@@ -279,15 +319,16 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   }
 
   /* ================= AGENDA ================= */
-  function vAgenda() {
+  function vAgenda(modulo) {
     let ts = H.tarefas(S);
+    if (modulo === 'sanidade') ts = ts.filter(t => SANITARIOS.includes(t.cat));
     if (agendaCat !== 'todos') ts = ts.filter(t => t.cat === agendaCat);
     const lim90 = H.iso(H.addDias(H.hoje(), 90));
     if (agendaFiltro === 'aberto') ts = ts.filter(t => t.status !== 'futuro');
     if (agendaFiltro === '90') ts = ts.filter(t => t.doc || t.due <= lim90);
     const grupos = [['atrasado', 'Atrasados'], ['pendente', 'Pendências documentais'], ['hoje', 'Hoje'], ['semana', 'Próximos 7 dias'], ['mes', 'Próximos 30 dias'], ['futuro', 'Programados']];
     const seg = [['aberto', 'Em aberto'], ['90', 'Próximos 90 dias'], ['tudo', 'Tudo']];
-    const cats = [...new Set(H.tarefas(S).map(t => t.cat))];
+    const cats = [...new Set(H.tarefas(S).map(t => t.cat))].filter(c => modulo !== 'sanidade' || SANITARIOS.includes(c));
     return '<div class="sec"><div class="spread"><div class="seg" role="group" aria-label="Período">' + seg.map(([k, l]) => '<button data-act="agenda-f" data-f="' + k + '" aria-pressed="' + (agendaFiltro === k) + '">' + l + '</button>').join('') + '</div>' +
       '<select id="agendaCat" class="inp" style="width:auto"><option value="todos">Todas as categorias</option>' + cats.map(c => '<option value="' + c + '"' + (agendaCat === c ? ' selected' : '') + '>' + H.CATS[c].nome + '</option>').join('') + '</select></div>' +
       (ts.length ? grupos.map(([k, l]) => { const g = ts.filter(t => t.status === k); return g.length ? '<div class="card flush"><div class="card-h" style="padding:14px 18px 0"><h3>' + l + '</h3><span class="small muted">' + g.length + '</span></div><div class="tasks" style="padding:2px 18px 6px 0">' + g.map(t => UI.linhaTarefa(t)).join('') + '</div></div>' : ''; }).join('') : '<div class="card empty">Nada para mostrar com esses filtros.</div>') +
@@ -378,7 +419,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     const num = (id, lab, val, ajuda, min, max) => '<div class="kv"><div><b>' + lab + '</b><p class="small muted">' + ajuda + '</p></div><div class="field"><input id="' + id + '" class="inp mono" type="number" min="' + min + '" max="' + max + '" value="' + val + '" aria-label="' + lab + '"></div></div>';
     return '<div class="sec" style="max-width:860px">' +
       '<div class="card stack"><h2>Logotipo</h2><div class="row" style="align-items:flex-start;gap:20px"><div class="logo-prev' + (h.logo ? '' : ' vazio') + '" id="logo-prev">' + (h.logo ? '<img src="' + esc(h.logo) + '" alt="Logotipo atual">' : 'Sem logotipo.<br>O portal mostra a marca Haras360.') + '</div>' +
-        '<div class="stack" style="flex:1;min-width:220px"><p class="small muted">Aparece na barra superior do Portal do Gestor e do Portal Campo. Use PNG com fundo transparente ou branco. As margens vazias são recortadas e a imagem é reduzida para 512 pixels.</p><div class="row"><label class="btn" for="logo-arq">' + IC.upload + 'Escolher imagem</label><input id="logo-arq" type="file" accept="image/png,image/jpeg,image/webp" hidden>' + (h.logo ? '<button class="btn ghost danger" data-act="remover-logo">Remover logotipo</button>' : '') + '</div></div></div></div>' +
+        '<div class="stack" style="flex:1;min-width:220px"><p class="small muted">Aparece no cabeçalho do portal do gestor, do Portal Campo e do app. Use PNG com fundo transparente ou branco. As margens vazias são recortadas e a imagem é reduzida para 512 pixels.</p><div class="row"><label class="btn" for="logo-arq">' + IC.upload + 'Escolher imagem</label><input id="logo-arq" type="file" accept="image/png,image/jpeg,image/webp" hidden>' + (h.logo ? '<button class="btn ghost danger" data-act="remover-logo">Remover logotipo</button>' : '') + '</div></div></div></div>' +
+      '<div class="card stack"><h2>' + IC.imagem + 'Imagens do haras</h2><p class="small muted">Personalize o portal e o app com fotos do seu haras. Sem imagem própria, valem as imagens padrão da plataforma.</p>' + UI.editorImagens(['cabecalho', 'banner', 'app'], S.imagens, 'haras') + '</div>' +
       '<div class="card stack"><h2>Dados do haras</h2><div class="fgrid"><div class="field"><label for="pa-nome">Nome do haras</label><input id="pa-nome" class="inp" value="' + esc(h.nome) + '"></div><div class="field"><label for="pa-mun">Município/UF</label><input id="pa-mun" class="inp" value="' + esc(h.municipio) + '"></div><div class="field full"><label for="pa-prop">Proprietário</label><input id="pa-prop" class="inp" value="' + esc(h.proprietario) + '"></div></div></div>' +
       '<div class="card stack"><h2>Regras sanitárias e reprodutivas</h2>' +
       '<div class="kv"><div><b>Reforço da vacina de raiva</b><p class="small muted">Em estados endêmicos para raiva o reforço passa a ser semestral.</p></div><div class="seg" role="group" aria-label="Reforço da raiva"><button data-act="pa-raiva" data-v="0" aria-pressed="' + !h.raivaSemestral + '">Anual</button><button data-act="pa-raiva" data-v="1" aria-pressed="' + !!h.raivaSemestral + '">Semestral</button></div></div>' +
@@ -457,7 +499,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     $('#sim-out').innerHTML = '<b style="font-family:var(--f-display);font-size:2rem">' + (m === null ? 'A definir' : H.moeda(m)) + '</b>' + (m === null ? '' : '<span class="muted"> por mês</span>') + '<p class="small muted mono">' + parts.join(' + ') + '</p>';
   }
 
-  const VIEWS = { painel: vPainel, animais: vAnimais, ficha: vFicha, importar: vImportar, agenda: vAgenda, protocolos: vProtocolos, notificacoes: vNotificacoes, equipe: vEquipe, assistente: vAssistente, plano: vPlano, parametros: vParametros, auditoria: vAuditoria, sobre: vSobre, glossario: vGlossario };
+  const VIEWS = { painel: vPainel, sanidade: vSanidade, reproducao: vReproducao, animais: vAnimais, ficha: vFicha, importar: vImportar, agenda: vAgenda, protocolos: vProtocolos, notificacoes: vNotificacoes, equipe: vEquipe, assistente: vAssistente, plano: vPlano, parametros: vParametros, auditoria: vAuditoria, sobre: vSobre, glossario: vGlossario };
   const AFTER = {
     animais() {
       $('#tb-animais').innerHTML = linhasAnimais();
@@ -493,6 +535,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     plano() { simOut(); $('#sim').addEventListener('input', e => { simN = Number(e.target.value); simOut(); }); },
     equipe() { carregarSessoes(); },
     parametros() {
+      UI.ligarEditorImagens('/api/haras/imagens', async () => { await recarregar(); render(); });
       $('#logo-arq').addEventListener('change', async e => {
         const f = e.target.files[0]; e.target.value = ''; if (!f) return;
         try { const img = await UI.prepararLogo(f); if (await executar(null, () => API.put('/api/haras/logo', { imagem: img }))) render(); }
@@ -591,6 +634,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     sair: async () => { try { await API.post('/api/logout'); } catch (e) { } location.href = '/entrar'; },
     sug: el => perguntar(el.dataset.q),
     'fora-plano': el => UI.toast(el.dataset.m + ' não está incluído no plano deste haras.'),
+    'em-breve': el => UI.toast(el.dataset.m + ' chega na próxima versão (v1.4.0).'),
     'recarregar-sessoes': () => carregarSessoes(),
     'vincular-celular': async el => {
       const u = (S.usuarios || []).find(x => String(x.id) === el.dataset.id);
@@ -609,6 +653,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     'dois-fatores-user': el => { const u = (S.usuarios || []).find(x => String(x.id) === el.dataset.id); confirmar(el, 'Confirmar redefinição', async () => { if (await executar(el, () => API.post('/api/usuarios/' + u.id + '/2fa/redefinir'))) render(); }); },
     'novos-codigos': () => UI.abrir({ titulo: 'Novos códigos de recuperação', corpo: '<form class="stack" novalidate><p>Os códigos atuais deixam de valer. Confirme sua senha.</p><div class="field"><label for="nc-senha">Senha</label><input id="nc-senha" type="password" class="inp" autocomplete="current-password"></div></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="gerar-codigos">Gerar</button>' }),
     'gerar-codigos': async el => { try { el.disabled = true; const r = await API.post('/api/me/codigos-recuperacao', { senha: document.getElementById('nc-senha').value }); UI.fechar(); UI.mostrarCodigos(r.codigos); } catch (e) { el.disabled = false; UI.toast(e.message); } },
+    'img-padrao': el => confirmar(el, 'Confirmar', async () => { if (await executar(el, () => API.del('/api/haras/imagens/' + el.dataset.tipo))) render(); }),
     'remover-logo': el => confirmar(el, 'Confirmar remoção', async () => { if (await executar(el, () => API.del('/api/haras/logo'))) render(); }),
     'pa-raiva': el => { document.querySelectorAll('[data-act="pa-raiva"]').forEach(b => b.setAttribute('aria-pressed', String(b === el))); },
     'salvar-params': async el => {

@@ -4,21 +4,23 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /*SHARED_CSS*/
-:root{--forest-accent:#e3ab6c}
-.hdr{background:var(--forest);color:var(--forest-ink);padding-inline:16px;padding-block:14px 0}
-.hdr-in{max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.brand{display:flex;align-items:center;gap:10px}
-.brand svg{width:30px;height:30px;color:var(--forest-accent);flex:none}
-.brand b{font-family:var(--f-display);font-size:1.3rem;font-weight:700;line-height:1;display:block}
-.brand small{display:block;font-size:.72rem;color:var(--forest-muted);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
-.me{display:flex;align-items:center;gap:10px;font-size:.84rem;color:var(--forest-muted);text-align:right;line-height:1.3}
-.me b{color:var(--forest-ink);font-weight:600}
-.avatar{width:34px;height:34px;border-radius:50%;background:var(--forest-accent);color:var(--forest);display:grid;place-items:center;font-weight:700;font-size:.8rem;flex:none}
-.tnav{max-width:900px;margin:12px auto 0;display:flex;gap:2px}
-.tnav button{display:flex;align-items:center;gap:8px;border:0;background:none;color:var(--forest-muted);padding:10px 14px;border-radius:8px 8px 0 0;cursor:pointer;font-weight:600;font-size:.92rem;position:relative}
-.tnav button svg{width:18px;height:18px}
-.tnav button:hover{color:var(--forest-ink)}
-.tnav button[aria-current="page"]{background:var(--bg);color:var(--ink)}
+.hdr{position:relative;background:var(--forest);color:#fff;overflow:hidden}
+.hdr-fundo{position:absolute;inset:0}
+.hdr-fundo .cab-img{width:100%;height:100%;object-fit:cover;display:block}
+.hdr::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(16,36,28,.92),rgba(16,36,28,.55) 55%,rgba(16,36,28,.3));pointer-events:none}
+.hdr-in{position:relative;z-index:1;max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px;min-height:84px}
+.hdr .ident{display:flex;align-items:center;gap:12px;min-width:0}
+.hdr .ident .logo-sim{width:40px;height:40px}
+.hdr .ident b{display:block;font:800 1.25rem/1.1 var(--f-display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hdr .ident small{display:block;font-size:.8rem;opacity:.85}
+.hdr .logo-h{height:48px;min-width:48px}
+.hdr .logo-h img{max-height:40px}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--gold);color:var(--gold-ink);display:grid;place-items:center;font-weight:800;font-size:.82rem;flex:none;border:0;cursor:pointer}
+.tnav{max-width:900px;margin:0 auto;display:flex;gap:4px;padding:10px 16px 0}
+.tnav button{display:flex;align-items:center;gap:8px;border:0;background:none;color:var(--muted);padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600;font-size:.92rem;position:relative}
+.tnav button svg{width:20px;height:20px}
+.tnav button:hover{color:var(--ink)}
+.tnav button[aria-current="page"]{background:var(--gold-soft);color:var(--forest)}
 .tnav .badge{background:var(--late);color:#fff;font-size:.68rem;font-weight:700;padding:1px 6px;border-radius:99px}
 .wrap{max-width:900px;margin:0 auto;padding-inline:16px;padding-block:22px 110px}
 .daybar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
@@ -30,6 +32,13 @@
 .quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .quick button{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;text-align:left}
 .quick button svg{width:22px;height:22px;color:var(--accent);flex:none}
+.btn-ocorr{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:15px 16px;border-radius:14px;border:0;background:var(--forest);color:#fff;font:700 1rem var(--f-body);cursor:pointer}
+.btn-ocorr svg{width:22px;height:22px}
+.mais{display:flex;flex-direction:column}
+.mais button,.mais a{display:flex;align-items:center;gap:14px;padding:15px 4px;border:0;border-top:1px solid var(--line-2);background:none;font:600 .98rem var(--f-body);color:var(--ink);cursor:pointer;text-align:left;text-decoration:none}
+.mais>:first-child{border-top:0}
+.mais svg{width:22px;height:22px;color:var(--forest);flex:none}
+.mais .badge{margin-left:auto}
 .quick button:hover{border-color:var(--accent)}
 .quick small{display:block;font-weight:400;color:var(--muted);font-size:.8rem}
 .acards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
@@ -46,11 +55,8 @@
 .notif.critico .bar{background:var(--late)} .notif.alerta .bar{background:var(--soon)}
 .notif.lida{opacity:.6}
 @media (max-width:640px){
-  .me #me-n,.me br{display:none}
-  .hdr{padding-block:12px}
   .tnav{position:fixed;left:0;right:0;bottom:0;margin:0;background:var(--surface);border-top:1px solid var(--line);justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));z-index:30}
-  .tnav button{flex-direction:column;gap:2px;font-size:.7rem;color:var(--muted);padding:6px 8px;border-radius:8px}
-  .tnav button[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+  .tnav button{flex-direction:column;gap:2px;font-size:.72rem;padding:6px 14px;border-radius:12px}
   .tnav .badge{position:absolute;top:0;right:4px}
   .cnt b{font-size:1.6rem}
   .quick{grid-template-columns:minmax(0,1fr)}
@@ -59,15 +65,10 @@
 </style>
 
 <header class="hdr">
-  <div class="hdr-in">
-    <div class="brand">
-      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M11 34V20a9 9 0 0 1 18 0v14"/><path d="M7 34h8M25 34h8"/><circle cx="14" cy="22" r="1.2" fill="currentColor"/><circle cx="26" cy="22" r="1.2" fill="currentColor"/><circle cx="16" cy="14.5" r="1.2" fill="currentColor"/><circle cx="24" cy="14.5" r="1.2" fill="currentColor"/></svg>
-      <div><b>Haras360</b><small id="haras-n">Campo</small></div>
-    </div>
-    <div class="me"><div><b id="me-n"></b><br><a href="#" data-act="minha-senha" style="color:var(--forest-muted)">Senha</a> · <a href="#" data-act="sair" style="color:var(--forest-muted)">Sair</a></div><span class="avatar" id="av"></span></div>
-  </div>
-  <nav class="tnav" id="tnav" aria-label="Navegação"></nav>
+  <div class="hdr-fundo" id="hdr-fundo"></div>
+  <div class="hdr-in"><div class="ident" id="ident"></div><button class="avatar" id="av" data-act="nav" data-v="mais" aria-label="Mais opções"></button></div>
 </header>
+<nav class="tnav" id="tnav" aria-label="Navegação"></nav>
 <main class="wrap"><div id="view" class="view-in"></div></main>
 <div id="modal" class="modal" hidden></div>
 <div id="toast" role="status" hidden></div>
@@ -101,16 +102,16 @@
   const avisos = () => H.notificacoes(S).filter(n => n.tipo !== 'campo' && n.tipo !== 'documental');
   const naoLidos = () => avisos().filter(n => !S.lidas.includes(n.id)).length;
 
-  const NAV_TODOS = [['hoje', 'Hoje', IC.home], ['animais', 'Animais', IC.horse], ['registrar', 'Registrar', IC.plus], ['avisos', 'Avisos', IC.bell], ['assistente', 'Assistente', IC.chat]];
+  const NAV_TODOS = [['hoje', 'Hoje', IC.home], ['animais', 'Animais', IC.cavalo], ['agenda', 'Agenda', IC.agenda], ['mais', 'Mais', '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>']];
   const NAV = [];
   function go(v, p) { view = v; param = p || null; render(); window.scrollTo(0, 0); }
   function render() {
     const nl = naoLidos();
-    if (S.haras.logo) { const b = document.querySelector('.hdr .brand'); if (!b.querySelector('.logo-h')) b.innerHTML = '<span class="logo-h"><img src="' + esc(S.haras.logo) + '" alt="Logotipo de ' + esc(S.haras.nome) + '"></span><div><b class="nome-h">' + esc(S.haras.nome) + '</b><small>Haras360 · Campo</small></div>'; }
-    else $('#haras-n').textContent = 'Campo · ' + S.haras.nome;
-    $('#me-n').textContent = S.usuario.nome;
+    if (!$('#hdr-fundo').dataset.ok) { $('#hdr-fundo').innerHTML = UI.fundo(S.imagens.cabecalho, 'cab-img'); $('#hdr-fundo').dataset.ok = '1'; }
+    $('#ident').innerHTML = (S.haras.logo ? '<span class="logo-h"><img src="' + esc(S.haras.logo) + '" alt="Logotipo de ' + esc(S.haras.nome) + '"></span>' : UI.logo(true)) +
+      '<div style="min-width:0"><b>' + esc(S.haras.nome) + '</b><small>' + (S.haras.municipio ? esc(S.haras.municipio) + ' · ' : '') + 'Campo</small></div>';
     $('#av').textContent = S.usuario.nome.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
-    $('#tnav').innerHTML = NAV.map(([id, l, ic]) => '<button data-act="' + (id === 'registrar' ? 'registrar' : 'nav') + '" data-v="' + id + '"' + ((view === id || (view === 'ficha' && id === 'animais')) ? ' aria-current="page"' : '') + '>' + ic + '<span>' + l + '</span>' + (id === 'avisos' && nl ? '<span class="badge">' + nl + '</span>' : '') + '</button>').join('');
+    $('#tnav').innerHTML = NAV.map(([id, l, ic]) => '<button data-act="' + (id === 'registrar' ? 'registrar' : 'nav') + '" data-v="' + id + '"' + ((view === id || (view === 'ficha' && id === 'animais') || (['avisos', 'assistente'].includes(view) && id === 'mais')) ? ' aria-current="page"' : '') + '>' + ic + '<span>' + l + '</span>' + (id === 'mais' && nl ? '<span class="badge">' + nl + '</span>' : '') + '</button>').join('');
     const v = $('#view'); v.classList.remove('view-in'); void v.offsetWidth; v.classList.add('view-in');
     v.innerHTML = VIEWS[view](param);
     if (AFTER[view]) AFTER[view](param);
@@ -122,11 +123,28 @@
     const d0 = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }); const d = d0.charAt(0).toUpperCase() + d0.slice(1);
     const bloco = (tit, arr, vazio) => '<div class="card flush"><div class="card-h" style="padding:14px 16px 0"><h3>' + tit + '</h3><span class="small muted">' + arr.length + '</span></div><div class="tasks" style="padding:2px 16px 6px 0">' + (arr.length ? arr.map(t => UI.linhaTarefa(t)).join('') : '<div class="empty">' + vazio + '</div>') + '</div></div>';
     return '<div class="sec"><div class="daybar"><div><div class="eyebrow">Tarefas do dia</div><h1>' + d + '</h1></div></div>' +
-      '<div class="card app-card"><div><h3>Trabalhe sem internet</h3><p class="small muted">Com o app Android, você registra no pasto e envia quando chegar ao Wi-Fi.</p></div><button class="btn pri" data-act="instalar-app">Instalar o app Android</button></div>' +
+      '<button class="btn-ocorr" data-act="ocorrencia">' + IC.plus + 'Registrar ocorrência</button>' +
       '<div class="cnt"><div class="late"><b>' + at.length + '</b><span>Atrasadas</span></div><div class="soon"><b>' + hj.length + '</b><span>Para hoje</span></div><div><b>' + sm.length + '</b><span>Próximos 7 dias</span></div></div>' +
-      '<div class="quick"><button data-act="registrar">' + IC.check + '<span>Novo registro<small>Vacina, vermífugo, casco, exame</small></span></button><button data-act="ocorrencia">' + IC.alert + '<span>Registrar ocorrência<small>Algo diferente com um animal</small></span></button></div>' +
+      '<div class="quick"><button data-act="registrar">' + IC.vacina + '<span>Novo registro<small>Vacina, vermífugo, casco, exame</small></span></button><button data-act="instalar-app">' + IC.cavalo + '<span>App Android<small>Registre no pasto, sem internet</small></span></button></div>' +
       bloco('Atrasadas', at, 'Nada atrasado. Bom trabalho.') + bloco('Para hoje', hj, 'Nada marcado para hoje.') + bloco('Próximos 7 dias', sm, 'Nada previsto para a semana.') +
       '</div>';
+  }
+  function vAgenda() {
+    const ts = H.tarefas(S).filter(t => !t.doc && t.status !== 'futuro');
+    const grupos = [['atrasado', 'Atrasadas'], ['hoje', 'Hoje'], ['semana', 'Próximos 7 dias'], ['mes', 'Próximos 30 dias']];
+    return '<div class="sec"><div><div class="eyebrow">Agenda</div><h1>Próximos 30 dias</h1></div>' +
+      grupos.map(([k, l]) => { const g = ts.filter(t => t.status === k); return g.length ? '<div class="card flush"><div class="card-h" style="padding:14px 16px 0"><h3>' + l + '</h3><span class="small muted">' + g.length + '</span></div><div class="tasks" style="padding:2px 16px 6px 0">' + g.map(t => UI.linhaTarefa(t)).join('') + '</div></div>' : ''; }).join('') +
+      (ts.length ? '' : '<div class="card empty">Nada previsto para os próximos 30 dias.</div>') + '</div>';
+  }
+  function vMais() {
+    const nl = naoLidos();
+    return '<div class="sec"><div><div class="eyebrow">' + esc(S.usuario.nome) + '</div><h1>Mais</h1></div><div class="card mais">' +
+      '<button data-act="nav" data-v="avisos">' + IC.sino + 'Avisos' + (nl ? '<span class="badge">' + nl + '</span>' : '') + '</button>' +
+      (NAV_ASSIST() ? '<button data-act="nav" data-v="assistente">' + IC.chat + 'Assistente</button>' : '') +
+      '<button data-act="instalar-app">' + IC.cavalo + 'Instalar o app Android</button>' +
+      '<button data-act="minha-senha">' + IC.escudo + 'Alterar minha senha</button>' +
+      '<a href="/ajuda#app" target="_blank" rel="noopener">' + IC.ajuda + 'Manual</a>' +
+      '<button data-act="sair">' + IC.engr + 'Sair</button></div></div>';
   }
 
   function vAnimais() {
@@ -163,7 +181,8 @@
   function vAssistente() { return UI.chatHTML(chat, 'Assistente', 'Pergunte sobre o que precisa ser feito, vacinação e cuidados com éguas gestantes.'); }
   function perguntar(q) { q = (q || '').trim(); if (!q) return; chat.push({ de: 'me', t: q }); const r = H.responder(S, q); chat.push({ de: 'bot', t: r.t, f: r.f }); render(); }
 
-  const VIEWS = { hoje: vHoje, animais: vAnimais, ficha: vFicha, avisos: vAvisos, assistente: vAssistente };
+  const VIEWS = { hoje: vHoje, animais: vAnimais, ficha: vFicha, agenda: vAgenda, mais: vMais, avisos: vAvisos, assistente: vAssistente };
+  const NAV_ASSIST = () => S.plano.modulos.assistente !== false;
   const AFTER = {
     assistente() {
       const m = $('#msgs'); m.scrollTop = m.scrollHeight;
@@ -214,7 +233,7 @@
     $('#view').innerHTML = '<div class="empty">Carregando...</div>';
     try {
       await recarregar();
-      NAV_TODOS.forEach(n => { if (n[0] !== 'assistente' || S.plano.modulos.assistente !== false) NAV.push(n); });
+      NAV_TODOS.forEach(n => NAV.push(n));
       render();
     } catch (e) {
       if (/usuários de um haras/.test(e.message)) { location.href = '/admin'; return; }

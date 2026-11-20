@@ -5,11 +5,17 @@
 <style>
 /*SHARED_CSS*/
 body{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-.lado{background:var(--forest);color:var(--forest-ink);padding:48px clamp(24px,5vw,72px);display:flex;flex-direction:column;justify-content:space-between;gap:40px}
-.lado svg{width:46px;height:46px;color:var(--forest-accent)}
-.lado h1{font-size:clamp(2rem,1.4rem + 2vw,3rem);max-width:14ch;margin-top:28px}
-.lado p{color:var(--forest-muted);max-width:42ch;margin-top:14px}
-.lado ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;color:var(--forest-muted);font-size:.92rem}
+.lado{position:relative;overflow:hidden;background:var(--forest);color:var(--forest-ink);padding:48px clamp(24px,5vw,72px);display:flex;flex-direction:column;justify-content:space-between;gap:40px}
+.lado>*{position:relative;z-index:1}
+.lado .lado-fundo{position:absolute;inset:0;z-index:0}
+.lado .lado-fundo .fundo{width:100%;height:100%;object-fit:cover;display:block}
+.lado::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,36,28,.94) 0%,rgba(16,36,28,.7) 45%,rgba(16,36,28,.2) 100%);z-index:0}
+.lado .marca-e{display:flex;align-items:center;gap:12px}
+.lado .marca-e .logo-sim{width:64px;height:64px}
+.lado .marca-e .marca-txt b{font-size:2rem}
+.lado h1{font-size:clamp(1.8rem,1.3rem + 2vw,2.8rem);max-width:16ch;margin-top:30px}
+.lado p{color:#DDE6DF;max-width:42ch;margin-top:14px}
+.lado ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;color:#E8EEE9;font-size:.92rem}
 .lado li::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--forest-accent);margin-right:10px;vertical-align:middle}
 .lado .rodape{font-size:.78rem;color:var(--forest-muted)}
 .form{display:flex;align-items:center;justify-content:center;padding:48px 16px}
@@ -24,9 +30,10 @@ ol.passos{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;
 @media (max-width:800px){body{grid-template-columns:minmax(0,1fr)}.lado{padding:28px 20px;gap:12px}.lado h1{font-size:1.6rem;margin-top:14px}.lado ul,.lado .rodape{display:none}}
 </style>
 <section class="lado">
+  <div class="lado-fundo" id="lado-fundo"></div>
   <div>
-    <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M11 34V20a9 9 0 0 1 18 0v14"/><path d="M7 34h8M25 34h8"/><circle cx="14" cy="22" r="1.2" fill="currentColor"/><circle cx="26" cy="22" r="1.2" fill="currentColor"/><circle cx="16" cy="14.5" r="1.2" fill="currentColor"/><circle cx="24" cy="14.5" r="1.2" fill="currentColor"/></svg>
-    <h1>Haras360</h1>
+    <div class="marca-e" id="marca-e"></div>
+    <h1>Gestão profissional do seu haras</h1>
     <p>Prontuário, agenda sanitária e plantel do seu haras em um só lugar, do escritório ao piquete.</p>
   </div>
   <ul><li>Importação do Relatório de Plantel ABCCMM</li><li>Vacinas, vermífugos e cascos agendados automaticamente</li><li>Gestor e caseiro trabalhando no mesmo histórico</li></ul>
@@ -79,6 +86,24 @@ ol.passos{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;
     <div class="row"><button type="button" class="btn" id="copiar">Copiar</button><button type="button" class="btn pri" id="continuar">Já guardei, continuar</button></div>
   </div>
 </main>
+<div id="toast" role="status" hidden></div>
+<script>
+/*CORE*/
+</script>
+<script>
+/*UI*/
+</script>
+<script>
+/* marca da plataforma e fundo da entrada (v1.3.0): enviados pelo administrador ou o padrão */
+(function () {
+  const pintar = m => {
+    document.getElementById('marca-e').innerHTML = UI.marca(m && m.logo, true);
+    document.getElementById('lado-fundo').innerHTML = UI.fundo(m && m.entrada, 'fundo');
+  };
+  pintar(null);
+  fetch('/api/marca').then(r => r.ok ? r.json() : null).then(m => { if (m && (m.logo || m.entrada)) pintar(m); }).catch(() => {});
+})();
+</script>
 <script>
 (function () {
   const $ = s => document.querySelector(s);

@@ -24,6 +24,20 @@ SEGREDOS = {}
 ERROS = []
 
 
+def _png_teste():
+    """Imagem de teste (degradê) gerada sem bibliotecas externas."""
+    import struct
+    import zlib
+    w, h = 600, 150
+    raw = b"".join(b"\x00" + b"".join(bytes([min(255, 60 + x // 3), min(255, 80 + y), 70]) for x in range(w)) for y in range(h))
+    def ch(t, d):
+        return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xFFFFFFFF)
+    return b"\x89PNG\r\n\x1a\n" + ch(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)) + ch(b"IDAT", zlib.compress(raw)) + ch(b"IEND", b"")
+
+
+IMG_TESTE = _png_teste()
+
+
 def nova_pagina(ctx, nome):
     p = ctx.new_page()
     p.on("pageerror", lambda e: ERROS.append(f"[{nome}] {e}"))
@@ -38,6 +52,9 @@ def foto(p, nome, pagina_inteira=False):
 
 def entrar(p, email, captura_2fa=None):
     p.goto(BASE + "/entrar")
+    if captura_2fa:  # tela de entrada com a marca da plataforma (v1.3.0)
+        p.wait_for_selector("#marca-e .logo-sim, #marca-e img")
+        foto(p, "entrar")
     p.fill("#email", email)
     p.fill("#senha", SENHA)
     p.click("#p-senha button.pri")
@@ -62,10 +79,11 @@ def entrar(p, email, captura_2fa=None):
 
 
 def ir(p, view):
-    alvo = p.locator(f'[data-act="nav"][data-v="{view}"]').first
-    if not alvo.is_visible():  # está dentro de um menu agrupado
-        grupo = alvo.locator("xpath=ancestor::div[contains(@class,'drop-m')]/preceding-sibling::button")
-        grupo.click()
+    alvo = p.locator(f'#menu-principal [data-act="nav"][data-v="{view}"]').first
+    if not alvo.count():  # fora do menu lateral (o sino de avisos fica no cabeçalho)
+        alvo = p.locator(f'[data-act="nav"][data-v="{view}"]').first
+    elif not alvo.is_visible():  # está dentro de um grupo recolhido do menu lateral (v1.3.0)
+        alvo.locator("xpath=ancestor::div[contains(@class,'sub')]/preceding-sibling::button").click()
     alvo.click()
     p.wait_for_timeout(300)
     p.wait_for_load_state("networkidle")
@@ -79,19 +97,30 @@ with sync_playwright() as pw:
     # ---------- gestor ----------
     g = nova_pagina(desk, "gestor")
     entrar(g, "gestor@demonstracao.local", captura_2fa="2fa")
-    g.wait_for_selector(".kpi")
+    g.wait_for_selector(".kpi2")
     foto(g, "painel")
     # v1.2.0: áudio do caseiro com player nos últimos registros do campo
     assert g.locator(".audio-reg audio").count() > 0, "falta o player de áudio nos registros do campo"
     g.locator(".audio-reg").first.scroll_into_view_if_needed()
     g.locator(".audio-reg").first.locator("xpath=ancestor::div[contains(@class,'card')][1]").screenshot(path=str(SAIDA / "audio-painel.png"))
-    for v in ("animais", "importar", "agenda", "protocolos", "equipe", "parametros", "auditoria", "plano", "notificacoes", "assistente", "sobre", "glossario"):
+    for v in ("sanidade", "reproducao", "animais", "importar", "agenda", "protocolos", "equipe", "parametros", "auditoria", "plano", "notificacoes", "assistente", "sobre", "glossario"):
         ir(g, v)
         assert g.inner_text("#view").strip(), f"tela vazia: {v}"
-        if v in ("importar", "agenda", "equipe", "parametros", "auditoria"):
+        if v in ("sanidade", "reproducao", "importar", "agenda", "equipe", "parametros", "auditoria"):
             if v in ("equipe", "auditoria"):
                 g.wait_for_selector("#sessoes table, #aud-t table", timeout=5000)
             foto(g, v)
+    # personalização (v1.3.0): o gestor envia o próprio banner e o Dashboard passa a usá-lo
+    ir(g, "parametros")
+    g.set_input_files("#img-banner", files=[{"name": "banner.png", "mimeType": "image/png", "buffer": IMG_TESTE}])
+    g.wait_for_selector('[data-act="img-padrao"][data-tipo="banner"]', timeout=15000)
+    foto(g, "imagens")
+    ir(g, "painel")
+    assert g.locator(".banner img.banner-img").count() == 1, "o banner do haras não apareceu no Dashboard"
+    ir(g, "parametros")
+    g.click('[data-act="img-padrao"][data-tipo="banner"]')
+    g.click('[data-act="img-padrao"][data-tipo="banner"]')
+    g.wait_for_selector('[data-act="img-padrao"][data-tipo="banner"]', state="detached", timeout=10000)
     ir(g, "animais")
     g.click("tr:has-text('BRISA DA SERRA AZUL')")
     g.wait_for_selector(".gest")
@@ -118,9 +147,12 @@ with sync_playwright() as pw:
     k.wait_for_selector(".cnt")
     foto(k, "campo")
     assert k.is_visible('[data-act="instalar-app"]'), "falta o botão Instalar o app Android no Portal Campo"
-    for v in ("animais", "avisos", "assistente", "hoje"):
+    for v in ("animais", "agenda", "mais", "hoje"):  # navegação v1.3.0: Hoje, Animais, Agenda e Mais
         k.click(f'#tnav [data-v="{v}"]')
         k.wait_for_timeout(200)
+        if v == "mais":
+            k.click('.mais [data-v="avisos"]')
+            k.wait_for_timeout(200)
 
     # ---------- gestor no celular: menu hambúrguer ----------
     cel2 = nav.new_context(viewport={"width": 390, "height": 844}, locale="pt-BR", timezone_id="America/Sao_Paulo", is_mobile=True, has_touch=True, bypass_csp=True)
@@ -128,7 +160,7 @@ with sync_playwright() as pw:
     entrar(gm, "gestor@demonstracao.local")
     gm.click('[data-act="hamb"]')
     assert gm.is_visible("#menu-principal"), "menu do celular não abriu"
-    gm.click('#menu-principal [data-v="equipe"]')
+    ir(gm, "equipe")
     larg = gm.evaluate("document.documentElement.scrollWidth")
     assert larg <= 392, f"rolagem horizontal no celular ({larg}px)"
 
@@ -138,7 +170,7 @@ with sync_playwright() as pw:
     entrar(a, "admin@demonstracao.local")
     a.wait_for_selector(".hcard")
     foto(a, "admin-haras")
-    for v, nome in (("administradores", "admin-administradores"), ("parametros", "admin-parametros"), ("atualizacao", "admin-atualizacao"), ("auditoria", None), ("sobre", None), ("glossario", None)):
+    for v, nome in (("marca", "admin-marca"), ("administradores", "admin-administradores"), ("parametros", "admin-parametros"), ("atualizacao", "admin-atualizacao"), ("auditoria", None), ("sobre", None), ("glossario", None)):
         ir(a, v)
         if v == "auditoria":
             a.wait_for_selector("#aud-t table")

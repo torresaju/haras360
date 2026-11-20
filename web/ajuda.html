@@ -4,10 +4,10 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /*SHARED_CSS*/
-.cab{background:var(--forest);color:var(--forest-ink);padding-inline:clamp(16px,4vw,48px);padding-block:36px 30px}
-.cab-in{max-width:1100px;margin:0 auto}
-.cab h1{font-size:clamp(1.8rem,1.3rem + 2vw,2.6rem)}
-.cab p{color:var(--forest-muted);max-width:62ch;margin-top:10px}
+.acab{position:relative;background:var(--forest);color:var(--forest-ink);padding-inline:clamp(16px,4vw,48px);padding-block:36px 30px}
+.acab-in{max-width:1100px;margin:0 auto}
+.acab h1{font-size:clamp(1.8rem,1.3rem + 2vw,2.6rem)}
+.acab p{color:var(--forest-muted);max-width:62ch;margin-top:10px}
 .corpo{max-width:1100px;margin:0 auto;padding-inline:clamp(16px,4vw,48px);padding-block:28px 80px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:40px}
 .sumario{position:sticky;top:16px;align-self:start;display:flex;flex-direction:column;gap:2px;font-size:.9rem}
 .sumario a{color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:6px;border-left:2px solid var(--line)}
@@ -27,7 +27,7 @@ figcaption{font-size:.84rem;color:var(--muted);padding:8px 12px;border-top:1px s
 kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
 @media (max-width:860px){.corpo{grid-template-columns:minmax(0,1fr)}.sumario{position:static;flex-direction:row;flex-wrap:wrap;gap:4px}.sumario a{border-left:0;background:var(--surface-2)}}
 </style>
-<header class="cab"><div class="cab-in"><div class="eyebrow" style="color:var(--forest-muted)">Ajuda</div><h1>Manual do Haras360</h1><p>Como usar o portal do gestor, o Portal Campo e a administração da plataforma. As telas mostram o Haras Demonstração, com dados fictícios.</p></div></header>
+<header class="acab"><div class="acab-in"><div class="row" style="gap:10px;margin-bottom:12px"><span id="marca-ajuda" class="row" style="gap:10px"><svg class="logo-sim" viewBox="0 0 120 120" aria-hidden="true"><path d="M18 94 A50 50 0 0 1 94 20" fill="none" stroke="#D5A064" stroke-width="6" stroke-linecap="round"/><path d="M34 106 C31 84 34 64 43 49 C48 39 53 31 58 26 L60 16 L65 23 L69 15 L71 25 C78 30 84 38 89 48 C93 56 98 63 100 69 C101 74 97 78 92 77 C87 76 83 73 79 71 C74 69 70 70 68 74 C66 82 67 94 71 106" fill="none" stroke="#F3F1E9" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M57 32 C50 44 46 58 46 76" fill="none" stroke="#F3F1E9" stroke-width="3.2" stroke-linecap="round"/><circle cx="76" cy="41" r="2.8" fill="#F3F1E9"/></svg><span class="marca-txt"><b>Haras<i>360</i></b><small>Gestão de haras</small></span></span></div><div class="eyebrow" style="color:var(--forest-muted)">Ajuda</div><h1>Manual do Haras360</h1><p>Como usar o portal do gestor, o Portal Campo e a administração da plataforma. As telas mostram o Haras Demonstração, com dados fictícios.</p></div></header>
 <div class="corpo">
   <nav class="sumario" aria-label="Sumário">
     <a href="#acesso">Primeiro acesso e 2FA</a><a href="#painel">Painel</a><a href="#importar">Importar ABCCMM</a><a href="#animais">Animais e prontuário</a><a href="#agenda">Agenda e protocolos</a><a href="#campo">Portal Campo</a><a href="#app">App Android do caseiro</a><a href="#equipe">Equipe e sessões</a><a href="#parametros">Parametrizações</a><a href="#auditoria">Auditoria</a><a href="#admin">Administração da plataforma</a><a href="#atualizacao">Atualização e backup</a>
@@ -105,3 +105,7 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
     </section>
   </article>
 </div>
+<script>
+/* logotipo da plataforma enviado pelo administrador (v1.3.0) */
+fetch('/api/marca').then(r => r.ok ? r.json() : null).then(m => { if (m && m.logo) document.getElementById('marca-ajuda').innerHTML = '<span class="marca-img"><img src="' + m.logo.url + '" alt="Haras360"></span>'; }).catch(() => {});
+</script>
