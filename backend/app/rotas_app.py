@@ -49,6 +49,20 @@ def info_apk():
 
 
 # ---------------- vínculo do aparelho ----------------
+def novo_vinculo(db, alvo: Usuario, criado_por=None):
+    """Gera o código de uso único do caseiro. Um código pendente por caseiro: gerar outro invalida o anterior."""
+    for v in db.scalars(select(VinculoApp).where(VinculoApp.usuario_id == alvo.id, VinculoApp.usado_em.is_(None))):
+        db.delete(v)
+    codigo = secrets.token_urlsafe(18)
+    expira = datetime.now() + timedelta(minutes=VALIDADE_VINCULO_MIN)
+    db.add(VinculoApp(codigo_hash=_hash(codigo), usuario_id=alvo.id, haras_id=alvo.haras_id, criado_por=criado_por, expira_em=expira))
+    return codigo, expira
+
+
+def link_vinculo(servidor, codigo):
+    return f"haras360://vincular?s={quote(servidor, safe='')}&c={codigo}"
+
+
 @r.post("/api/usuarios/{uid}/vinculo")
 def gerar_vinculo(uid: int, request: Request, u: Usuario = Depends(gestor), db=Depends(get_db)):
     alvo = db.get(Usuario, uid)
@@ -60,16 +74,11 @@ def gerar_vinculo(uid: int, request: Request, u: Usuario = Depends(gestor), db=D
         erro(400, "Reative o acesso deste caseiro antes de vincular um celular.")
     if not P.modulo_liberado(db, db.get(Haras, u.haras_id), "caseiro"):
         erro(403, "O acesso do caseiro não está incluído no plano deste haras.")
-    # Um código pendente por caseiro: gerar outro invalida o anterior.
-    for v in db.scalars(select(VinculoApp).where(VinculoApp.usuario_id == uid, VinculoApp.usado_em.is_(None))):
-        db.delete(v)
-    codigo = secrets.token_urlsafe(18)
-    expira = datetime.now() + timedelta(minutes=VALIDADE_VINCULO_MIN)
-    db.add(VinculoApp(codigo_hash=_hash(codigo), usuario_id=uid, haras_id=u.haras_id, criado_por=u.id, expira_em=expira))
+    codigo, expira = novo_vinculo(db, alvo, u.id)
     auditar(db, "app_vinculo_gerado", usuario=u, alvo=alvo.nome, request=request)
     db.commit()
     servidor = _base_url(request)
-    link = f"haras360://vincular?s={quote(servidor, safe='')}&c={codigo}"
+    link = link_vinculo(servidor, codigo)
     return {"qr": qr_svg(link), "link": link, "servidor": servidor, "codigo": codigo, "minutos": VALIDADE_VINCULO_MIN,
             "expira": expira.isoformat(timespec="minutes"), "caseiro": alvo.nome}
 

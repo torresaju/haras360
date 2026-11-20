@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'api.dart';
@@ -21,7 +22,12 @@ class ResultadoSinc {
 class Sincronizador {
   static bool _rodando = false;
 
+  /// Só para o teste de integração: simula Wi-Fi ligado (true) ou desligado (false).
+  @visibleForTesting
+  static bool? redeForcada;
+
   static Future<bool> noWifi() async {
+    if (redeForcada != null) return redeForcada!;
     final r = await Connectivity().checkConnectivity();
     return r.contains(ConnectivityResult.wifi) || r.contains(ConnectivityResult.ethernet);
   }
