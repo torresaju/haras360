@@ -1,7 +1,7 @@
 <title>Haras360 Administração</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Zilla+Slab:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /*SHARED_CSS*/
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px 20px;margin:0}
@@ -59,14 +59,18 @@
     finally { if (el && el.isConnected) { el.disabled = false; el.innerHTML = txt; } }
   }
   const menu = () => [
-    { id: 'haras', rotulo: 'Haras' },
-    { grupo: 'Administração', itens: [{ id: 'administradores', rotulo: 'Administradores', desc: 'Quem administra a plataforma' }, { id: 'parametros', rotulo: 'Parametrizações', desc: 'Planos, preços, login e e-mail' }, { id: 'auditoria', rotulo: 'Auditoria' }, { id: 'atualizacao', rotulo: 'Atualização e backup' }] },
-    { grupo: 'Ajuda', itens: [{ id: 'sobre', rotulo: 'Sobre' }, { href: '/ajuda', rotulo: 'Manual', desc: 'Abre em nova aba' }, { id: 'glossario', rotulo: 'Glossário' }] }
+    { id: 'haras', rotulo: 'Haras e gestores', ic: 'cavalo' },
+    { id: 'administradores', rotulo: 'Administradores', ic: 'escudo' },
+    { id: 'marca', rotulo: 'Marca e imagens', ic: 'imagem' },
+    { id: 'parametros', rotulo: 'Parametrizações', ic: 'engr' },
+    { id: 'auditoria', rotulo: 'Auditoria', ic: 'agenda' },
+    { id: 'atualizacao', rotulo: 'Atualização e backup', ic: 'graf' },
+    { grupo: 'Ajuda', ic: 'ajuda', itens: [{ id: 'sobre', rotulo: 'Sobre' }, { href: '/ajuda', rotulo: 'Manual' }, { id: 'glossario', rotulo: 'Glossário' }] }
   ];
-  const TITULOS = { haras: ['Plataforma', 'Haras e gestores'], administradores: ['Administração', 'Administradores da plataforma'], parametros: ['Administração', 'Parametrizações globais'], auditoria: ['Administração', 'Auditoria'], atualizacao: ['Administração', 'Atualização e backup'], sobre: ['Ajuda', 'Sobre o Haras360'], glossario: ['Ajuda', 'Glossário'] };
+  const TITULOS = { haras: ['Plataforma', 'Haras e gestores'], marca: ['Administração', 'Marca e imagens da plataforma'], administradores: ['Administração', 'Administradores da plataforma'], parametros: ['Administração', 'Parametrizações globais'], auditoria: ['Administração', 'Auditoria'], atualizacao: ['Administração', 'Atualização e backup'], sobre: ['Ajuda', 'Sobre o Haras360'], glossario: ['Ajuda', 'Glossário'] };
   function go(v) { view = v; render(); window.scrollTo(0, 0); }
   function render() {
-    $('#topbar').innerHTML = UI.topbar({ menu: menu(), atual: view, home: '/admin', sub: 'Administração da plataforma', usuario: S.usuario, perfilTxt: 'Administrador',
+    $('#topbar').innerHTML = UI.topbar({ menu: menu(), atual: view, home: '/admin', sub: 'Administração da plataforma', marca: S.marca.logo, cabecalho: S.marca.cabecalho, usuario: S.usuario, perfilTxt: 'Administrador',
       usuarioItens: [{ act: 'minha-senha', rotulo: 'Alterar minha senha' }, { act: 'novos-codigos', rotulo: 'Novos códigos de recuperação do 2FA' }] });
     const [eb, ti] = TITULOS[view];
     $('#v-eyebrow').textContent = eb; $('#v-title').textContent = ti; document.title = 'Haras360 · ' + ti;
@@ -203,9 +207,15 @@
   const vSobre = () => '<div class="sec" style="max-width:760px"><div class="card stack"><h2>Haras360</h2><p>Plataforma de gestão de haras para criadores de Mangalarga Marchador.</p><dl class="facts"><div><dt>Versão</dt><dd class="mono">' + esc(S.versao) + '</dd></div><div><dt>Migração do banco</dt><dd class="mono">' + S.versaoBanco + '</dd></div><div><dt>Haras</dt><dd>' + S.haras.length + '</dd></div></dl><div class="row"><a class="btn" href="/ajuda" target="_blank" rel="noopener">Abrir o manual</a></div></div></div>';
   const vGlossario = () => '<div class="sec" style="max-width:760px"><div class="card"><dl class="glos" style="margin:0">' + H.GLOSSARIO.map(([t, d]) => '<dt>' + esc(t) + '</dt><dd>' + esc(d) + '</dd>').join('') + '</dl></div></div>';
 
-  const VIEWS = { haras: vHaras, administradores: vAdministradores, parametros: vParametros, auditoria: vAuditoria, atualizacao: vAtualizacao, sobre: vSobre, glossario: vGlossario };
+  function vMarca() {
+    return '<div class="sec" style="max-width:1100px"><div class="card stack"><h2>Logotipo e imagens padrão</h2><p class="small muted">Valem para todos os haras. O gestor de cada haras pode trocar o cabeçalho, o banner e o fundo do app pelas próprias imagens; sem isso, aparecem estas. Sem nenhuma imagem enviada, ficam o logotipo e as ilustrações do Haras360.</p>' +
+      UI.editorImagens(['logo', 'entrada', 'cabecalho', 'banner', 'app'], S.marca, 'plataforma') + '</div>' +
+      '<p class="note">A tela de entrada e o logotipo são públicos, porque aparecem antes do login. O ícone do app no celular continua sendo o do Haras360.</p></div>';
+  }
+  const VIEWS = { marca: vMarca, haras: vHaras, administradores: vAdministradores, parametros: vParametros, auditoria: vAuditoria, atualizacao: vAtualizacao, sobre: vSobre, glossario: vGlossario };
   const AFTER = {
     parametros() { desenharPlanos(); desenharFaixas(); },
+    marca() { UI.ligarEditorImagens('/api/admin/marca', async () => { await recarregar(); render(); }); },
     auditoria() {
       carregarAuditoria();
       $('#aud-f').addEventListener('submit', e => { e.preventDefault(); audF.haras = $('#af-haras').value; audF.acao = $('#af-acao').value; audF.texto = $('#af-texto').value.trim(); audF.de = $('#af-de').value; audF.ate = $('#af-ate').value; carregarAuditoria(); });
@@ -239,6 +249,7 @@
     nav: el => go(el.dataset.v),
     fechar: () => UI.fechar(),
     sair: async () => { try { await API.post('/api/logout'); } catch (e) { } location.href = '/entrar'; },
+    'img-padrao': el => UI.confirmar(el, 'Confirmar', async () => { if (await executar(el, () => API.del('/api/admin/marca/' + el.dataset.tipo))) render(); }),
     'novo-haras': () => UI.abrir({ titulo: 'Novo haras', corpo: '<form class="fgrid" novalidate><div class="field full"><label for="nh-nome">Nome do haras</label><input id="nh-nome" class="inp"></div><div class="field"><label for="nh-mun">Município/UF</label><input id="nh-mun" class="inp"></div><div class="field full"><label for="nh-logo">Logotipo (opcional)</label><input id="nh-logo" type="file" class="inp" accept="image/png,image/jpeg,image/webp"></div><div class="field"><label for="nh-plano">Plano</label><select id="nh-plano" class="inp">' + Object.keys(S.parametros.planos).map(p => '<option>' + esc(p) + '</option>').join('') + '</select></div><div class="field full"><label for="nh-gn">Nome do gestor</label><input id="nh-gn" class="inp"></div><div class="field full"><label for="nh-ge">E-mail do gestor (login)</label><input id="nh-ge" type="email" class="inp"></div>' + senhaForm('nh-gs', 'Senha inicial do gestor (mín. 8)') + '</form><p class="small muted">No primeiro acesso o gestor cadastra o 2FA no celular.</p>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="criar-haras">Criar haras</button>' }),
     'criar-haras': async el => {
       const v = id => document.getElementById(id).value.trim();

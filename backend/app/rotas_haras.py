@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy import select
 
 from . import logos as L
+from . import imagens as IMG
 from . import parametros as P
 from . import regras as R
 from .config import FOTOS_DIR, LOGOS_DIR, VERSAO
@@ -116,6 +117,7 @@ def estado(u: Usuario = Depends(do_haras), db=Depends(get_db)):
         "notifPrefs": h.notif_prefs or R.notif_prefs_padrao(), "lidas": lidas,
         "tarefas": ts, "gestacoes": {a["id"]: R.gestacao(a, regs, hd["gestacaoDias"]) for a in animais},
         "notificacoes": R.notificacoes(hd, animais, regs, prots, ts),
+        "imagens": IMG.descrever(db, u.haras_id),
     }
 
 

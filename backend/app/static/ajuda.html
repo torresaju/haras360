@@ -6,46 +6,49 @@
 <title>Haras360 Manual</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Zilla+Slab:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 [hidden]{display:none!important}
 body{margin:0}
 img{max-width:100%}
 :root{
-  /* Layout: barra lateral verde-floresta fixa + área de trabalho em grade; no celular a barra vira faixa superior rolável */
-  --bg:#eceee8; --surface:#fafbf7; --surface-2:#f1f3ed; --ink:#1b231e; --muted:#58645c; --line:#d4d9cf; --line-2:#e3e7df;
-  --forest:#1e3a2b; --forest-2:#27493a; --forest-ink:#e8f0e9; --forest-muted:#a3baa9;
-  --accent:#96541d; --accent-soft:#f2e4d4; --accent-ink:#ffffff;
-  --late:#ad3327; --late-soft:#f6e0db; --soon:#9b640c; --soon-soft:#f5e9cf; --ok:#2a6f46; --ok-soft:#dbeee1; --info:#2c5b84; --info-soft:#dee8f2;
-  --shadow:0 1px 2px rgba(20,32,24,.06),0 8px 24px rgba(20,32,24,.07);
-  --f-display:"Zilla Slab",Rockwell,"Roboto Slab",Georgia,serif;
-  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  /* Identidade v1.3.0 · elegância equestre + tecnologia: verde haras, dourado, areia, grafite e verde sálvia */
+  --bg:#F3F1E9; --surface:#FFFFFF; --surface-2:#F7F5EE; --ink:#292F2B; --muted:#5C6A61; --line:#E2DED1; --line-2:#ECE9DF;
+  --forest:#193D30; --forest-2:#22503F; --forest-ink:#F3F1E9; --forest-muted:#A9BBAF;
+  --accent:#193D30; --accent-soft:#E2ECE5; --accent-ink:#FFFFFF;
+  --gold:#D5A064; --gold-ink:#292F2B; --gold-text:#8A5E26; --gold-soft:#F6EBDC; --salvia:#82978A;
+  --late:#B3261E; --late-soft:#F9E3DF; --soon:#8F5A0B; --soon-soft:#FBEED7; --ok:#2E6B45; --ok-soft:#DDEFE3; --info:#2C5B84; --info-soft:#E0EAF3; --repro:#6B4E8C; --repro-soft:#EEE8F5;
+  --shadow:0 1px 2px rgba(25,61,48,.05),0 8px 24px rgba(25,61,48,.06);
+  --f-display:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
-  --r:10px;
+  --r:14px; --lat:252px;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#101511; --surface:#171f19; --surface-2:#1d261f; --ink:#e3eae3; --muted:#97a59b; --line:#2b362e; --line-2:#232d26;
-  --forest:#0b150f; --forest-2:#16251b; --forest-ink:#dde8df; --forest-muted:#85a08d;
-  --accent:#d38b4c; --accent-soft:#38261a; --accent-ink:#1b120a;
-  --late:#ec7c6a; --late-soft:#3a1d18; --soon:#e1aa52; --soon-soft:#352810; --ok:#6cbf88; --ok-soft:#163022; --info:#7eaedb; --info-soft:#172838;
+  --bg:#0F1713; --surface:#16211B; --surface-2:#1C2922; --ink:#E8ECE6; --muted:#A3B2A8; --line:#2A3830; --line-2:#223029;
+  --forest:#0C1A14; --forest-2:#17302A; --forest-ink:#EDEBE2; --forest-muted:#93A99B;
+  --accent:#8CC5A2; --accent-soft:#1D3328; --accent-ink:#0C1A14;
+  --gold:#D5A064; --gold-ink:#1B1A16; --gold-text:#E2B57E; --gold-soft:#33291B; --salvia:#82978A;
+  --late:#F0897A; --late-soft:#3A1D18; --soon:#E6B25C; --soon-soft:#352810; --ok:#7CCB97; --ok-soft:#163022; --info:#8DB8E0; --info-soft:#172838; --repro:#C3A6E6; --repro-soft:#2A2238;
   --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark;
 }}
 :root[data-theme="dark"]{
-  --bg:#101511; --surface:#171f19; --surface-2:#1d261f; --ink:#e3eae3; --muted:#97a59b; --line:#2b362e; --line-2:#232d26;
-  --forest:#0b150f; --forest-2:#16251b; --forest-ink:#dde8df; --forest-muted:#85a08d;
-  --accent:#d38b4c; --accent-soft:#38261a; --accent-ink:#1b120a;
-  --late:#ec7c6a; --late-soft:#3a1d18; --soon:#e1aa52; --soon-soft:#352810; --ok:#6cbf88; --ok-soft:#163022; --info:#7eaedb; --info-soft:#172838;
+  --bg:#0F1713; --surface:#16211B; --surface-2:#1C2922; --ink:#E8ECE6; --muted:#A3B2A8; --line:#2A3830; --line-2:#223029;
+  --forest:#0C1A14; --forest-2:#17302A; --forest-ink:#EDEBE2; --forest-muted:#93A99B;
+  --accent:#8CC5A2; --accent-soft:#1D3328; --accent-ink:#0C1A14;
+  --gold:#D5A064; --gold-ink:#1B1A16; --gold-text:#E2B57E; --gold-soft:#33291B; --salvia:#82978A;
+  --late:#F0897A; --late-soft:#3A1D18; --soon:#E6B25C; --soon-soft:#352810; --ok:#7CCB97; --ok-soft:#163022; --info:#8DB8E0; --info-soft:#172838; --repro:#C3A6E6; --repro-soft:#2A2238;
   --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{min-height:100%}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
-h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.005em}
+h1,h2,h3{font-family:var(--f-display);font-weight:800;line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.015em}
 h1{font-size:clamp(1.6rem,1.2rem + 1.4vw,2.2rem)}
 h2{font-size:1.3rem}
 h3{font-size:1.06rem}
 p{margin:0}
-a{color:var(--accent)}
+a{color:var(--accent);text-underline-offset:2px}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .mono{font-family:var(--f-mono);font-size:.86em;letter-spacing:.01em;font-variant-numeric:tabular-nums}
@@ -59,11 +62,12 @@ button,input,select,textarea{font:inherit;color:inherit}
 @media (max-width:1000px){.grid2{grid-template-columns:minmax(0,1fr)}}
 
 /* botões */
-.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem;line-height:1.2;text-decoration:none;color:var(--ink);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);padding:9px 16px;border-radius:10px;cursor:pointer;font-weight:600;font-size:.9rem;line-height:1.2;text-decoration:none;color:var(--ink);white-space:nowrap}
 .btn:hover{border-color:var(--muted)}
 .btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.pri:hover{filter:brightness(1.06)}
 .btn.ghost{background:transparent;border-color:transparent;color:var(--accent);padding-inline:8px}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:var(--gold-ink)}
 .btn.ghost:hover{background:var(--accent-soft)}
 .btn.sm{padding:5px 10px;font-size:.82rem}
 .btn.danger{color:var(--late)}
@@ -92,7 +96,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 @media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:2px;text-align:left;cursor:pointer}
 .kpi:hover{border-color:var(--muted)}
-.kpi b{font-family:var(--f-display);font-size:2rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi b{font-family:var(--f-display);font-size:2rem;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
 .kpi span{font-size:.84rem;color:var(--muted)}
 .kpi.late b{color:var(--late)} .kpi.soon b{color:var(--soon)} .kpi.info b{color:var(--info)}
 
@@ -197,65 +201,75 @@ textarea.inp{min-height:84px;resize:vertical}
 }
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-/* ---------- barra superior com menus agrupados (gestor e administrador) ---------- */
-:root{--forest-accent:#e3ab6c}
-.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--forest);color:var(--forest-ink);padding-inline:clamp(16px,3vw,32px)}
-.topbar-in{display:flex;align-items:center;gap:18px;min-height:60px;max-width:1400px;margin:0 auto}
-.brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;flex:none}
-.brand svg{width:30px;height:30px;flex:none;color:var(--forest-accent)}
-.brand b{font-family:var(--f-display);font-size:1.3rem;font-weight:700;display:block;line-height:1}
-.brand small{display:block;font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--forest-muted);margin-top:2px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.menu{display:flex;align-items:center;gap:2px;margin-left:auto}
-.menu>li,.menu>div{list-style:none;position:relative}
-.mi{display:flex;align-items:center;gap:6px;border:0;background:none;color:var(--forest-muted);padding:8px 11px;border-radius:7px;cursor:pointer;font-weight:600;font-size:.9rem;white-space:nowrap;text-decoration:none}
-.mi:hover,.mi[aria-expanded="true"]{color:var(--forest-ink);background:var(--forest-2)}
-.mi[aria-current="page"]{color:var(--forest-ink);box-shadow:inset 0 -2px 0 var(--forest-accent);border-radius:7px 7px 0 0}
-.mi .caret{width:10px;height:10px;opacity:.7}
-.mi.off{opacity:.45}
-.drop-m{position:absolute;right:0;top:calc(100% + 6px);min-width:230px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:6px;display:flex;flex-direction:column;gap:2px;z-index:50}
-.menu>div:not(:last-child) .drop-m{right:auto;left:0}
-.di{display:flex;align-items:center;gap:10px;border:0;background:none;color:var(--ink);padding:9px 10px;border-radius:7px;cursor:pointer;font-size:.9rem;text-align:left;text-decoration:none;width:100%}
-.di:hover{background:var(--surface-2)}
-.di[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
-.di.off{color:var(--muted)}
-.di .tag{margin-left:auto;font-size:.68rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:1px 7px}
-.di small{display:block;color:var(--muted);font-size:.78rem}
-.dsep{height:1px;background:var(--line-2);margin:4px 2px}
-.tb-acts{display:flex;align-items:center;gap:6px;flex:none}
-.tb-ic{position:relative;border:0;background:none;color:var(--forest-ink);width:38px;height:38px;border-radius:8px;display:grid;place-items:center;cursor:pointer}
-.tb-ic:hover{background:var(--forest-2)}
-.tb-ic svg{width:20px;height:20px}
+/* ---------- v1.3.0: menu lateral permanente + cabeçalho do haras (gestor e administrador) ---------- */
+:root{--forest-accent:var(--gold)}
+.side{position:fixed;inset:0 auto 0 0;width:var(--lat);z-index:45;background:var(--forest);color:var(--forest-ink);display:flex;flex-direction:column;overflow:hidden}
+.side-marca{display:flex;align-items:center;gap:10px;padding:22px 20px 18px;color:inherit;text-decoration:none}
+.logo-sim{width:46px;height:46px;flex:none}
+.marca-txt b{display:block;font-family:var(--f-display);font-weight:800;font-size:1.45rem;line-height:1;letter-spacing:-.02em}
+.marca-txt b i{font-style:normal;color:var(--gold)}
+.marca-txt small{display:block;font-size:.62rem;letter-spacing:.26em;text-transform:uppercase;color:var(--forest-muted);margin-top:5px}
+.marca-img img{max-height:52px;max-width:200px;display:block;object-fit:contain}
+.side-nav{flex:1;overflow-y:auto;padding:6px 12px 12px;display:flex;flex-direction:column;gap:2px}
+.si{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:var(--forest-ink);opacity:.86;padding:10px 12px;border-radius:10px;cursor:pointer;font:600 .93rem var(--f-body);text-align:left;text-decoration:none}
+.si svg{width:20px;height:20px;flex:none}
+.si .caret{width:11px;height:11px;margin-left:auto;transition:transform .15s}
+.si[aria-expanded="true"] .caret{transform:rotate(180deg)}
+.si:hover{background:var(--forest-2);opacity:1}
+.si[aria-current="page"]{background:var(--gold);color:var(--gold-ink);opacity:1}
+.si[data-sel]{opacity:1}
+.si.off{opacity:.5}
+.si .tag{margin-left:auto;font-size:.62rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:1px solid currentColor;border-radius:99px;padding:1px 7px;opacity:.8}
+.sub{display:flex;flex-direction:column;gap:1px;margin:2px 0 6px 31px;padding-left:10px;border-left:1px solid rgba(243,241,233,.16)}
+.sub .si{padding:8px 10px;font-weight:500;font-size:.88rem}
+.side-pe{height:150px;flex:none;position:relative;opacity:.9;mask-image:linear-gradient(to bottom,transparent,#000 45%)}
+.side-ilu{position:absolute;inset:0;width:100%;height:100%}
+.cab{position:relative;margin-left:var(--lat);min-height:92px;background:var(--forest);color:#fff;overflow:hidden}
+.cab-fundo{position:absolute;inset:0}
+.cab-img{width:100%;height:100%;object-fit:cover;display:block}
+.cab::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(16,36,28,.92) 0%,rgba(16,36,28,.6) 42%,rgba(16,36,28,.15) 75%,rgba(16,36,28,.45) 100%);pointer-events:none}
+.cab-in{position:relative;z-index:1;display:flex;align-items:center;gap:16px;min-height:92px;padding-inline:clamp(16px,3vw,36px);max-width:1440px}
+.cab-id{display:flex;align-items:center;gap:14px;min-width:0;flex:1}
+.cab-nome b{display:block;font:800 clamp(1.15rem,1rem + .8vw,1.6rem)/1.1 var(--f-display);letter-spacing:-.015em;text-shadow:0 1px 8px rgba(0,0,0,.35);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cab-nome small{display:block;font-size:.85rem;opacity:.9;margin-top:3px}
+.tb-acts{display:flex;align-items:center;gap:8px;flex:none}
+.tb-ic{position:relative;border:0;background:rgba(0,0,0,.18);color:#fff;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;cursor:pointer}
+.tb-ic:hover{background:rgba(0,0,0,.32)}
+.tb-ic svg{width:21px;height:21px}
 .tb-ic .badge{position:absolute;top:2px;right:0;margin:0}
 .badge{background:var(--late);color:#fff;font-size:.68rem;font-weight:700;padding:1px 6px;border-radius:99px;font-variant-numeric:tabular-nums}
-.avatar{width:32px;height:32px;border-radius:50%;background:var(--forest-accent);color:var(--forest);display:grid;place-items:center;font-weight:700;font-size:.78rem;flex:none}
-.userbtn{display:flex;align-items:center;gap:9px;border:0;background:none;color:var(--forest-ink);padding:4px 8px 4px 4px;border-radius:99px;cursor:pointer;text-align:left}
-.userbtn:hover,.userbtn[aria-expanded="true"]{background:var(--forest-2)}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--gold);color:var(--gold-ink);display:grid;place-items:center;font-weight:800;font-size:.8rem;flex:none}
+.userbtn{display:flex;align-items:center;gap:9px;border:0;background:rgba(0,0,0,.18);color:#fff;padding:4px 10px 4px 4px;border-radius:99px;cursor:pointer;text-align:left}
+.userbtn:hover,.userbtn[aria-expanded="true"]{background:rgba(0,0,0,.32)}
+.userbtn .caret{width:10px;height:10px}
 .userbtn span.n{font-size:.86rem;font-weight:600;line-height:1.15}
-.userbtn span.n small{display:block;font-weight:500;color:var(--forest-muted);font-size:.74rem}
+.userbtn span.n small{display:block;font-weight:500;opacity:.85;font-size:.74rem}
+.drop-m{position:absolute;right:0;top:calc(100% + 6px);min-width:240px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:6px;display:flex;flex-direction:column;gap:2px;z-index:60}
+.di{display:flex;align-items:center;gap:10px;border:0;background:none;color:var(--ink);padding:9px 10px;border-radius:8px;cursor:pointer;font-size:.9rem;text-align:left;text-decoration:none;width:100%}
+.di:hover{background:var(--surface-2)}
+.dsep{height:1px;background:var(--line-2);margin:4px 2px}
 .hamb{display:none}
+.side-veu{position:fixed;inset:0;background:rgba(10,20,15,.45);z-index:44}
 .pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.pagehead h1{color:var(--forest)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pagehead h1{color:var(--ink)}}
 .pagehead .acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-main.wrapm{padding-inline:clamp(16px,3vw,32px);padding-block:24px 72px;max-width:1400px;margin:0 auto;min-width:0}
+main.wrapm{padding-inline:clamp(16px,3vw,36px);padding-block:26px 72px;max-width:1440px;min-width:0;margin-left:var(--lat)}
 .off-note{display:flex;gap:10px;align-items:flex-start}
-@media (max-width:980px){
+@media (max-width:1000px){
+  .side{transform:translateX(-100%);transition:transform .2s ease;box-shadow:0 0 40px rgba(0,0,0,.35)}
+  .side.aberto{transform:none}
+  .cab,main.wrapm{margin-left:0}
   .hamb{display:grid}
-  .menu{display:none;position:absolute;left:0;right:0;top:100%;background:var(--forest);flex-direction:column;align-items:stretch;padding:8px 16px 16px;gap:2px;max-height:calc(100dvh - 60px);overflow-y:auto;box-shadow:0 12px 24px rgba(0,0,0,.25)}
-  .menu.aberto{display:flex}
-  .menu>div{width:100%}
-  .mi{width:100%;justify-content:space-between;padding:11px 10px}
-  .mi[aria-current="page"]{box-shadow:inset 3px 0 0 var(--forest-accent);border-radius:7px}
-  .drop-m{position:static;box-shadow:none;border:0;background:var(--forest-2);margin:2px 0 6px;min-width:0}
-  .drop-m .di{color:var(--forest-ink)}
-  .drop-m .di:hover{background:var(--forest)}
-  .drop-m .di[aria-current="page"]{background:var(--forest);color:var(--forest-accent)}
-  .drop-m .di small,.drop-m .di .tag{color:var(--forest-muted);border-color:var(--forest-muted)}
-  .userbtn span.n{display:none}
-  .topbar-in{gap:10px}
+  .userbtn span.n,.userbtn .caret{display:none}
+  .cab-in{min-height:76px;gap:10px}
+  .cab{min-height:76px}
 }
+@media (prefers-reduced-motion:reduce){.side{transition:none}}
 
 /* logotipo do haras na barra superior */
-.logo-h{display:grid;place-items:center;background:#fff;border-radius:8px;height:42px;min-width:42px;max-width:110px;padding:3px 6px;flex:none}
-.logo-h img{max-height:36px;max-width:98px;object-fit:contain;display:block}
+.logo-h{display:grid;place-items:center;background:#fff;border-radius:12px;height:56px;min-width:56px;max-width:130px;padding:4px 8px;flex:none;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+.logo-h img{max-height:48px;max-width:114px;object-fit:contain;display:block}
 .brand .nome-h{font-size:1.05rem;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .logo-prev{display:grid;place-items:center;background:#fff;border:1px solid var(--line);border-radius:10px;width:160px;height:160px;padding:10px;flex:none}
 .logo-prev img{max-width:100%;max-height:100%;object-fit:contain}
@@ -276,10 +290,72 @@ ol.passos{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;
 .audio-reg .small svg{width:15px;height:15px}
 .audio-reg audio{width:min(360px,100%);height:36px}
 
-.cab{background:var(--forest);color:var(--forest-ink);padding-inline:clamp(16px,4vw,48px);padding-block:36px 30px}
-.cab-in{max-width:1100px;margin:0 auto}
-.cab h1{font-size:clamp(1.8rem,1.3rem + 2vw,2.6rem)}
-.cab p{color:var(--forest-muted);max-width:62ch;margin-top:10px}
+/* ---------- Dashboard v1.3.0 ---------- */
+.data-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 14px;font-weight:600;font-size:.88rem}
+.data-chip svg{width:18px;height:18px}
+.kpis5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+@media (max-width:1200px){.kpis5{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:640px){.kpis5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi2{display:flex;align-items:center;gap:14px;border:1px solid transparent;border-radius:16px;padding:16px;text-align:left;cursor:pointer;font:inherit;color:var(--ink);min-height:96px}
+.kpi2:hover{border-color:var(--line)}
+.kpi2 .kpi-ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.6)}
+.kpi2 .kpi-ic svg{width:26px;height:26px}
+.kpi2 b{display:block;font:800 2rem/1 var(--f-display);font-variant-numeric:tabular-nums}
+.kpi2 span span{display:block;font-size:.84rem;margin-top:4px;color:var(--muted)}
+.kpi2.k-ok{background:var(--ok-soft)} .kpi2.k-ok .kpi-ic,.kpi2.k-ok b{color:var(--ok)}
+.kpi2.k-late{background:var(--late-soft)} .kpi2.k-late .kpi-ic,.kpi2.k-late b,.kpi2.k-late span span{color:var(--late)}
+.kpi2.k-soon{background:var(--gold-soft)} .kpi2.k-soon .kpi-ic,.kpi2.k-soon b{color:var(--gold-text)}
+.kpi2.k-repro{background:var(--repro-soft)} .kpi2.k-repro .kpi-ic,.kpi2.k-repro b{color:var(--repro)}
+.kpi2.k-info{background:var(--info-soft)} .kpi2.k-info .kpi-ic,.kpi2.k-info b{color:var(--info)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .kpi2 .kpi-ic{background:rgba(0,0,0,.2)}}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:start}
+@media (max-width:1100px){.grid3{grid-template-columns:minmax(0,1fr)}}
+.card-h h3{display:flex;align-items:center;gap:8px}
+.card-h h3 svg{width:19px;height:19px;color:var(--forest)}
+.evs{display:flex;flex-direction:column}
+.ev{display:grid;grid-template-columns:48px 26px minmax(0,1fr);gap:12px;align-items:center;border:0;border-top:1px solid var(--line-2);background:none;padding:10px 0;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.ev:first-child{border-top:0}
+.ev-d{display:flex;flex-direction:column;align-items:center;background:var(--gold-soft);border-radius:10px;padding:5px 0;line-height:1}
+.ev-d b{font:800 1.15rem var(--f-display)} .ev-d small{font-size:.66rem;font-weight:700;letter-spacing:.05em;color:var(--gold-text);margin-top:2px}
+.ev-ic svg{width:22px;height:22px;color:var(--forest)}
+.ev-t b{display:block;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .ev-t small{color:var(--muted);font-size:.8rem}
+.rosca-w{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.rosca{width:140px;height:140px;flex:none}
+.rosca-n{font:800 30px var(--f-display);fill:var(--ink)} .rosca-t{font:500 11px var(--f-body);fill:var(--muted)}
+.leg{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;flex:1;min-width:150px;font-size:.88rem}
+.leg li{display:flex;align-items:center;gap:8px}
+.leg i{width:11px;height:11px;border-radius:50%;flex:none}
+.leg b{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums} .leg small{color:var(--muted);font-weight:500}
+.lst{margin:0;display:flex;flex-direction:column}
+.lst div{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-top:1px solid var(--line-2)}
+.lst div:first-child{border-top:0}
+.lst dt{color:var(--muted)} .lst dd{margin:0;font:800 1.1rem var(--f-display)}
+.banner{position:relative;border-radius:18px;overflow:hidden;min-height:150px;background:var(--forest)}
+.banner-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.banner::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(243,241,233,.96) 0%,rgba(243,241,233,.86) 45%,rgba(243,241,233,0) 80%)}
+.banner-in{position:relative;z-index:1;display:flex;align-items:center;gap:18px;padding:26px 28px;min-height:150px;flex-wrap:wrap;color:#292F2B}
+.banner-in h2{font-size:1.4rem;color:#193D30} .banner-in p{max-width:52ch;margin-top:4px}
+.banner-ic{width:52px;height:52px;border-radius:14px;background:#F6EBDC;display:grid;place-items:center;color:#8A5E26;flex:none}
+.banner-ic svg{width:30px;height:30px}
+.banner .btn.gold{margin-left:auto}
+hr.div{border:0;border-top:1px solid var(--line-2);margin:14px 0}
+
+/* ---------- editor de imagens (v1.3.0) ---------- */
+.img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.img-slot{display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--surface)}
+.img-prev{position:relative;border-radius:10px;overflow:hidden;background:var(--surface-2);max-height:220px;width:100%;margin-inline:auto}
+.img-prev.escuro{background:var(--forest)}
+.img-prev img,.img-prev svg{width:100%;height:100%;object-fit:cover;display:block}
+.img-marca{height:100%;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--forest-ink)}
+.img-marca .logo-sim{width:48px;height:48px}
+.img-info{display:flex;flex-direction:column;gap:2px}
+.inp.sm{padding:5px 8px;font-size:.82rem;width:auto}
+.card h2>svg{width:22px;height:22px;vertical-align:-4px;margin-right:8px;color:var(--forest)}
+
+.acab{position:relative;background:var(--forest);color:var(--forest-ink);padding-inline:clamp(16px,4vw,48px);padding-block:36px 30px}
+.acab-in{max-width:1100px;margin:0 auto}
+.acab h1{font-size:clamp(1.8rem,1.3rem + 2vw,2.6rem)}
+.acab p{color:var(--forest-muted);max-width:62ch;margin-top:10px}
 .corpo{max-width:1100px;margin:0 auto;padding-inline:clamp(16px,4vw,48px);padding-block:28px 80px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:40px}
 .sumario{position:sticky;top:16px;align-self:start;display:flex;flex-direction:column;gap:2px;font-size:.9rem}
 .sumario a{color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:6px;border-left:2px solid var(--line)}
@@ -302,10 +378,10 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
 </head>
 <body>
 
-<header class="cab"><div class="cab-in"><div class="eyebrow" style="color:var(--forest-muted)">Ajuda</div><h1>Manual do Haras360</h1><p>Como usar o portal do gestor, o Portal Campo e a administração da plataforma. As telas mostram o Haras Demonstração, com dados fictícios.</p></div></header>
+<header class="acab"><div class="acab-in"><div class="row" style="gap:10px;margin-bottom:12px"><span id="marca-ajuda" class="row" style="gap:10px"><svg class="logo-sim" viewBox="0 0 120 120" aria-hidden="true"><path d="M18 94 A50 50 0 0 1 94 20" fill="none" stroke="#D5A064" stroke-width="6" stroke-linecap="round"/><path d="M34 106 C31 84 34 64 43 49 C48 39 53 31 58 26 L60 16 L65 23 L69 15 L71 25 C78 30 84 38 89 48 C93 56 98 63 100 69 C101 74 97 78 92 77 C87 76 83 73 79 71 C74 69 70 70 68 74 C66 82 67 94 71 106" fill="none" stroke="#F3F1E9" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M57 32 C50 44 46 58 46 76" fill="none" stroke="#F3F1E9" stroke-width="3.2" stroke-linecap="round"/><circle cx="76" cy="41" r="2.8" fill="#F3F1E9"/></svg><span class="marca-txt"><b>Haras<i>360</i></b><small>Gestão de haras</small></span></span></div><div class="eyebrow" style="color:var(--forest-muted)">Ajuda</div><h1>Manual do Haras360</h1><p>Como usar o portal do gestor, o Portal Campo e a administração da plataforma. As telas mostram o Haras Demonstração, com dados fictícios.</p></div></header>
 <div class="corpo">
   <nav class="sumario" aria-label="Sumário">
-    <a href="#acesso">Primeiro acesso e 2FA</a><a href="#painel">Painel</a><a href="#importar">Importar ABCCMM</a><a href="#animais">Animais e prontuário</a><a href="#agenda">Agenda e protocolos</a><a href="#campo">Portal Campo</a><a href="#app">App Android do caseiro</a><a href="#equipe">Equipe e sessões</a><a href="#parametros">Parametrizações</a><a href="#auditoria">Auditoria</a><a href="#admin">Administração da plataforma</a><a href="#atualizacao">Atualização e backup</a>
+    <a href="#acesso">Primeiro acesso e 2FA</a><a href="#painel">Dashboard e menus</a><a href="#importar">Importar ABCCMM</a><a href="#animais">Animais e prontuário</a><a href="#agenda">Agenda e protocolos</a><a href="#campo">Portal Campo</a><a href="#app">App Android do caseiro</a><a href="#equipe">Equipe e sessões</a><a href="#parametros">Parametrizações</a><a href="#imagens">Imagens do haras</a><a href="#auditoria">Auditoria</a><a href="#admin">Administração da plataforma</a><a href="#marca">Marca e imagens da plataforma</a><a href="#atualizacao">Atualização e backup</a>
   </nav>
   <article>
     <section id="acesso"><h2>Primeiro acesso e verificação em duas etapas</h2>
@@ -314,10 +390,14 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       <figure><img src="/ajuda/img/2fa.png" alt="Tela de ativação do 2FA com QR Code" loading="lazy"><figcaption>Ativação do 2FA no primeiro acesso do gestor.</figcaption></figure>
       <p>Perdeu o celular? Na tela do código, use "Perdi o celular: usar código de recuperação". Depois, gere novos códigos no menu com o seu nome. Se não tiver mais códigos, outro gestor ou o administrador redefine o seu 2FA.</p>
     </section>
-    <section id="painel"><h2>Painel</h2><span class="perfil">Gestor</span>
-      <p>Mostra o que precisa de atenção: procedimentos atrasados, os previstos para os próximos 7 dias, pendências da ABCCMM, gestações em andamento e os últimos registros feitos pelo caseiro.</p>
-      <figure><img src="/ajuda/img/painel.png" alt="Painel do gestor" loading="lazy"><figcaption>Painel do gestor com a barra de menus no topo.</figcaption></figure>
-      <p>Os menus ficam agrupados: Plantel (Animais, Importar ABCCMM), Manejo (Agenda, Protocolos), Equipe, Assistente, Administração e Ajuda. O sino mostra os avisos não lidos.</p>
+    <section id="painel"><h2>Dashboard e menus</h2><span class="perfil">Gestor</span>
+      <p>O Dashboard mostra o que precisa de atenção: cinco indicadores (animais, vacinas vencidas, vacinas dos próximos 7 dias, gestações ativas e partos previstos para 30 dias), os próximos eventos, a composição do rebanho, a situação reprodutiva, a lista Atenção agora e os últimos registros feitos pelo caseiro.</p>
+      <figure><img src="/ajuda/img/painel.png" alt="Dashboard do gestor" loading="lazy"><figcaption>Dashboard do gestor com o menu lateral.</figcaption></figure>
+      <p>O menu fica na lateral, agrupado por módulo: Dashboard; Animais (Plantel, Importar ABCCMM); Sanidade (Vacinas e manejos, Protocolos); Reprodução; Agenda; Relatórios (em breve); Administração (Equipe, Parametrizações, Auditoria, Assistente, Plano) e Ajuda. Toque no nome do grupo para abrir ou fechar. No celular, o menu abre pelo botão ☰. No cabeçalho ficam o logotipo e o nome do haras, o sino com os avisos não lidos e o menu com o seu nome.</p>
+      <div class="fotos-app">
+        <figure><img src="/ajuda/img/sanidade.png" alt="Vacinas e manejos" loading="lazy"><figcaption>Sanidade › Vacinas e manejos.</figcaption></figure>
+        <figure><img src="/ajuda/img/reproducao.png" alt="Reprodução" loading="lazy"><figcaption>Reprodução: coberturas, diagnósticos e partos previstos.</figcaption></figure>
+      </div>
     </section>
     <section id="importar"><h2>Importar o Relatório de Plantel ABCCMM</h2><span class="perfil">Gestor</span>
       <ol><li>No Sistema de Gestão ABCCMM, gere o Relatório de Plantel em PDF.</li><li>Em Plantel › Importar ABCCMM, envie o PDF. A leitura acontece no seu navegador.</li><li>Confira a lista: o sistema compara com o total informado no relatório e marca animais novos, a atualizar e já cadastrados.</li><li>Clique em Importar. A agenda sanitária é calculada na hora.</li></ol>
@@ -334,24 +414,27 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       <p>Em Manejo › Protocolos você ajusta idades, séries, intervalos e ativa ou desativa cada item. Os padrões seguem a VetJr. UFMG para vacinas e práticas de mercado para os demais manejos; valide com o veterinário do plantel.</p>
     </section>
     <section id="campo"><h2>Portal Campo do caseiro</h2><span class="perfil">Caseiro</span>
-      <p>Feito para o celular: tarefas do dia, fichas dos animais, registro com fotos e ocorrências. Ao tocar em Registrar em uma tarefa, o formulário já vem preenchido.</p>
+      <p>Feito para o celular: tarefas do dia, fichas dos animais, registro com fotos e ocorrências. Ao tocar em Registrar em uma tarefa, o formulário já vem preenchido. O botão <b>Registrar ocorrência</b> fica no topo da tela Hoje. A barra de baixo tem Hoje, Animais, Agenda (próximos 30 dias) e Mais (avisos, assistente, instalar o app, senha, manual e sair).</p>
       <figure><img src="/ajuda/img/campo.png" alt="Portal Campo no celular" loading="lazy" style="max-width:420px"><figcaption>Portal Campo na largura de um celular.</figcaption></figure>
       <p>Para trabalhar sem internet no campo, use o app Android: toque em <b>Instalar o app Android</b>, no topo da tela Hoje.</p>
     </section>
     <section id="app"><h2>App Android do caseiro</h2><span class="perfil">Caseiro</span><span class="perfil">Gestor</span>
       <p>O app funciona sem internet: o caseiro registra no pasto e o celular envia sozinho quando chega ao Wi-Fi da sede. Dados móveis (3G/4G) não são usados. Android 8 ou superior.</p>
-      <ol><li><b>Instalar:</b> no celular do caseiro, entre no Portal Campo e toque em Instalar o app Android, no topo da tela Hoje. O gestor também encontra o link e um QR Code de download na janela Vincular celular. Se o Android pedir, permita instalar apps desta origem.</li><li><b>Vincular:</b> o gestor abre Equipe e toca em Vincular celular na linha do caseiro. No app, toque em Ler QR Code. O código vale 10 minutos e uma única vez. Sem câmera, digite o servidor e o código mostrados abaixo do QR Code.</li><li><b>Trabalhar:</b> a tela Hoje mostra as tarefas atrasadas, de hoje e da semana. Toque em Registrar numa tarefa e o formulário já vem preenchido. Até 4 fotos por registro, comprimidas no celular, e um áudio de até 2 minutos: toque em Gravar áudio, fale e toque em Parar. Dá para ouvir e apagar antes de salvar.</li><li><b>Enviar:</b> a cada hora, e sempre que o app abre no Wi-Fi, os registros e as fotos vão para o servidor. Na aba Envio estão a fila, a hora da última sincronização e o botão Sincronizar agora.</li></ol>
+      <ol><li><b>Instalar:</b> no celular do caseiro, entre no Portal Campo e toque em Instalar o app Android, no topo da tela Hoje. O gestor também encontra o link e um QR Code de download na janela Vincular celular. Se o Android pedir, permita instalar apps desta origem.</li><li><b>Vincular:</b> o gestor abre Equipe e toca em Vincular celular na linha do caseiro. No app, toque em Ler QR Code. O código vale 10 minutos e uma única vez. Sem câmera, digite o servidor e o código mostrados abaixo do QR Code.</li><li><b>Trabalhar:</b> a tela Hoje mostra as tarefas atrasadas, de hoje e da semana. Toque em Registrar numa tarefa e o formulário já vem preenchido. Até 4 fotos por registro, comprimidas no celular, e um áudio de até 2 minutos: toque em Gravar áudio, fale e toque em Parar. Dá para ouvir e apagar antes de salvar.</li><li><b>Enviar:</b> a cada hora, e sempre que o app abre no Wi-Fi, os registros e as fotos vão para o servidor. Em Mais › Envio estão a fila, a hora da última sincronização e o botão Sincronizar agora.</li></ol>
+      <p>A barra de baixo do app tem Hoje, Animais, Agenda (próximos 30 dias) e Mais (Avisos, Envio, versão do app e vincular de novo). O fundo e o logotipo do haras são baixados no Wi-Fi e ficam guardados no celular.</p>
       <figure><img src="/ajuda/img/vincular.png" alt="QR Code para vincular o celular do caseiro" loading="lazy"><figcaption>Equipe › Vincular celular: o QR Code que o app lê.</figcaption></figure>
       <div class="fotos-app">
         <figure><img src="/ajuda/img/app-hoje.png" alt="Tela Hoje do app" loading="lazy"><figcaption>Tarefas do dia, mesmo sem internet.</figcaption></figure>
         <figure><img src="/ajuda/img/app-registro.png" alt="Registro de ocorrência no app, com áudio" loading="lazy"><figcaption>Registro com áudio, gravado no celular.</figcaption></figure>
-        <figure><img src="/ajuda/img/app-envio-pendente.png" alt="Aba Envio com um registro aguardando o Wi-Fi" loading="lazy"><figcaption>Aguardando o Wi-Fi para enviar.</figcaption></figure>
+        <figure><img src="/ajuda/img/app-agenda.png" alt="Agenda do app" loading="lazy"><figcaption>Agenda dos próximos 30 dias.</figcaption></figure>
+        <figure><img src="/ajuda/img/app-mais.png" alt="Tela Mais do app" loading="lazy"><figcaption>Mais: avisos, envio e versão.</figcaption></figure>
+        <figure><img src="/ajuda/img/app-envio-pendente.png" alt="Envio com um registro aguardando o Wi-Fi" loading="lazy"><figcaption>Aguardando o Wi-Fi para enviar.</figcaption></figure>
       </div>
       <p>O registro feito no app aparece no prontuário com a origem "App". Quando tem áudio, o gestor ouve pelo player no próprio registro, no prontuário e nos últimos registros do campo do Painel. O áudio vai para o servidor só no Wi-Fi, como as fotos, e sai junto se o registro for excluído.</p>
       <figure><img src="/ajuda/img/audio-painel.png" alt="Player de áudio nos últimos registros do campo" loading="lazy" style="max-width:460px"><figcaption>Áudio do caseiro no Painel do gestor.</figcaption></figure>
       <p>O administrador liga ou desliga o áudio por plano (grade de planos e módulos) e define a duração máxima em Parametrizações › App do caseiro.</p>
       <p> O gestor pode encerrar o celular em Equipe › Sessões e aparelhos ativos; os registros que ainda estiverem no celular continuam guardados até um novo vínculo. Se o servidor recusar um registro (por exemplo, animal excluído), ele fica em Envio › Recusados pelo servidor, com Tentar de novo.</p>
-      <p>Quando o servidor recebe uma versão nova, o app avisa na aba Envio e oferece o download. A atualização instala por cima, sem perder dados.</p>
+      <p>Quando o servidor recebe uma versão nova, o app avisa em Mais › Envio e oferece o download. A atualização instala por cima, sem perder dados.</p>
     </section>
     <section id="equipe"><h2>Equipe e sessões</h2><span class="perfil">Gestor</span>
       <p>Adicione gestores e caseiros com senha inicial. Para cada pessoa você pode redefinir a senha, redefinir o 2FA de outro gestor e desativar o acesso. Em Sessões e aparelhos ativos aparecem os navegadores e celulares conectados; encerre os que não reconhecer.</p>
@@ -360,6 +443,12 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
     <section id="parametros"><h2>Parametrizações do haras</h2><span class="perfil">Gestor</span>
       <p>Logotipo do haras, dados do haras, reforço da raiva anual ou semestral, dias de gestação usados na previsão de parto e tolerância para reiniciar a primovacinação.</p><p>O logotipo aparece na barra superior do Portal do Gestor e do Portal Campo. Envie PNG, JPG ou WebP com fundo branco ou transparente: o sistema recorta as margens vazias e reduz a imagem. O administrador também pode enviar ou trocar o logotipo ao cadastrar o haras.</p>
       <figure><img src="/ajuda/img/parametros.png" alt="Parametrizações do haras" loading="lazy"><figcaption>Parametrizações do haras.</figcaption></figure>
+    </section>
+    <section id="imagens"><h2>Imagens do haras</h2><span class="perfil">Gestor</span>
+      <p>Em Administração › Parametrizações › Imagens do haras, o gestor personaliza o portal e o app com imagens próprias:</p>
+      <ul><li><b>Imagem do cabeçalho:</b> faixa no topo do Portal do Gestor e do Portal Campo.</li><li><b>Banner do Dashboard:</b> imagem larga no Dashboard.</li><li><b>Fundo do app:</b> fundo da tela de abertura e do topo da tela Hoje no app Android.</li></ul>
+      <p>Envie PNG, JPG ou WebP de até 3 MB. O navegador reduz a imagem antes do envio. Escolha o foco (centro, topo ou base) para indicar que parte aparece quando a imagem é recortada. <b>Usar a padrão</b> volta para a imagem da plataforma. Cada troca fica na auditoria. O app baixa a imagem nova na próxima sincronização pelo Wi-Fi.</p>
+      <figure><img src="/ajuda/img/imagens.png" alt="Imagens do haras" loading="lazy"><figcaption>Imagens do haras com um banner próprio.</figcaption></figure>
     </section>
     <section id="auditoria"><h2>Auditoria</h2><span class="perfil">Gestor</span><span class="perfil">Administrador</span>
       <p>Registra logins (inclusive recusados), 2FA, importações, exclusões com o conteúdo excluído, mudanças de protocolo e de parametrização, usuários, atualizações e backups. Filtre por ação, texto e período.</p>
@@ -372,6 +461,14 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       <p>Em Administração › Administradores, crie outros administradores, redefina a senha ou o 2FA de outro administrador e desative quem não deve mais entrar. Cada ação pede a sua senha e fica na auditoria. Ninguém desativa a própria conta, e a plataforma nunca fica sem administrador ativo. Para a sua conta, use o menu com o seu nome.</p>
       <figure><img src="/ajuda/img/admin-administradores.png" alt="Lista de administradores" loading="lazy"><figcaption>Administradores da plataforma.</figcaption></figure>
     </section>
+    <section id="marca"><h2>Marca e imagens da plataforma</h2><span class="perfil">Administrador</span>
+      <p>Em Marca e imagens, o administrador troca o logotipo da plataforma e as imagens padrão: imagem da tela de entrada, cabeçalho, banner do Dashboard e fundo do app. As imagens padrão valem para todos os haras que não enviaram a sua. Sem nenhuma imagem enviada, o Haras360 usa a sua ilustração própria.</p>
+      <div class="fotos-app">
+        <figure><img src="/ajuda/img/admin-marca.png" alt="Marca e imagens" loading="lazy"><figcaption>Logotipo e imagens padrão da plataforma.</figcaption></figure>
+        <figure><img src="/ajuda/img/entrar.png" alt="Tela de entrada" loading="lazy"><figcaption>Tela de entrada com a imagem da plataforma.</figcaption></figure>
+      </div>
+      <p>As imagens ficam em <code>/opt/haras360/compartilhado/imagens</code> e entram no backup diário.</p>
+    </section>
     <section id="atualizacao"><h2>Atualização e backup</h2><span class="perfil">Administrador</span>
       <ol><li>Na Release da versão no GitHub, baixe <span class="mono">haras360-X.Y.Z.tar.gz</span> e anote o SHA-256.</li><li>No Windows, rode <kbd>python assinar-pacote.py haras360-X.Y.Z.tar.gz</kbd> e digite a senha da chave (a mesma do Journey). Sai o arquivo <span class="mono">.sig</span>.</li><li>Em Administração › Atualização e backup, envie o pacote e a assinatura.</li></ol>
       <p>O servidor confere o SHA-256 e a assinatura, faz backup, aplica as migrações, troca de versão e testa. Se falhar, volta sozinho. As três últimas versões ficam guardadas para voltar com um clique.</p>
@@ -380,6 +477,10 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
     </section>
   </article>
 </div>
+<script>
+/* logotipo da plataforma enviado pelo administrador (v1.3.0) */
+fetch('/api/marca').then(r => r.ok ? r.json() : null).then(m => { if (m && m.logo) document.getElementById('marca-ajuda').innerHTML = '<span class="marca-img"><img src="' + m.logo.url + '" alt="Haras360"></span>'; }).catch(() => {});
+</script>
 
 </body>
 </html>

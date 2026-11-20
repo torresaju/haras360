@@ -21,6 +21,7 @@ COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "0") == "1"
 COMPARTILHADO = Path(os.environ.get("H360_COMPARTILHADO", "./dados"))
 FOTOS_DIR = Path(os.environ.get("FOTOS_DIR", COMPARTILHADO / "fotos"))
 LOGOS_DIR = COMPARTILHADO / "logos"
+IMAGENS_DIR = COMPARTILHADO / "imagens"  # marca da plataforma e imagens de cada haras (v1.3.0)
 FILA_DIR = Path(os.environ.get("H360_FILA", COMPARTILHADO / "fila"))
 BACKUPS_DIR = Path(os.environ.get("H360_BACKUPS", COMPARTILHADO / "backups"))
 RELEASES_DIR = Path(os.environ.get("H360_RELEASES", "./releases"))

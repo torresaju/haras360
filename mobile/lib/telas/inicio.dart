@@ -4,8 +4,8 @@ import '../dados.dart';
 import '../sincronizacao.dart';
 import '../tema.dart';
 import 'animais.dart';
-import 'avisos.dart';
-import 'envio.dart';
+import 'agenda.dart';
+import 'mais.dart';
 import 'hoje.dart';
 import 'registro.dart';
 import 'vincular.dart';
@@ -77,34 +77,31 @@ class _TelaInicioState extends State<TelaInicio> with WidgetsBindingObserver {
         listenable: dados,
         builder: (context, _) {
           final pend = (dados.contagem['registros'] ?? 0) + (dados.contagem['fotos'] ?? 0) + (dados.contagem['audios'] ?? 0);
-          final telas = [TelaHoje(registrar: registrar), TelaAnimais(registrar: registrar), TelaAvisos(registrar: registrar), const TelaEnvio()];
-          final nomeHaras = (dados.haras['nome'] as String?) ?? 'Haras360';
+          final alertaMais = pend > 0 || dados.atualizacaoDisponivel || dados.avisos.isNotEmpty;
+          final telas = [TelaHoje(registrar: registrar), TelaAnimais(registrar: registrar), TelaAgenda(registrar: registrar), TelaMais(registrar: registrar)];
           return Scaffold(
-            appBar: AppBar(
-              title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(nomeHaras, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                const Text('Haras360 · Campo', style: TextStyle(fontSize: 12, color: Cores.florestaApagado)),
-              ]),
-              actions: [
-                if (dados.sincronizando)
-                  const Padding(padding: EdgeInsets.all(16), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Cores.florestaTinta))),
-              ],
-            ),
             body: dados.estado == null
-                ? const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('Ainda sem dados do haras. Conecte ao Wi-Fi e toque em Envio › Sincronizar agora.', textAlign: TextAlign.center)))
+                ? SafeArea(
+                    child: Center(
+                        child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(mainAxisSize: MainAxisSize.min, children: [
+                              const Text('Ainda sem dados do haras. Conecte ao Wi-Fi e sincronize.', textAlign: TextAlign.center),
+                              const SizedBox(height: 16),
+                              FilledButton.icon(onPressed: dados.sincronizando ? null : dados.sincronizar, icon: const Icon(Icons.sync), label: const Text('Sincronizar agora')),
+                            ]))))
                 : telas[_aba],
-            floatingActionButton: _aba == 3 || dados.estado == null
+            floatingActionButton: _aba >= 2 || dados.estado == null
                 ? null
-                : FloatingActionButton.extended(onPressed: () => registrar(), icon: const Icon(Icons.add), label: const Text('Registrar'), backgroundColor: Cores.acento, foregroundColor: Colors.white),
+                : FloatingActionButton.extended(onPressed: () => registrar(), icon: const Icon(Icons.add), label: const Text('Registrar'), backgroundColor: Cores.floresta, foregroundColor: Colors.white),
             bottomNavigationBar: NavigationBar(
               selectedIndex: _aba,
               onDestinationSelected: (i) => setState(() => _aba = i),
               destinations: [
-                const NavigationDestination(icon: Icon(Icons.today_outlined), selectedIcon: Icon(Icons.today), label: 'Hoje'),
+                const NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Hoje'),
                 const NavigationDestination(icon: Icon(Icons.pets_outlined), selectedIcon: Icon(Icons.pets), label: 'Animais'),
-                NavigationDestination(icon: Badge(isLabelVisible: dados.avisos.isNotEmpty, label: Text('${dados.avisos.length}'), child: const Icon(Icons.notifications_outlined)), label: 'Avisos'),
-                NavigationDestination(
-                    icon: Badge(isLabelVisible: pend > 0 || dados.atualizacaoDisponivel, label: Text(pend > 0 ? '$pend' : '!'), child: const Icon(Icons.sync)), label: 'Envio'),
+                const NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month), label: 'Agenda'),
+                NavigationDestination(icon: Badge(isLabelVisible: alertaMais, label: Text(pend > 0 ? '$pend' : '!'), child: const Icon(Icons.more_horiz)), label: 'Mais'),
               ],
             ),
           );

@@ -2,6 +2,28 @@
 
 Uma nota por versão, da mais recente para a mais antiga.
 
+## v1.3.0 · 20/11/2026 · Nova identidade visual e personalização por imagens
+* **Identidade visual nova nos portais e no app:**
+  * logotipo próprio (perfil de cavalo com arco dourado) e ícone novo do app;
+  * paleta verde haras `#193D30`, dourado `#D5A064`, areia `#F3F1E9`, grafite `#292F2B` e verde sálvia `#82978A`;
+  * títulos em Manrope e texto em Inter, embutidas no APK para funcionar offline;
+  * ícones lineares e ilustração própria do Haras360 (cavalo ao pôr do sol), usada quando não há imagem enviada.
+* **Portal do Gestor:**
+  * menu lateral por módulo: Dashboard; Animais (Plantel, Importar ABCCMM); Sanidade (Vacinas e manejos, Protocolos); Reprodução; Agenda; Relatórios (em breve); Administração (Equipe, Parametrizações, Auditoria, Assistente, Plano) e Ajuda. No celular, o menu abre pelo botão ☰;
+  * cabeçalho com imagem, logotipo e nome do haras, sino de avisos e menu do usuário;
+  * Dashboard novo: cinco indicadores, próximos eventos, composição do rebanho, situação reprodutiva, Atenção agora, últimos registros do campo e banner;
+  * telas novas Sanidade › Vacinas e manejos e Reprodução.
+* **Portal Campo:** cabeçalho com imagem e logotipo, botão Registrar ocorrência no topo, barra de baixo com Hoje, Animais, Agenda e Mais.
+* **App Android:** abertura com o fundo do haras, tela Hoje com cabeçalho e botão grande Registrar ocorrência, abas Hoje, Animais, Agenda (30 dias) e Mais (Avisos, Envio, versão, vincular de novo).
+* **Personalização por imagens (tudo parametrizável):**
+  * o administrador troca, em Marca e imagens, o logotipo da plataforma e as imagens padrão (tela de entrada, cabeçalho, banner do Dashboard e fundo do app);
+  * o gestor troca, em Parametrizações › Imagens do haras, o cabeçalho, o banner do Dashboard e o fundo do app (o logotipo do haras continua em Parametrizações). A imagem do haras vale sobre a da plataforma;
+  * PNG, JPG ou WebP até 3 MB, conferidos pelo conteúdo, reduzidos no navegador, com foco (centro, topo ou base) e botão Usar a padrão. Cada troca vai para a auditoria;
+  * o app baixa o fundo e o logotipo no Wi-Fi e guarda no celular, para funcionar sem internet;
+  * a tela de entrada mostra a imagem e o logotipo da plataforma.
+* **Servidor:** migração 004 (tabela `imagens_marca`), rotas `/api/marca`, `/marca/{tipo}`, `/imagens/{tipo}`, `/api/haras/imagens/{tipo}` e `/api/admin/marca/{tipo}`. As imagens ficam em `compartilhado/imagens` e entram no backup diário.
+* **Testes:** 4 testes novos da API de imagens (66 no total); a verificação visual envia um banner, confere no Dashboard e volta ao padrão; o teste no emulador percorre Hoje, Animais, Agenda e Mais.
+
 ## v1.2.0 · 20/11/2026 · Áudio nos registros do caseiro
 * **App:** botão Gravar áudio no registro (até 2 minutos, AAC mono a 32 kbps, cerca de 250 KB por minuto), com contador, ouvir e apagar antes de salvar. Funciona sem internet: o áudio entra na fila e vai só no Wi-Fi, depois do registro e das fotos. A ficha do animal toca os áudios, inclusive os que ainda estão no celular.
 * **Servidor:** `POST /api/app/audios` (um por registro, tipo conferido pelo conteúdo, idempotente), `/audios/{id}` só para o mesmo haras, exclusão junto com o registro e migração 003.

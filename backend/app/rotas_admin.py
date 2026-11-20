@@ -6,6 +6,7 @@ from fastapi import APIRouter, Body, Depends, File, Form, Request, UploadFile
 from sqlalchemy import func, select
 
 from . import logos as L
+from . import imagens as IMG
 from . import parametros as P
 from . import regras as R
 from . import sistema as S
@@ -67,7 +68,7 @@ def painel(u: Usuario = Depends(admin), db=Depends(get_db)):
                        for x in db.scalars(select(Usuario).where(Usuario.perfil == "admin").order_by(Usuario.nome))]
     return {
         "versao": VERSAO, "versaoBanco": versao_banco(), "usuario": {"id": u.id, "nome": u.nome, "email": u.email, "perfil": u.perfil},
-        "haras": haras, "administradores": administradores, "parametros": P.publico_global(P.todos(db)), "modulos": P.MODULOS,
+        "haras": haras, "administradores": administradores, "marca": IMG.descrever(db), "parametros": P.publico_global(P.todos(db)), "modulos": P.MODULOS,
         "atualizacao": S.status_tarefa(), "versoes": S.versoes_guardadas(), "backup": S.ultimo_backup(),
         "limitePacoteMB": MAX_PACOTE_MB,
     }
