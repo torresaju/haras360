@@ -33,7 +33,7 @@ def aguardar_banco(tentativas=30):
         except OperationalError as e:
             if i == tentativas - 1:
                 raise
-            print(f"Aguardando o banco de dados ({i + 1}/{tentativas}): {e.__class__.__name__}", flush=True)
+            print(f"Aguardando o banco de dados ({i + 1}/{tentativas}): {str(e.orig)[:160] if getattr(e, 'orig', None) else e.__class__.__name__}", flush=True)
             time.sleep(2)
 
 

@@ -253,6 +253,15 @@ main.wrapm{padding-inline:clamp(16px,3vw,32px);padding-block:24px 72px;max-width
   .topbar-in{gap:10px}
 }
 
+/* logotipo do haras na barra superior */
+.logo-h{display:grid;place-items:center;background:#fff;border-radius:8px;height:42px;min-width:42px;max-width:110px;padding:3px 6px;flex:none}
+.logo-h img{max-height:36px;max-width:98px;object-fit:contain;display:block}
+.brand .nome-h{font-size:1.05rem;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logo-prev{display:grid;place-items:center;background:#fff;border:1px solid var(--line);border-radius:10px;width:160px;height:160px;padding:10px;flex:none}
+.logo-prev img{max-width:100%;max-height:100%;object-fit:contain}
+.logo-prev.vazio{color:var(--muted);font-size:.84rem;text-align:center;background:var(--surface-2)}
+@media (max-width:980px){.brand .nome-h{max-width:150px}}
+
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px 20px}
 .facts div{display:flex;flex-direction:column;gap:2px;min-width:0}
 .facts dt{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
@@ -437,7 +446,7 @@ const H = (function () {
     sessao_encerrada: 'Sessão encerrada', usuario_criado: 'Usuário criado', usuario_ativado: 'Usuário reativado', usuario_desativado: 'Usuário desativado',
     animal_criado: 'Animal cadastrado', animal_editado: 'Animal editado', importacao: 'Importação ABCCMM', registro_excluido: 'Registro excluído',
     protocolos_alterados: 'Protocolos alterados', protocolos_restaurados: 'Protocolos restaurados', parametro_alterado: 'Parametrização alterada',
-    haras_criado: 'Haras criado', haras_alterado: 'Haras alterado', atualizacao_solicitada: 'Atualização solicitada', atualizacao_concluida: 'Atualização concluída',
+    haras_criado: 'Haras criado', logo_alterado: 'Logotipo alterado', haras_alterado: 'Haras alterado', atualizacao_solicitada: 'Atualização solicitada', atualizacao_concluida: 'Atualização concluída',
     atualizacao_falhou: 'Atualização falhou', rollback_solicitado: 'Volta de versão solicitada', rollback_concluido: 'Volta de versão concluída',
     backup_solicitado: 'Backup solicitado', backup_concluido: 'Backup concluído', backup_falhou: 'Backup falhou'
   };
@@ -711,6 +720,41 @@ const UI = (function () {
     });
   }
 
+  /* ---------- logotipo do haras: reduz para 512 px mantendo a transparência ---------- */
+  function prepararLogo(file) {
+    return new Promise((res, rej) => {
+      if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { rej(new Error('Use uma imagem PNG, JPG ou WebP.')); return; }
+      const fr = new FileReader();
+      fr.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          // recorta as margens vazias (brancas ou transparentes) para o logotipo ocupar bem o espaço
+          const o = document.createElement('canvas'); o.width = img.width; o.height = img.height;
+          const ox = o.getContext('2d'); ox.drawImage(img, 0, 0);
+          const px = ox.getImageData(0, 0, o.width, o.height).data;
+          let x0 = o.width, y0 = o.height, x1 = -1, y1 = -1;
+          for (let y = 0; y < o.height; y += 2) for (let x = 0; x < o.width; x += 2) {
+            const i = (y * o.width + x) * 4;
+            if (px[i + 3] > 24 && (px[i] < 235 || px[i + 1] < 235 || px[i + 2] < 235)) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+          }
+          let sx = 0, sy = 0, sw = o.width, sh = o.height;
+          if (x1 > x0 && y1 > y0) { const m = Math.round(Math.max(x1 - x0, y1 - y0) * 0.04); sx = Math.max(0, x0 - m); sy = Math.max(0, y0 - m); sw = Math.min(o.width, x1 + m + 2) - sx; sh = Math.min(o.height, y1 + m + 2) - sy; }
+          const k = Math.min(1, 512 / Math.max(sw, sh));
+          const c = document.createElement('canvas'); c.width = Math.round(sw * k); c.height = Math.round(sh * k);
+          c.getContext('2d').drawImage(o, sx, sy, sw, sh, 0, 0, c.width, c.height);
+          let url = c.toDataURL('image/png');
+          if (url.length > 1300000) url = c.toDataURL('image/webp', 0.9);
+          if (url.length > 1300000) { rej(new Error('O logotipo ficou grande demais. Use uma imagem mais simples.')); return; }
+          res(url);
+        };
+        img.onerror = () => rej(new Error('Não foi possível abrir a imagem.'));
+        img.src = fr.result;
+      };
+      fr.onerror = () => rej(new Error('Não foi possível ler o arquivo.'));
+      fr.readAsDataURL(file);
+    });
+  }
+
   /* ---------- formulário de registro ---------- */
   let fotosPend = [];
   const OPC = (arr, sel) => arr.map(v => { const [val, lab] = Array.isArray(v) ? v : [v, v]; return '<option value="' + esc(val) + '"' + (String(val) === String(sel) ? ' selected' : '') + '>' + esc(lab) + '</option>'; }).join('');
@@ -829,7 +873,8 @@ const UI = (function () {
     const ini = (o.usuario.nome || '?').split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
     const userMenu = '<div class="drop-m" id="dd-user" hidden><div style="padding:8px 10px"><b>' + esc(o.usuario.nome) + '</b><small class="muted" style="display:block">' + esc(o.usuario.email) + '</small></div><div class="dsep"></div>' +
       o.usuarioItens.map(it => '<button class="di" data-act="' + it.act + '">' + esc(it.rotulo) + '</button>').join('') + '<div class="dsep"></div><button class="di" data-act="sair">Sair</button></div>';
-    return '<div class="topbar-in"><a class="brand" href="' + o.home + '">' + MARCA + '<div><b>Haras360</b><small>' + esc(o.sub) + '</small></div></a>' +
+    const marca = o.logo ? '<span class="logo-h"><img src="' + esc(o.logo) + '" alt="Logotipo de ' + esc(o.sub) + '"></span><div><b class="nome-h">' + esc(o.sub) + '</b><small>Haras360</small></div>' : MARCA + '<div><b>Haras360</b><small>' + esc(o.sub) + '</small></div>';
+    return '<div class="topbar-in"><a class="brand" href="' + o.home + '">' + marca + '</a>' +
       '<nav class="menu" id="menu-principal" aria-label="Menu principal">' + menu + '</nav>' +
       '<div class="tb-acts">' + (o.sino ? '<button class="tb-ic" data-act="nav" data-v="' + o.sino.view + '" aria-label="Notificações">' + ICON.bell + (o.sino.n ? '<span class="badge">' + o.sino.n + '</span>' : '') + '</button>' : '') +
       '<div style="position:relative"><button class="userbtn" data-dd="user" aria-expanded="false" aria-haspopup="true"><span class="avatar">' + esc(ini) + '</span><span class="n">' + esc(o.usuario.nome.split(' ')[0]) + '<small>' + esc(o.perfilTxt) + '</small></span></button>' + userMenu + '</div>' +
@@ -863,7 +908,7 @@ const UI = (function () {
     try { await navigator.clipboard.writeText((mostrarCodigos.atual || []).join('\n')); toast('Códigos copiados.'); } catch (err) { toast('Selecione os códigos e copie manualmente.'); }
   });
 
-  return { ICON, toast, topbar, fecharMenus, confirmar, mostrarCodigos, abrir, fechar, chipStatus, chipCat, linhaTarefa, linhaTempo, verFoto, formRegistro, lerRegistro, remFoto, preDeTarefa, chatHTML, comprimir, TOM, set onClose(f) { onClose = f; } };
+  return { ICON, toast, topbar, prepararLogo, fecharMenus, confirmar, mostrarCodigos, abrir, fechar, chipStatus, chipCat, linhaTarefa, linhaTempo, verFoto, formRegistro, lerRegistro, remFoto, preDeTarefa, chatHTML, comprimir, TOM, set onClose(f) { onClose = f; } };
 })();
 
 </script>
@@ -920,7 +965,7 @@ const UI = (function () {
 
   function render() {
     const nl = naoLidas().length;
-    $('#topbar').innerHTML = UI.topbar({ menu: menu(), atual: view, home: '/gestor', sub: S.haras.nome, usuario: S.usuario, perfilTxt: 'Gestor', sino: { view: 'notificacoes', n: nl },
+    $('#topbar').innerHTML = UI.topbar({ menu: menu(), atual: view, home: '/gestor', sub: S.haras.nome, logo: S.haras.logo, usuario: S.usuario, perfilTxt: 'Gestor', sino: { view: 'notificacoes', n: nl },
       usuarioItens: [{ act: 'minha-senha', rotulo: 'Alterar minha senha' }, { act: 'novos-codigos', rotulo: 'Novos códigos de recuperação do 2FA' }] });
     const [eb, ti0] = TITULOS[view] || ['', ''];
     const ti = view === 'painel' ? S.haras.nome : ti0;
@@ -1189,6 +1234,8 @@ const UI = (function () {
     const h = S.haras;
     const num = (id, lab, val, ajuda, min, max) => '<div class="kv"><div><b>' + lab + '</b><p class="small muted">' + ajuda + '</p></div><div class="field"><input id="' + id + '" class="inp mono" type="number" min="' + min + '" max="' + max + '" value="' + val + '" aria-label="' + lab + '"></div></div>';
     return '<div class="sec" style="max-width:860px">' +
+      '<div class="card stack"><h2>Logotipo</h2><div class="row" style="align-items:flex-start;gap:20px"><div class="logo-prev' + (h.logo ? '' : ' vazio') + '" id="logo-prev">' + (h.logo ? '<img src="' + esc(h.logo) + '" alt="Logotipo atual">' : 'Sem logotipo.<br>O portal mostra a marca Haras360.') + '</div>' +
+        '<div class="stack" style="flex:1;min-width:220px"><p class="small muted">Aparece na barra superior do Portal do Gestor e do Portal Campo. Use PNG com fundo transparente ou branco. As margens vazias são recortadas e a imagem é reduzida para 512 pixels.</p><div class="row"><label class="btn" for="logo-arq">' + IC.upload + 'Escolher imagem</label><input id="logo-arq" type="file" accept="image/png,image/jpeg,image/webp" hidden>' + (h.logo ? '<button class="btn ghost danger" data-act="remover-logo">Remover logotipo</button>' : '') + '</div></div></div></div>' +
       '<div class="card stack"><h2>Dados do haras</h2><div class="fgrid"><div class="field"><label for="pa-nome">Nome do haras</label><input id="pa-nome" class="inp" value="' + esc(h.nome) + '"></div><div class="field"><label for="pa-mun">Município/UF</label><input id="pa-mun" class="inp" value="' + esc(h.municipio) + '"></div><div class="field full"><label for="pa-prop">Proprietário</label><input id="pa-prop" class="inp" value="' + esc(h.proprietario) + '"></div></div></div>' +
       '<div class="card stack"><h2>Regras sanitárias e reprodutivas</h2>' +
       '<div class="kv"><div><b>Reforço da vacina de raiva</b><p class="small muted">Em estados endêmicos para raiva o reforço passa a ser semestral.</p></div><div class="seg" role="group" aria-label="Reforço da raiva"><button data-act="pa-raiva" data-v="0" aria-pressed="' + !h.raivaSemestral + '">Anual</button><button data-act="pa-raiva" data-v="1" aria-pressed="' + !!h.raivaSemestral + '">Semestral</button></div></div>' +
@@ -1302,6 +1349,13 @@ const UI = (function () {
     },
     plano() { simOut(); $('#sim').addEventListener('input', e => { simN = Number(e.target.value); simOut(); }); },
     equipe() { carregarSessoes(); },
+    parametros() {
+      $('#logo-arq').addEventListener('change', async e => {
+        const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+        try { const img = await UI.prepararLogo(f); if (await executar(null, () => API.put('/api/haras/logo', { imagem: img }))) render(); }
+        catch (err) { UI.toast(err.message); }
+      });
+    },
     auditoria() {
       carregarAuditoria();
       $('#aud-f').addEventListener('submit', e => { e.preventDefault(); audF.acao = $('#af-acao').value; audF.texto = $('#af-texto').value.trim(); audF.de = $('#af-de').value; audF.ate = $('#af-ate').value; carregarAuditoria(); });
@@ -1399,6 +1453,7 @@ const UI = (function () {
     'dois-fatores-user': el => { const u = (S.usuarios || []).find(x => String(x.id) === el.dataset.id); confirmar(el, 'Confirmar redefinição', async () => { if (await executar(el, () => API.post('/api/usuarios/' + u.id + '/2fa/redefinir'))) render(); }); },
     'novos-codigos': () => UI.abrir({ titulo: 'Novos códigos de recuperação', corpo: '<form class="stack" novalidate><p>Os códigos atuais deixam de valer. Confirme sua senha.</p><div class="field"><label for="nc-senha">Senha</label><input id="nc-senha" type="password" class="inp" autocomplete="current-password"></div></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="gerar-codigos">Gerar</button>' }),
     'gerar-codigos': async el => { try { el.disabled = true; const r = await API.post('/api/me/codigos-recuperacao', { senha: document.getElementById('nc-senha').value }); UI.fechar(); UI.mostrarCodigos(r.codigos); } catch (e) { el.disabled = false; UI.toast(e.message); } },
+    'remover-logo': el => confirmar(el, 'Confirmar remoção', async () => { if (await executar(el, () => API.del('/api/haras/logo'))) render(); }),
     'pa-raiva': el => { document.querySelectorAll('[data-act="pa-raiva"]').forEach(b => b.setAttribute('aria-pressed', String(b === el))); },
     'salvar-params': async el => {
       const g = Number($('#pa-gest').value), t = Number($('#pa-tol').value);

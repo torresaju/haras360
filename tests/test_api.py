@@ -323,3 +323,22 @@ def test_paginas_e_saude(base):
         r = c.get(p)
         assert r.status_code == 200, p
     assert "frame-ancestors 'none'" in c.get("/entrar").headers["content-security-policy"]
+
+
+def test_logotipo_do_haras(base):
+    g = entrar("gestor@teste.com", "senha1234")
+    assert g.put("/api/haras/logo", json={"imagem": "data:image/png;base64,AAAA"}, headers=H).status_code == 400
+    r = g.put("/api/haras/logo", json={"imagem": PNG}, headers=H)
+    assert r.status_code == 200
+    url = r.json()["logo"]
+    assert g.get("/api/estado").json()["haras"]["logo"] == url
+    assert g.get(url).status_code == 200
+    assert TestClient(app).get(url).status_code == 401
+    assert entrar("outro@teste.com", "senha1234").get(url).status_code == 404  # logotipo de outro haras
+    assert entrar("admin@teste.com", "admin1234").get(url).status_code == 200
+    assert g.delete("/api/haras/logo", headers=H).status_code == 200
+    assert g.get(url).status_code == 404 and g.get("/api/estado").json()["haras"]["logo"] == ""
+    adm = entrar("admin@teste.com", "admin1234")
+    assert adm.patch(f"/api/admin/haras/{base['haras']}", json={"logo": PNG}, headers=H).status_code == 200
+    assert next(h for h in adm.get("/api/admin/painel").json()["haras"] if h["id"] == base["haras"])["logo"].startswith("/logos/")
+    assert "logo_alterado" in {x["acao"] for x in g.get("/api/auditoria").json()}

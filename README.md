@@ -13,7 +13,7 @@ A especificação aprovada está em [`docs/ESPECIFICACAO.md`](docs/ESPECIFICACAO
 | Versão | Data | Branch | Entrega | Situação |
 |---|---|---|---|---|
 | v0.1.0 | 19/11/2026 | etapa/0.1-repositorio | Código de outubro no Git, testes automatizados, documentação | Publicada |
-| v1.0.0 | | etapa/1.0-vps | Portais e API na segunda VM micro, sem Docker, 2FA, auditoria, parametrizações, pacote assinado com rollback, backup OCI | Planejada |
+| v1.0.0 | 19/11/2026 | etapa/1.0-vps | Portais e API na segunda VM micro, sem Docker, 2FA, auditoria, parametrizações, logotipo do haras, pacote assinado com volta automática, backup OCI | Em revisão (PR) |
 | v1.1.0 | | etapa/1.1-app-android | APK Android do caseiro, offline com envio no Wi-Fi | Planejada |
 
 Notas de cada versão: [`docs/HISTORICO.md`](docs/HISTORICO.md).
@@ -24,7 +24,7 @@ Notas de cada versão: [`docs/HISTORICO.md`](docs/HISTORICO.md).
 backend/   API FastAPI, motor de regras (app/regras.py), modelos, páginas montadas (app/static)
 web/       fontes dos portais; após editar: python web/build.py
 mobile/    app Flutter do caseiro (v1.1.0)
-deploy/    instalação e atualização na VPS (v1.0.0)
+deploy/    instalação, atualização assinada, backup e restauração na VPS (ver docs/IMPLANTACAO.md)
 docs/      especificação e histórico
 tests/     testes automatizados
 ```
@@ -37,13 +37,18 @@ python -m pytest          # motor, paridade com o protótipo e API (paridade exi
 python web/build.py       # monta backend/app/static a partir de web/
 ```
 
-Para rodar a API localmente com SQLite:
+Instância de demonstração local (SQLite, dados fictícios):
 
 ```bash
 cd backend
-SECRET_KEY=dev DB_URL=sqlite:///./dev.db python -m app.cli criar-haras
-SECRET_KEY=dev DB_URL=sqlite:///./dev.db uvicorn app.main:app --port 8090
+export SECRET_KEY=dev DB_URL=sqlite:///./dev.db
+python -m app.cli criar-admin --nome Admin --email admin@demonstracao.local --senha demonstracao123
+python -m app.cli demonstracao            # gestor@demonstracao.local e caseiro@demonstracao.local, senha demonstracao123
+uvicorn app.main:app --port 8090
+python ../tests/visual/capturas.py http://127.0.0.1:8090 app/static/ajuda   # percorre as telas e refaz as capturas do manual
 ```
+
+Implantação na VPS: [`docs/IMPLANTACAO.md`](docs/IMPLANTACAO.md).
 
 ## Fluxo de trabalho
 

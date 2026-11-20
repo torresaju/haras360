@@ -35,6 +35,7 @@ class Haras(Base):
     associado_abccmm: Mapped[str] = mapped_column(String(160), default="")
     notif_prefs: Mapped[dict] = mapped_column(JSON, nullable=True)
     plano: Mapped[str] = mapped_column(String(60), default="Padrão")
+    logo: Mapped[str] = mapped_column(String(80), nullable=True)  # arquivo em compartilhado/logos
     ativo: Mapped[bool] = mapped_column(Boolean, default=True)
     criado_em: Mapped[datetime] = mapped_column(DateTime, default=agora)
 

@@ -5,6 +5,7 @@ import re
 from fastapi import APIRouter, Body, Depends, File, Form, Request, UploadFile
 from sqlalchemy import func, select
 
+from . import logos as L
 from . import parametros as P
 from . import regras as R
 from . import sistema as S
@@ -59,7 +60,7 @@ def painel(u: Usuario = Depends(admin), db=Depends(get_db)):
     for h in db.scalars(select(Haras).order_by(Haras.nome)):
         n = contagem.get(h.id, 0)
         plano = P.plano_do_haras(db, h)
-        haras.append({"id": h.id, "nome": h.nome, "municipio": h.municipio, "plano": plano["nome"], "limite": plano["limite"], "ativo": bool(h.ativo),
+        haras.append({"id": h.id, "nome": h.nome, "municipio": h.municipio, "plano": plano["nome"], "logo": L.url(h), "limite": plano["limite"], "ativo": bool(h.ativo),
                       "animais": n, "mensalidade": P.mensalidade(faixas, n), "usuarios": usuarios.get(h.id, []),
                       "criado": h.criado_em.date().isoformat()})
     return {
@@ -74,6 +75,8 @@ def painel(u: Usuario = Depends(admin), db=Depends(get_db)):
 def novo_haras(request: Request, body: dict = Body(...), u: Usuario = Depends(admin), db=Depends(get_db)):
     h, g = criar_haras_com_gestor(db, body.get("nome"), body.get("municipio"), body.get("plano"), body.get("gestorNome"), body.get("gestorEmail"),
                                   str(body.get("gestorSenha") or ""))
+    if body.get("logo"):
+        L.salvar(h, body["logo"])
     auditar(db, "haras_criado", usuario=u, haras_id=h.id, alvo=f"{h.nome} · gestor {g.email}", detalhe={"plano": h.plano}, request=request)
     db.commit()
     return {"id": h.id, "resumo": f"Haras {h.nome} criado. O gestor cadastra o 2FA no primeiro acesso."}
@@ -102,6 +105,13 @@ def editar_haras(hid: int, request: Request, body: dict = Body(...), u: Usuario 
                 revogar_sessoes(db, x.id)
     if "nome" in body and _txt(body["nome"], 120):
         h.nome = _txt(body["nome"], 120)
+    if "logo" in body:
+        if body["logo"]:
+            L.salvar(h, body["logo"])
+        else:
+            L.remover_arquivo(h.logo)
+            h.logo = None
+        mud["logo"] = "alterado" if body["logo"] else "removido"
     if mud:
         auditar(db, "haras_alterado", usuario=u, haras_id=h.id, alvo=h.nome, detalhe=mud, request=request)
     db.commit()

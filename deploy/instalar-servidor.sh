@@ -54,7 +54,7 @@ fi
 # ---------- 3. usuário e pastas ----------
 id "$H360_USUARIO" >/dev/null 2>&1 || useradd --system --home-dir "$H360_BASE" --shell /usr/sbin/nologin "$H360_USUARIO"
 install -d -m 755 -o root -g root "$H360_BASE" "$H360_RELEASES" "$H360_PACOTES"
-install -d -m 750 -o "$H360_USUARIO" -g "$H360_USUARIO" "$H360_COMP" "$H360_COMP/fotos" "$H360_FILA" "$H360_FILA/entrada"
+install -d -m 750 -o "$H360_USUARIO" -g "$H360_USUARIO" "$H360_COMP" "$H360_COMP/fotos" "$H360_COMP/logos" "$H360_FILA" "$H360_FILA/entrada"
 install -d -m 711 -o root -g root "$H360_BACKUPS"
 install -d -m 700 -o root -g root "$H360_VARLIB"
 install -d -m 750 -o root -g "$H360_USUARIO" "$H360_ETC"
@@ -82,7 +82,7 @@ if [ -z "$REST" ]; then
   umask 027
   cat > "$H360_ETC/haras360.env" <<ENV
 # Haras360 · gerado pelo instalador em $(date '+%d/%m/%Y %H:%M'). Contém segredos.
-DB_URL=mysql+pymysql://haras360:$DB_SENHA@localhost/haras360?charset=utf8mb4&unix_socket=/run/mysqld/mysqld.sock
+DB_URL="mysql+pymysql://haras360:$DB_SENHA@localhost/haras360?charset=utf8mb4&unix_socket=/run/mysqld/mysqld.sock"
 SECRET_KEY=$(gerar 64)
 COOKIE_SECURE=0
 TZ=America/Sao_Paulo
@@ -122,7 +122,7 @@ if [ -n "$REST" ]; then
   info "Restaurando banco e fotos do backup"
   gunzip -c "$REST/banco.sql.gz" | mysql haras360
   tar -xzf "$REST/fotos.tar.gz" -C "$H360_COMP"
-  chown -R "$H360_USUARIO":"$H360_USUARIO" "$H360_COMP/fotos"
+  chown -R "$H360_USUARIO":"$H360_USUARIO" "$H360_COMP/fotos"; [ -d "$H360_COMP/logos" ] && chown -R "$H360_USUARIO":"$H360_USUARIO" "$H360_COMP/logos"
 fi
 
 # ---------- 8. banco e serviços ----------

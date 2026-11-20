@@ -2,6 +2,39 @@
 
 Uma nota por versão, da mais recente para a mais antiga.
 
+## v1.0.0 · 19/11/2026 · Portais e API na segunda VM micro
+* **Servidor sem Docker:** `deploy/instalar-servidor.sh` instala na VM micro da Oracle:
+  * swap de 2 GB e MariaDB ajustado para 1 GB;
+  * aplicação como serviço systemd com limite de memória, atrás do Caddy na porta 8090;
+  * liberação da porta no firewall da VM, inclusive a regra das imagens Oracle.
+* **Atualização por pacote assinado (Ed25519):**
+  * o GitHub Actions gera o pacote e anexa à Release, e a assinatura é feita no Windows com `assinar-pacote.py`;
+  * o envio pode ser pelo botão Administração › Atualização ou por SSH;
+  * antes de trocar de versão: conferência de SHA-256, assinatura e manifesto, backup e migrações aditivas;
+  * se a nova versão não responder, volta sozinha; há volta manual e três versões guardadas.
+* **Backup do ambiente inteiro**, todo dia às 02:30: banco, fotos, logotipos, configuração, chaves, serviços, pacote em uso e instalador. Envio ao bucket privado da OCI por link pré-autenticado. `restaurar-servidor.sh` reconstrói uma VM nova a partir dele.
+* **Segurança:**
+  * 2FA por aplicativo autenticador para administrador e gestor, com códigos de recuperação;
+  * sessões gravadas no banco, que podem ser encerradas em Equipe;
+  * auditoria completa, com consulta filtrada;
+  * limite de tentativas de login parametrizável;
+  * cabeçalhos de segurança e CSP;
+  * varredura OWASP ZAP no GitHub Actions.
+* **Perfil Administrador da plataforma:** haras e gestores, planos, parametrizações globais, atualização e backup.
+* **Planos e módulos por parametrização**, com tudo liberado por padrão. Módulos fora do plano aparecem esmaecidos e são recusados pela API.
+* **Parametrizações do haras:** reforço da raiva, dias de gestação e tolerância para reiniciar a primovacinação, que agora são lidos pelo motor de regras.
+* **Logotipo de cada haras:** enviado pelo gestor ou pelo administrador, com recorte automático das margens. Aparece na barra superior dos portais.
+* **Interface:**
+  * barra superior com menus agrupados e menu hambúrguer no celular;
+  * novas telas: Parametrizações, Auditoria, Plano, Sobre, Glossário e Manual com capturas da instância de demonstração;
+  * login com 2FA.
+* Registro com identificador gerado no aparelho não duplica em reenvio, como preparação para o app Android.
+* Instalação Docker de outubro removida.
+* Testes:
+  * 45 testes de motor, paridade e API;
+  * verificação visual de todas as telas;
+  * teste de instalação completo no GitHub Actions, com atualização, volta automática, recusa de pacote adulterado, volta manual e backup.
+
 ## v0.1.0 · 19/11/2026 · Repositório e base do projeto
 * Código entregue em 01/10/2026 (`haras360-vps.tar.gz`) importado sem alterações de comportamento.
 * Estrutura: `backend/` (API FastAPI, motor de regras, scripts da instalação Docker de outubro), `web/` (fontes dos portais), `mobile/` e `deploy/` reservados para as próximas versões, `docs/` e `tests/`.

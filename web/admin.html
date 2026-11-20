@@ -85,8 +85,9 @@
     const receita = ativos.reduce((t, h) => t + (h.mensalidade || 0), 0), semPreco = ativos.some(h => h.mensalidade === null);
     const planos = Object.keys(S.parametros.planos);
     return '<div class="sec"><div class="kpis"><div class="kpi"><span>Haras ativos</span><b>' + ativos.length + '</b><span>de ' + S.haras.length + ' cadastrados</span></div><div class="kpi"><span>Animais ativos</span><b>' + animais + '</b><span>em todos os haras</span></div><div class="kpi"><span>Receita mensal</span><b>' + (semPreco ? 'A definir' : H.moeda(receita)) + '</b><span>pelas faixas de preço</span></div><div class="kpi"><span>Versão</span><b class="mono" style="font-size:1.4rem">' + esc(S.versao) + '</b><span>banco na migração ' + S.versaoBanco + '</span></div></div>' +
-      (S.haras.length ? S.haras.map(h => '<div class="card hcard"><div class="spread"><div><h2>' + esc(h.nome) + '</h2><p class="small muted">' + esc(h.municipio || 'Município não informado') + ' · criado em ' + H.br(h.criado) + '</p></div><div class="row">' + (h.ativo ? '<span class="chip c-ok">Ativo</span>' : '<span class="chip c-muted">Desativado</span>') +
+      (S.haras.length ? S.haras.map(h => '<div class="card hcard"><div class="spread"><div class="row" style="gap:14px">' + (h.logo ? '<span class="logo-h" style="border:1px solid var(--line)"><img src="' + esc(h.logo) + '" alt=""></span>' : '') + '<div><h2>' + esc(h.nome) + '</h2><p class="small muted">' + esc(h.municipio || 'Município não informado') + ' · criado em ' + H.br(h.criado) + '</p></div></div><div class="row">' + (h.ativo ? '<span class="chip c-ok">Ativo</span>' : '<span class="chip c-muted">Desativado</span>') +
         '<label class="small muted" for="pl-' + h.id + '">Plano</label><select id="pl-' + h.id + '" class="inp" style="width:auto" data-chg="plano" data-id="' + h.id + '">' + planos.map(p => '<option' + (p === h.plano ? ' selected' : '') + '>' + esc(p) + '</option>').join('') + '</select>' +
+        '<label class="btn ghost sm" for="lg-' + h.id + '">' + (h.logo ? 'Trocar logotipo' : 'Enviar logotipo') + '</label><input type="file" id="lg-' + h.id + '" data-chg="logo" data-id="' + h.id + '" accept="image/png,image/jpeg,image/webp" hidden>' + (h.logo ? '<button class="btn ghost sm" data-act="remover-logo" data-id="' + h.id + '">Remover logotipo</button>' : '') +
         '<button class="btn ghost sm' + (h.ativo ? ' danger' : '') + '" data-act="toggle-haras" data-id="' + h.id + '">' + (h.ativo ? 'Desativar' : 'Reativar') + '</button></div></div>' +
         '<dl class="facts"><div><dt>Animais ativos</dt><dd>' + h.animais + ' de ' + h.limite + '</dd></div><div><dt>Mensalidade</dt><dd>' + (h.mensalidade === null ? 'A definir' : H.moeda(h.mensalidade)) + '</dd></div><div><dt>Usuários</dt><dd>' + h.usuarios.length + '</dd></div></dl>' +
         '<div class="users">' + h.usuarios.map(u => '<div><div><b>' + esc(u.nome) + '</b> <span class="chip nodot ' + (u.perfil === 'gestor' ? 'c-accent' : 'c-info') + '">' + (u.perfil === 'gestor' ? 'Gestor' : 'Caseiro') + '</span>' + (u.perfil === 'gestor' ? (u.doisFatores ? ' <span class="chip c-ok">2FA</span>' : ' <span class="chip c-soon">2FA pendente</span>') : '') + (u.ativo ? '' : ' <span class="chip c-muted">Desativado</span>') + '<br><span class="small muted">' + esc(u.email) + '</span></div><div class="row" style="gap:4px"><button class="btn ghost sm" data-act="senha-user" data-id="' + u.id + '" data-n="' + esc(u.nome) + '">Redefinir senha</button>' + (u.doisFatores ? '<button class="btn ghost sm" data-act="dois-fatores" data-id="' + u.id + '">Redefinir 2FA</button>' : '') + '</div></div>').join('') + '</div></div>').join('')
@@ -220,10 +221,12 @@
     nav: el => go(el.dataset.v),
     fechar: () => UI.fechar(),
     sair: async () => { try { await API.post('/api/logout'); } catch (e) { } location.href = '/entrar'; },
-    'novo-haras': () => UI.abrir({ titulo: 'Novo haras', corpo: '<form class="fgrid" novalidate><div class="field full"><label for="nh-nome">Nome do haras</label><input id="nh-nome" class="inp"></div><div class="field"><label for="nh-mun">Município/UF</label><input id="nh-mun" class="inp"></div><div class="field"><label for="nh-plano">Plano</label><select id="nh-plano" class="inp">' + Object.keys(S.parametros.planos).map(p => '<option>' + esc(p) + '</option>').join('') + '</select></div><div class="field full"><label for="nh-gn">Nome do gestor</label><input id="nh-gn" class="inp"></div><div class="field full"><label for="nh-ge">E-mail do gestor (login)</label><input id="nh-ge" type="email" class="inp"></div>' + senhaForm('nh-gs', 'Senha inicial do gestor (mín. 8)') + '</form><p class="small muted">No primeiro acesso o gestor cadastra o 2FA no celular.</p>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="criar-haras">Criar haras</button>' }),
+    'novo-haras': () => UI.abrir({ titulo: 'Novo haras', corpo: '<form class="fgrid" novalidate><div class="field full"><label for="nh-nome">Nome do haras</label><input id="nh-nome" class="inp"></div><div class="field"><label for="nh-mun">Município/UF</label><input id="nh-mun" class="inp"></div><div class="field full"><label for="nh-logo">Logotipo (opcional)</label><input id="nh-logo" type="file" class="inp" accept="image/png,image/jpeg,image/webp"></div><div class="field"><label for="nh-plano">Plano</label><select id="nh-plano" class="inp">' + Object.keys(S.parametros.planos).map(p => '<option>' + esc(p) + '</option>').join('') + '</select></div><div class="field full"><label for="nh-gn">Nome do gestor</label><input id="nh-gn" class="inp"></div><div class="field full"><label for="nh-ge">E-mail do gestor (login)</label><input id="nh-ge" type="email" class="inp"></div>' + senhaForm('nh-gs', 'Senha inicial do gestor (mín. 8)') + '</form><p class="small muted">No primeiro acesso o gestor cadastra o 2FA no celular.</p>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="criar-haras">Criar haras</button>' }),
     'criar-haras': async el => {
       const v = id => document.getElementById(id).value.trim();
-      if (await executar(el, () => API.post('/api/admin/haras', { nome: v('nh-nome'), municipio: v('nh-mun'), plano: v('nh-plano'), gestorNome: v('nh-gn'), gestorEmail: v('nh-ge'), gestorSenha: document.getElementById('nh-gs').value }))) { UI.fechar(); render(); }
+      let logo = null; const f = document.getElementById('nh-logo').files[0];
+      if (f) { try { logo = await UI.prepararLogo(f); } catch (e) { UI.toast(e.message); return; } }
+      if (await executar(el, () => API.post('/api/admin/haras', { nome: v('nh-nome'), municipio: v('nh-mun'), plano: v('nh-plano'), gestorNome: v('nh-gn'), gestorEmail: v('nh-ge'), gestorSenha: document.getElementById('nh-gs').value, logo }))) { UI.fechar(); render(); }
     },
     'toggle-haras': el => { const h = S.haras.find(x => String(x.id) === el.dataset.id); const fn = async () => { if (await executar(el, () => API.patch('/api/admin/haras/' + h.id, { ativo: !h.ativo }))) render(); }; h.ativo ? UI.confirmar(el, 'Confirmar: desconecta todos os usuários', fn) : fn(); },
     'senha-user': el => UI.abrir({ titulo: 'Redefinir senha de ' + esc(el.dataset.n), corpo: '<form class="stack" novalidate>' + senhaForm('r-senha', 'Nova senha (mín. 8)') + '<input type="hidden" id="r-uid" value="' + el.dataset.id + '"></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-senha-user">Redefinir</button>' }),
@@ -240,6 +243,7 @@
       if (Object.keys(corpo.planos).some(k => !k)) { UI.toast('Todo plano precisa de nome.'); return; }
       if (await executar(el, () => API.put('/api/admin/parametros', corpo))) render();
     },
+    'remover-logo': el => UI.confirmar(el, 'Confirmar remoção', async () => { if (await executar(el, () => API.patch('/api/admin/haras/' + el.dataset.id, { logo: null }), 'Logotipo removido.')) render(); }),
     rollback: el => UI.confirmar(el, 'Confirmar volta', async () => { if (await executar(el, () => API.post('/api/admin/rollback', { versao: el.dataset.v }))) render(); }),
     'backup-agora': async el => { if (await executar(el, () => API.post('/api/admin/backup'))) render(); },
     'minha-senha': () => UI.abrir({ titulo: 'Alterar minha senha', corpo: '<form class="stack" novalidate><div class="field"><label for="m-atual">Senha atual</label><input id="m-atual" type="password" class="inp" autocomplete="current-password"></div>' + senhaForm('m-nova', 'Nova senha (mín. 8)') + '</form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-minha-senha">Alterar</button>' }),
@@ -254,6 +258,13 @@
     f(el, e);
   });
   document.addEventListener('change', async e => {
+    const lg = e.target.closest('[data-chg="logo"]');
+    if (lg) {
+      const f = lg.files[0]; lg.value = ''; if (!f) return;
+      try { const img = await UI.prepararLogo(f); if (await executar(null, () => API.patch('/api/admin/haras/' + lg.dataset.id, { logo: img }), 'Logotipo atualizado.')) render(); }
+      catch (err) { UI.toast(err.message); }
+      return;
+    }
     const el = e.target.closest('[data-chg="plano"]'); if (!el) return;
     const h = S.haras.find(x => String(x.id) === el.dataset.id);
     if (!(await executar(null, () => API.patch('/api/admin/haras/' + h.id, { plano: el.value })))) el.value = h.plano;

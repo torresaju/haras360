@@ -105,7 +105,9 @@
   function go(v, p) { view = v; param = p || null; render(); window.scrollTo(0, 0); }
   function render() {
     const nl = naoLidos();
-    $('#haras-n').textContent = 'Campo · ' + S.haras.nome; $('#me-n').textContent = S.usuario.nome;
+    if (S.haras.logo) { const b = document.querySelector('.hdr .brand'); if (!b.querySelector('.logo-h')) b.innerHTML = '<span class="logo-h"><img src="' + esc(S.haras.logo) + '" alt="Logotipo de ' + esc(S.haras.nome) + '"></span><div><b class="nome-h">' + esc(S.haras.nome) + '</b><small>Haras360 · Campo</small></div>'; }
+    else $('#haras-n').textContent = 'Campo · ' + S.haras.nome;
+    $('#me-n').textContent = S.usuario.nome;
     $('#av').textContent = S.usuario.nome.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
     $('#tnav').innerHTML = NAV.map(([id, l, ic]) => '<button data-act="' + (id === 'registrar' ? 'registrar' : 'nav') + '" data-v="' + id + '"' + ((view === id || (view === 'ficha' && id === 'animais')) ? ' aria-current="page"' : '') + '>' + ic + '<span>' + l + '</span>' + (id === 'avisos' && nl ? '<span class="badge">' + nl + '</span>' : '') + '</button>').join('');
     const v = $('#view'); v.classList.remove('view-in'); void v.offsetWidth; v.classList.add('view-in');

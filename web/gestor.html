@@ -108,7 +108,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 
   function render() {
     const nl = naoLidas().length;
-    $('#topbar').innerHTML = UI.topbar({ menu: menu(), atual: view, home: '/gestor', sub: S.haras.nome, usuario: S.usuario, perfilTxt: 'Gestor', sino: { view: 'notificacoes', n: nl },
+    $('#topbar').innerHTML = UI.topbar({ menu: menu(), atual: view, home: '/gestor', sub: S.haras.nome, logo: S.haras.logo, usuario: S.usuario, perfilTxt: 'Gestor', sino: { view: 'notificacoes', n: nl },
       usuarioItens: [{ act: 'minha-senha', rotulo: 'Alterar minha senha' }, { act: 'novos-codigos', rotulo: 'Novos códigos de recuperação do 2FA' }] });
     const [eb, ti0] = TITULOS[view] || ['', ''];
     const ti = view === 'painel' ? S.haras.nome : ti0;
@@ -377,6 +377,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     const h = S.haras;
     const num = (id, lab, val, ajuda, min, max) => '<div class="kv"><div><b>' + lab + '</b><p class="small muted">' + ajuda + '</p></div><div class="field"><input id="' + id + '" class="inp mono" type="number" min="' + min + '" max="' + max + '" value="' + val + '" aria-label="' + lab + '"></div></div>';
     return '<div class="sec" style="max-width:860px">' +
+      '<div class="card stack"><h2>Logotipo</h2><div class="row" style="align-items:flex-start;gap:20px"><div class="logo-prev' + (h.logo ? '' : ' vazio') + '" id="logo-prev">' + (h.logo ? '<img src="' + esc(h.logo) + '" alt="Logotipo atual">' : 'Sem logotipo.<br>O portal mostra a marca Haras360.') + '</div>' +
+        '<div class="stack" style="flex:1;min-width:220px"><p class="small muted">Aparece na barra superior do Portal do Gestor e do Portal Campo. Use PNG com fundo transparente ou branco. As margens vazias são recortadas e a imagem é reduzida para 512 pixels.</p><div class="row"><label class="btn" for="logo-arq">' + IC.upload + 'Escolher imagem</label><input id="logo-arq" type="file" accept="image/png,image/jpeg,image/webp" hidden>' + (h.logo ? '<button class="btn ghost danger" data-act="remover-logo">Remover logotipo</button>' : '') + '</div></div></div></div>' +
       '<div class="card stack"><h2>Dados do haras</h2><div class="fgrid"><div class="field"><label for="pa-nome">Nome do haras</label><input id="pa-nome" class="inp" value="' + esc(h.nome) + '"></div><div class="field"><label for="pa-mun">Município/UF</label><input id="pa-mun" class="inp" value="' + esc(h.municipio) + '"></div><div class="field full"><label for="pa-prop">Proprietário</label><input id="pa-prop" class="inp" value="' + esc(h.proprietario) + '"></div></div></div>' +
       '<div class="card stack"><h2>Regras sanitárias e reprodutivas</h2>' +
       '<div class="kv"><div><b>Reforço da vacina de raiva</b><p class="small muted">Em estados endêmicos para raiva o reforço passa a ser semestral.</p></div><div class="seg" role="group" aria-label="Reforço da raiva"><button data-act="pa-raiva" data-v="0" aria-pressed="' + !h.raivaSemestral + '">Anual</button><button data-act="pa-raiva" data-v="1" aria-pressed="' + !!h.raivaSemestral + '">Semestral</button></div></div>' +
@@ -490,6 +492,13 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     },
     plano() { simOut(); $('#sim').addEventListener('input', e => { simN = Number(e.target.value); simOut(); }); },
     equipe() { carregarSessoes(); },
+    parametros() {
+      $('#logo-arq').addEventListener('change', async e => {
+        const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+        try { const img = await UI.prepararLogo(f); if (await executar(null, () => API.put('/api/haras/logo', { imagem: img }))) render(); }
+        catch (err) { UI.toast(err.message); }
+      });
+    },
     auditoria() {
       carregarAuditoria();
       $('#aud-f').addEventListener('submit', e => { e.preventDefault(); audF.acao = $('#af-acao').value; audF.texto = $('#af-texto').value.trim(); audF.de = $('#af-de').value; audF.ate = $('#af-ate').value; carregarAuditoria(); });
@@ -587,6 +596,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     'dois-fatores-user': el => { const u = (S.usuarios || []).find(x => String(x.id) === el.dataset.id); confirmar(el, 'Confirmar redefinição', async () => { if (await executar(el, () => API.post('/api/usuarios/' + u.id + '/2fa/redefinir'))) render(); }); },
     'novos-codigos': () => UI.abrir({ titulo: 'Novos códigos de recuperação', corpo: '<form class="stack" novalidate><p>Os códigos atuais deixam de valer. Confirme sua senha.</p><div class="field"><label for="nc-senha">Senha</label><input id="nc-senha" type="password" class="inp" autocomplete="current-password"></div></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="gerar-codigos">Gerar</button>' }),
     'gerar-codigos': async el => { try { el.disabled = true; const r = await API.post('/api/me/codigos-recuperacao', { senha: document.getElementById('nc-senha').value }); UI.fechar(); UI.mostrarCodigos(r.codigos); } catch (e) { el.disabled = false; UI.toast(e.message); } },
+    'remover-logo': el => confirmar(el, 'Confirmar remoção', async () => { if (await executar(el, () => API.del('/api/haras/logo'))) render(); }),
     'pa-raiva': el => { document.querySelectorAll('[data-act="pa-raiva"]').forEach(b => b.setAttribute('aria-pressed', String(b === el))); },
     'salvar-params': async el => {
       const g = Number($('#pa-gest').value), t = Number($('#pa-tol').value);

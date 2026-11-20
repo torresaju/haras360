@@ -106,6 +106,41 @@ const UI = (function () {
     });
   }
 
+  /* ---------- logotipo do haras: reduz para 512 px mantendo a transparência ---------- */
+  function prepararLogo(file) {
+    return new Promise((res, rej) => {
+      if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { rej(new Error('Use uma imagem PNG, JPG ou WebP.')); return; }
+      const fr = new FileReader();
+      fr.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          // recorta as margens vazias (brancas ou transparentes) para o logotipo ocupar bem o espaço
+          const o = document.createElement('canvas'); o.width = img.width; o.height = img.height;
+          const ox = o.getContext('2d'); ox.drawImage(img, 0, 0);
+          const px = ox.getImageData(0, 0, o.width, o.height).data;
+          let x0 = o.width, y0 = o.height, x1 = -1, y1 = -1;
+          for (let y = 0; y < o.height; y += 2) for (let x = 0; x < o.width; x += 2) {
+            const i = (y * o.width + x) * 4;
+            if (px[i + 3] > 24 && (px[i] < 235 || px[i + 1] < 235 || px[i + 2] < 235)) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+          }
+          let sx = 0, sy = 0, sw = o.width, sh = o.height;
+          if (x1 > x0 && y1 > y0) { const m = Math.round(Math.max(x1 - x0, y1 - y0) * 0.04); sx = Math.max(0, x0 - m); sy = Math.max(0, y0 - m); sw = Math.min(o.width, x1 + m + 2) - sx; sh = Math.min(o.height, y1 + m + 2) - sy; }
+          const k = Math.min(1, 512 / Math.max(sw, sh));
+          const c = document.createElement('canvas'); c.width = Math.round(sw * k); c.height = Math.round(sh * k);
+          c.getContext('2d').drawImage(o, sx, sy, sw, sh, 0, 0, c.width, c.height);
+          let url = c.toDataURL('image/png');
+          if (url.length > 1300000) url = c.toDataURL('image/webp', 0.9);
+          if (url.length > 1300000) { rej(new Error('O logotipo ficou grande demais. Use uma imagem mais simples.')); return; }
+          res(url);
+        };
+        img.onerror = () => rej(new Error('Não foi possível abrir a imagem.'));
+        img.src = fr.result;
+      };
+      fr.onerror = () => rej(new Error('Não foi possível ler o arquivo.'));
+      fr.readAsDataURL(file);
+    });
+  }
+
   /* ---------- formulário de registro ---------- */
   let fotosPend = [];
   const OPC = (arr, sel) => arr.map(v => { const [val, lab] = Array.isArray(v) ? v : [v, v]; return '<option value="' + esc(val) + '"' + (String(val) === String(sel) ? ' selected' : '') + '>' + esc(lab) + '</option>'; }).join('');
@@ -224,7 +259,8 @@ const UI = (function () {
     const ini = (o.usuario.nome || '?').split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
     const userMenu = '<div class="drop-m" id="dd-user" hidden><div style="padding:8px 10px"><b>' + esc(o.usuario.nome) + '</b><small class="muted" style="display:block">' + esc(o.usuario.email) + '</small></div><div class="dsep"></div>' +
       o.usuarioItens.map(it => '<button class="di" data-act="' + it.act + '">' + esc(it.rotulo) + '</button>').join('') + '<div class="dsep"></div><button class="di" data-act="sair">Sair</button></div>';
-    return '<div class="topbar-in"><a class="brand" href="' + o.home + '">' + MARCA + '<div><b>Haras360</b><small>' + esc(o.sub) + '</small></div></a>' +
+    const marca = o.logo ? '<span class="logo-h"><img src="' + esc(o.logo) + '" alt="Logotipo de ' + esc(o.sub) + '"></span><div><b class="nome-h">' + esc(o.sub) + '</b><small>Haras360</small></div>' : MARCA + '<div><b>Haras360</b><small>' + esc(o.sub) + '</small></div>';
+    return '<div class="topbar-in"><a class="brand" href="' + o.home + '">' + marca + '</a>' +
       '<nav class="menu" id="menu-principal" aria-label="Menu principal">' + menu + '</nav>' +
       '<div class="tb-acts">' + (o.sino ? '<button class="tb-ic" data-act="nav" data-v="' + o.sino.view + '" aria-label="Notificações">' + ICON.bell + (o.sino.n ? '<span class="badge">' + o.sino.n + '</span>' : '') + '</button>' : '') +
       '<div style="position:relative"><button class="userbtn" data-dd="user" aria-expanded="false" aria-haspopup="true"><span class="avatar">' + esc(ini) + '</span><span class="n">' + esc(o.usuario.nome.split(' ')[0]) + '<small>' + esc(o.perfilTxt) + '</small></span></button>' + userMenu + '</div>' +
@@ -258,5 +294,5 @@ const UI = (function () {
     try { await navigator.clipboard.writeText((mostrarCodigos.atual || []).join('\n')); toast('Códigos copiados.'); } catch (err) { toast('Selecione os códigos e copie manualmente.'); }
   });
 
-  return { ICON, toast, topbar, fecharMenus, confirmar, mostrarCodigos, abrir, fechar, chipStatus, chipCat, linhaTarefa, linhaTempo, verFoto, formRegistro, lerRegistro, remFoto, preDeTarefa, chatHTML, comprimir, TOM, set onClose(f) { onClose = f; } };
+  return { ICON, toast, topbar, prepararLogo, fecharMenus, confirmar, mostrarCodigos, abrir, fechar, chipStatus, chipCat, linhaTarefa, linhaTempo, verFoto, formRegistro, lerRegistro, remFoto, preDeTarefa, chatHTML, comprimir, TOM, set onClose(f) { onClose = f; } };
 })();

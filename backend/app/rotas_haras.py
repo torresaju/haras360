@@ -9,9 +9,10 @@ from fastapi import APIRouter, Body, Depends, Request
 from fastapi.responses import FileResponse
 from sqlalchemy import select
 
+from . import logos as L
 from . import parametros as P
 from . import regras as R
-from .config import FOTOS_DIR, VERSAO
+from .config import FOTOS_DIR, LOGOS_DIR, VERSAO
 from .db import Animal, Auditoria, Foto, Haras, Importacao, NotifLida, Protocolo, Registro, Usuario
 from .seguranca import auditar, do_haras, erro, gestor, get_db, hash_senha, revogar_sessoes, usuario_atual, validar_senha_nova
 
@@ -75,7 +76,7 @@ def protocolos_haras(db, haras_id):
 
 def haras_out(db, h: Haras):
     o = {"id": h.id, "nome": h.nome, "proprietario": h.proprietario or "", "municipio": h.municipio or "", "raivaSemestral": bool(h.raiva_semestral),
-         "associadoABCCMM": h.associado_abccmm or ""}
+         "associadoABCCMM": h.associado_abccmm or "", "logo": L.url(h)}
     o.update(P.todos(db, h.id))
     return o
 
@@ -408,6 +409,36 @@ def editar_haras(request: Request, body: dict = Body(...), u: Usuario = Depends(
         auditar(db, "parametro_alterado", usuario=u, alvo="haras", detalhe=dif, request=request)
     db.commit()
     return {"resumo": "Parametrizações do haras salvas. A agenda foi recalculada."}
+
+
+@r.put("/api/haras/logo")
+def trocar_logo(request: Request, body: dict = Body(...), u: Usuario = Depends(gestor), db=Depends(get_db)):
+    h = db.get(Haras, u.haras_id)
+    L.salvar(h, body.get("imagem"))
+    auditar(db, "logo_alterado", usuario=u, alvo=h.nome, request=request)
+    db.commit()
+    return {"resumo": "Logotipo do haras atualizado.", "logo": L.url(h)}
+
+
+@r.delete("/api/haras/logo")
+def remover_logo(request: Request, u: Usuario = Depends(gestor), db=Depends(get_db)):
+    h = db.get(Haras, u.haras_id)
+    L.remover_arquivo(h.logo)
+    h.logo = None
+    auditar(db, "logo_alterado", usuario=u, alvo=f"{h.nome} (removido)", request=request)
+    db.commit()
+    return {"resumo": "Logotipo removido. O portal volta a mostrar a marca Haras360."}
+
+
+@r.get("/logos/{nome}")
+def ver_logo(nome: str, u: Usuario = Depends(usuario_atual), db=Depends(get_db)):
+    m = re.fullmatch(r"(\d+)-[0-9a-f]{12}\.(png|jpg|webp)", nome)
+    if not m or (u.perfil != "admin" and str(u.haras_id) != m.group(1)):
+        erro(404, "Logotipo não encontrado.")
+    p = LOGOS_DIR / nome
+    if not p.is_file():
+        erro(404, "Logotipo não encontrado.")
+    return FileResponse(p, headers={"Cache-Control": "private, max-age=604800"})
 
 
 @r.put("/api/notif-prefs")
