@@ -12,7 +12,7 @@ A especificação aprovada está em [`docs/ESPECIFICACAO.md`](docs/ESPECIFICACAO
 
 | Versão | Data | Branch | Entrega | Situação |
 |---|---|---|---|---|
-| v0.1.0 | 19/11/2026 | etapa/0.1-repositorio | Código de outubro no Git, testes automatizados, documentação | Em revisão (PR) |
+| v0.1.0 | 19/11/2026 | etapa/0.1-repositorio | Código de outubro no Git, testes automatizados, documentação | Publicada |
 | v1.0.0 | | etapa/1.0-vps | Portais e API na segunda VM micro, sem Docker, 2FA, auditoria, parametrizações, pacote assinado com rollback, backup OCI | Planejada |
 | v1.1.0 | | etapa/1.1-app-android | APK Android do caseiro, offline com envio no Wi-Fi | Planejada |
 
