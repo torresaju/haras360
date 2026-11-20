@@ -2,6 +2,18 @@
 
 Uma nota por versão, da mais recente para a mais antiga.
 
+## v1.1.1 · 20/11/2026 · Instalação em VM compartilhada e tela de Administradores
+Correções vindas da primeira instalação real, na VM que já roda a plataforma de reservatórios.
+* **Instalador convive com outra aplicação:**
+  * usa a primeira porta interna livre a partir da 8000 (antes era fixa e falhava com "address already in use");
+  * acrescenta o Haras360 a um Caddy existente com uma linha `import`, guardando cópia do original (antes sobrescrevia o Caddyfile); o site fica em `/etc/caddy/haras360.caddy`;
+  * avisa quando o MariaDB já atende outras bases;
+  * ajusta o fuso da VM de UTC para America/Sao_Paulo (backup às 02:30 de Brasília).
+  * Novo teste no GitHub Actions instala ao lado de outra aplicação e confere que as duas continuam funcionando.
+* **QR Codes sem corte:** o QR Code do cadastro do 2FA aparecia cortado e não era lido pelo autenticador. Agora escala sem perder as bordas.
+* **App Android mais fácil de achar:** botão Instalar o app no topo do Portal Campo, e link com QR Code de download na janela Vincular celular do gestor.
+* **Administração › Administradores:** criar, desativar e reativar, redefinir senha e 2FA de outro administrador. Cada ação pede a senha de quem faz e vai para a auditoria. Ninguém desativa a si mesmo e a plataforma nunca fica sem administrador ativo.
+
 ## v1.1.0 · 20/11/2026 · App Android do caseiro
 * **App Android (Flutter, Android 8 ou superior)** para o caseiro: tarefas do dia, animais com ficha e histórico, avisos e registro de vacina, vermífugo, odontologia, casqueamento, exame, reprodução e ocorrência, com até 4 fotos.
 * **Funciona sem internet:** banco local no celular com o último retrato do haras e a fila de registros. A situação das tarefas é recalculada com a data do dia, e o registro feito no pasto já tira a tarefa da lista.

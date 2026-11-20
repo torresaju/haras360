@@ -13,7 +13,7 @@ from .config import MAX_PACOTE_MB, VERSAO
 from .db import Animal, Haras, Protocolo, Usuario
 from .migracoes import versao_banco
 from .rotas_haras import EMAIL_RE, consultar_auditoria
-from .seguranca import admin, auditar, erro, get_db, hash_senha, revogar_sessoes, validar_senha_nova
+from .seguranca import admin, auditar, confere_senha, erro, get_db, hash_senha, revogar_sessoes, validar_senha_nova
 
 r = APIRouter(prefix="/api/admin")
 PACOTE_RE = re.compile(r"^haras360-(\d+\.\d+\.\d+)\.tar\.gz$")
@@ -63,9 +63,11 @@ def painel(u: Usuario = Depends(admin), db=Depends(get_db)):
         haras.append({"id": h.id, "nome": h.nome, "municipio": h.municipio, "plano": plano["nome"], "logo": L.url(h), "limite": plano["limite"], "ativo": bool(h.ativo),
                       "animais": n, "mensalidade": P.mensalidade(faixas, n), "usuarios": usuarios.get(h.id, []),
                       "criado": h.criado_em.date().isoformat()})
+    administradores = [{"id": x.id, "nome": x.nome, "email": x.email, "ativo": bool(x.ativo), "doisFatores": bool(x.totp_ativo), "eu": x.id == u.id}
+                       for x in db.scalars(select(Usuario).where(Usuario.perfil == "admin").order_by(Usuario.nome))]
     return {
         "versao": VERSAO, "versaoBanco": versao_banco(), "usuario": {"id": u.id, "nome": u.nome, "email": u.email, "perfil": u.perfil},
-        "haras": haras, "parametros": P.publico_global(P.todos(db)), "modulos": P.MODULOS,
+        "haras": haras, "administradores": administradores, "parametros": P.publico_global(P.todos(db)), "modulos": P.MODULOS,
         "atualizacao": S.status_tarefa(), "versoes": S.versoes_guardadas(), "backup": S.ultimo_backup(),
         "limitePacoteMB": MAX_PACOTE_MB,
     }
@@ -146,6 +148,84 @@ def dois_fatores_usuario(uid: int, request: Request, u: Usuario = Depends(admin)
     auditar(db, "2fa_redefinido", usuario=u, haras_id=x.haras_id, alvo=f"{x.nome} <{x.email}>", request=request)
     db.commit()
     return {"resumo": f"2FA de {x.nome} redefinido."}
+
+
+# ---------------- administradores (v1.1.1) ----------------
+def _confirmar_minha_senha(u: Usuario, body: dict):
+    """Ações sobre administradores pedem a senha de quem as faz."""
+    if not confere_senha(str(body.get("minhaSenha") or ""), u.senha_hash):
+        erro(403, "Sua senha não confere. Digite a sua senha atual para confirmar.")
+
+
+def _outro_admin(db, uid, u: Usuario):
+    x = db.get(Usuario, uid)
+    if not x or x.perfil != "admin":
+        erro(404, "Administrador não encontrado.")
+    if x.id == u.id:
+        erro(400, "Para a sua própria conta, use o menu com o seu nome (senha e códigos de recuperação).")
+    return x
+
+
+@r.post("/administradores")
+def criar_administrador(request: Request, body: dict = Body(...), u: Usuario = Depends(admin), db=Depends(get_db)):
+    _confirmar_minha_senha(u, body)
+    nome = _txt(body.get("nome"), 120)
+    email = str(body.get("email") or "").strip().lower()[:160]
+    senha = str(body.get("senha") or "")
+    if not nome:
+        erro(400, "Informe o nome.")
+    if not EMAIL_RE.match(email):
+        erro(400, "E-mail inválido.")
+    validar_senha_nova(senha)
+    if db.scalar(select(Usuario).where(Usuario.email == email)):
+        erro(409, "Já existe um usuário com este e-mail.")
+    x = Usuario(haras_id=None, nome=nome, email=email, senha_hash=hash_senha(senha), perfil="admin", ativo=True)
+    db.add(x)
+    auditar(db, "usuario_criado", usuario=u, alvo=f"{nome} <{email}> (admin)", request=request)
+    db.commit()
+    return {"resumo": f"Administrador {nome} criado. No primeiro acesso ele cadastra o 2FA."}
+
+
+@r.patch("/administradores/{uid}")
+def alterar_administrador(uid: int, request: Request, body: dict = Body(...), u: Usuario = Depends(admin), db=Depends(get_db)):
+    x = _outro_admin(db, uid, u)
+    if "ativo" not in body:
+        erro(400, "Nada para alterar.")
+    _confirmar_minha_senha(u, body)
+    ativo = bool(body["ativo"])
+    if not ativo:
+        outros = db.scalar(select(func.count()).select_from(Usuario).where(Usuario.perfil == "admin", Usuario.ativo.is_(True), Usuario.id != x.id)) or 0
+        if outros == 0:
+            erro(400, "A plataforma precisa de pelo menos um administrador ativo.")
+        revogar_sessoes(db, x.id)
+    x.ativo = ativo
+    auditar(db, "usuario_ativado" if ativo else "usuario_desativado", usuario=u, alvo=f"{x.nome} <{x.email}> (admin)", request=request)
+    db.commit()
+    return {"resumo": f"Administrador {x.nome} {'reativado' if ativo else 'desativado'}."}
+
+
+@r.post("/administradores/{uid}/senha")
+def senha_administrador(uid: int, request: Request, body: dict = Body(...), u: Usuario = Depends(admin), db=Depends(get_db)):
+    x = _outro_admin(db, uid, u)
+    _confirmar_minha_senha(u, body)
+    s = str(body.get("senha") or "")
+    validar_senha_nova(s)
+    x.senha_hash = hash_senha(s)
+    revogar_sessoes(db, x.id)
+    auditar(db, "senha_redefinida", usuario=u, alvo=f"{x.nome} <{x.email}> (admin)", request=request)
+    db.commit()
+    return {"resumo": f"Senha de {x.nome} redefinida. As sessões dele foram encerradas."}
+
+
+@r.post("/administradores/{uid}/2fa/redefinir")
+def dois_fatores_administrador(uid: int, request: Request, body: dict = Body(...), u: Usuario = Depends(admin), db=Depends(get_db)):
+    x = _outro_admin(db, uid, u)
+    _confirmar_minha_senha(u, body)
+    x.totp_ativo, x.totp_segredo, x.recuperacao = False, None, None
+    revogar_sessoes(db, x.id)
+    auditar(db, "2fa_redefinido", usuario=u, alvo=f"{x.nome} <{x.email}> (admin)", request=request)
+    db.commit()
+    return {"resumo": f"2FA de {x.nome} redefinido. Ele cadastra de novo no próximo acesso."}
 
 
 @r.put("/parametros")
