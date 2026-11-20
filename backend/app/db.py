@@ -1,22 +1,16 @@
-"""Configuração, banco de dados e modelos do Haras360."""
-import os
-import time
+"""Banco de dados e modelos do Haras360.
+
+Regra das migrações: o esquema só cresce (tabelas e colunas novas), para a
+versão anterior continuar funcionando se uma atualização precisar voltar.
+"""
 from datetime import datetime
 
-from sqlalchemy import (JSON, Boolean, Date, DateTime, ForeignKey, Integer, String, Text, create_engine)
-from sqlalchemy.exc import OperationalError
+from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Integer, String, Text, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
-DB_URL = os.environ.get("DB_URL", "sqlite:///./haras360.db")
-SECRET_KEY = os.environ.get("SECRET_KEY", "")
-FOTOS_DIR = os.environ.get("FOTOS_DIR", "./dados/fotos")
-COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "0") == "1"
-LIMITE_ANIMAIS = int(os.environ.get("LIMITE_ANIMAIS", "30"))
+from .config import DB_URL
 
-if not SECRET_KEY:
-    raise SystemExit("SECRET_KEY não definida. Rode o install.sh ou configure o arquivo .env.")
-
-_kw = {"pool_pre_ping": True, "pool_recycle": 3600}
+_kw = {"pool_pre_ping": True, "pool_recycle": 3600, "pool_size": 5, "max_overflow": 5}
 if DB_URL.startswith("sqlite"):
     _kw = {"connect_args": {"check_same_thread": False}}
 engine = create_engine(DB_URL, **_kw)
@@ -40,19 +34,69 @@ class Haras(Base):
     raiva_semestral: Mapped[bool] = mapped_column(Boolean, default=False)
     associado_abccmm: Mapped[str] = mapped_column(String(160), default="")
     notif_prefs: Mapped[dict] = mapped_column(JSON, nullable=True)
+    plano: Mapped[str] = mapped_column(String(60), default="Padrão")
+    logo: Mapped[str] = mapped_column(String(80), nullable=True)  # arquivo em compartilhado/logos
+    ativo: Mapped[bool] = mapped_column(Boolean, default=True)
     criado_em: Mapped[datetime] = mapped_column(DateTime, default=agora)
 
 
 class Usuario(Base):
     __tablename__ = "usuarios"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    haras_id: Mapped[int] = mapped_column(ForeignKey("haras.id"), index=True)
+    haras_id: Mapped[int] = mapped_column(ForeignKey("haras.id"), index=True, nullable=True)  # nulo para o administrador
     nome: Mapped[str] = mapped_column(String(120))
     email: Mapped[str] = mapped_column(String(160), unique=True)
     senha_hash: Mapped[str] = mapped_column(String(100))
-    perfil: Mapped[str] = mapped_column(String(20))  # gestor | operador
+    perfil: Mapped[str] = mapped_column(String(20))  # admin | gestor | operador
     ativo: Mapped[bool] = mapped_column(Boolean, default=True)
+    totp_segredo: Mapped[str] = mapped_column(String(64), nullable=True)
+    totp_ativo: Mapped[bool] = mapped_column(Boolean, default=False)
+    recuperacao: Mapped[list] = mapped_column(JSON, nullable=True)  # hashes dos códigos de recuperação
     criado_em: Mapped[datetime] = mapped_column(DateTime, default=agora)
+
+
+class Sessao(Base):
+    __tablename__ = "sessoes"
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    publico: Mapped[str] = mapped_column(String(16), unique=True)  # identificador exibido e usado para encerrar
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id", ondelete="CASCADE"), index=True)
+    etapa: Mapped[str] = mapped_column(String(16), default="ok")  # ok | 2fa | cadastro2fa
+    tipo: Mapped[str] = mapped_column(String(10), default="web")  # web | app
+    ip: Mapped[str] = mapped_column(String(64), default="")
+    agente: Mapped[str] = mapped_column(String(200), default="")
+    criada_em: Mapped[datetime] = mapped_column(DateTime, default=agora)
+    ultimo_uso: Mapped[datetime] = mapped_column(DateTime, default=agora)
+    expira_em: Mapped[datetime] = mapped_column(DateTime)
+    revogada: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class Auditoria(Base):
+    __tablename__ = "auditoria"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    quando: Mapped[datetime] = mapped_column(DateTime, default=agora, index=True)
+    haras_id: Mapped[int] = mapped_column(Integer, nullable=True, index=True)
+    usuario_id: Mapped[int] = mapped_column(Integer, nullable=True)
+    usuario: Mapped[str] = mapped_column(String(160), default="")
+    ip: Mapped[str] = mapped_column(String(64), default="")
+    acao: Mapped[str] = mapped_column(String(40), index=True)
+    alvo: Mapped[str] = mapped_column(String(200), default="")
+    resultado: Mapped[str] = mapped_column(String(10), default="ok")  # ok | falha
+    detalhe: Mapped[dict] = mapped_column(JSON, nullable=True)
+
+
+class Parametro(Base):
+    __tablename__ = "parametros"
+    escopo: Mapped[str] = mapped_column(String(20), primary_key=True)  # global | haras:<id>
+    chave: Mapped[str] = mapped_column(String(60), primary_key=True)
+    valor: Mapped[dict] = mapped_column(JSON, nullable=True)
+    atualizado_em: Mapped[datetime] = mapped_column(DateTime, default=agora, onupdate=agora)
+
+
+class SchemaVersao(Base):
+    __tablename__ = "schema_versao"
+    versao: Mapped[int] = mapped_column(Integer, primary_key=True)
+    descricao: Mapped[str] = mapped_column(String(200), default="")
+    aplicada_em: Mapped[datetime] = mapped_column(DateTime, default=agora)
 
 
 class Animal(Base):
@@ -77,7 +121,7 @@ class Animal(Base):
 
 class Registro(Base):
     __tablename__ = "registros"
-    id: Mapped[str] = mapped_column(String(16), primary_key=True)
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
     haras_id: Mapped[int] = mapped_column(ForeignKey("haras.id"), index=True)
     animal_id: Mapped[str] = mapped_column(ForeignKey("animais.id", ondelete="CASCADE"), index=True)
     data: Mapped[object] = mapped_column(Date)
@@ -127,16 +171,3 @@ class Importacao(Base):
     novos: Mapped[int] = mapped_column(Integer, default=0)
     atualizados: Mapped[int] = mapped_column(Integer, default=0)
     criado_em: Mapped[datetime] = mapped_column(DateTime, default=agora)
-
-
-def iniciar_banco(tentativas=30):
-    """Cria as tabelas, aguardando o MySQL ficar disponível."""
-    for i in range(tentativas):
-        try:
-            Base.metadata.create_all(engine)
-            return
-        except OperationalError as e:
-            if i == tentativas - 1:
-                raise
-            print(f"Aguardando o banco de dados ({i + 1}/{tentativas}): {e.__class__.__name__}", flush=True)
-            time.sleep(2)

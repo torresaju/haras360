@@ -1,0 +1,10 @@
+[Unit]
+Description=Haras360: backup do ambiente
+After=mariadb.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/haras360-backup
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=1h

@@ -1,0 +1,48 @@
+name: Segurança e verificação visual
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  zap-e-capturas:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      SECRET_KEY: chave-somente-para-ci
+      DB_URL: sqlite:////tmp/haras360-ci.db
+      H360_COMPARTILHADO: /tmp/haras360-ci
+      TZ: America/Sao_Paulo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instância de demonstração
+        run: |
+          pip install -r backend/requirements.txt pyotp playwright==1.65.2
+          python -m playwright install --with-deps chromium
+          cd backend
+          python -m app.cli criar-admin --nome "Administrador Demonstração" --email admin@demonstracao.local --senha demonstracao123
+          python -m app.cli demonstracao
+          nohup python -m uvicorn app.main:app --host 0.0.0.0 --port 8090 > /tmp/uvicorn.log 2>&1 &
+          for i in $(seq 1 30); do curl -fs localhost:8090/api/saude && break; sleep 1; done
+
+      - name: Verificação visual de todas as telas
+        run: python tests/visual/capturas.py http://127.0.0.1:8090 capturas
+
+      - name: Varredura OWASP ZAP (baseline)
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: http://localhost:8090/entrar
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: relatorio-zap
+          cmd_options: -a -j
+
+      - name: Capturas de tela
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-de-tela
+          path: capturas/

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Configura o envio do backup ao bucket privado da OCI por link pré-autenticado (PAR).
+#
+# No console da Oracle Cloud:
+#   Storage > Buckets > Create bucket (privado, com versionamento ativado)
+#   No bucket: Pre-Authenticated Requests > Create
+#     Target: Bucket; Access: Permit object writes; validade longa (ex.: 2 anos)
+#   Copie a URL gerada (termina em /o/) e cole aqui.
+set -euo pipefail
+. /usr/local/lib/haras360/comum.sh
+exige_root
+read -rp "URL do link pré-autenticado (termina em /o/): " URL
+[[ "$URL" =~ ^https://objectstorage\.[a-z0-9-]+\.oraclecloud\.com/p/.+/o/?$ ]] || falha "URL não parece um link pré-autenticado de bucket da OCI."
+TESTE="$(mktemp)"; echo "teste haras360 $(date -Is)" > "$TESTE"
+curl -fsS -X PUT -T "$TESTE" "${URL%/}/haras360-teste-de-envio.txt" -o /dev/null || { rm -f "$TESTE"; falha "Não consegui gravar no bucket com esse link."; }
+rm -f "$TESTE"
+umask 077
+printf 'OCI_PAR_URL=%s\n' "$URL" > "$H360_ETC/backup.env"
+info "Envio configurado. Um arquivo de teste foi gravado no bucket (haras360-teste-de-envio.txt); pode apagá-lo."
+info "Para testar o backup completo agora: sudo haras360-backup"

@@ -1,0 +1,9 @@
+[Unit]
+Description=Haras360: fila de tarefas pedidas pela tela de administração
+
+[Path]
+PathExists=/opt/haras360/compartilhado/fila/pedido.json
+Unit=haras360-tarefa.service
+
+[Install]
+WantedBy=multi-user.target

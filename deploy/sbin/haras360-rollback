@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Volta o Haras360 para uma versão guardada.
+# Uso: sudo haras360-rollback X.Y.Z      (sem argumento, lista as versões guardadas)
+set -euo pipefail
+. /usr/local/lib/haras360/comum.sh
+exige_root
+ATUAL="$(versao_atual)"
+if [ $# -eq 0 ]; then
+  echo "Em uso: $ATUAL"; echo "Guardadas:"; ls -1 "$H360_RELEASES" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -t. -k1,1nr -k2,2nr -k3,3nr | sed 's/^/  /'
+  exit 0
+fi
+ALVO="$1"
+[[ "$ALVO" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || falha "Versão inválida: $ALVO"
+[ -d "$H360_RELEASES/$ALVO/venv" ] || falha "A versão $ALVO não está guardada neste servidor."
+[ "$ALVO" != "$ATUAL" ] || falha "A versão $ALVO já está em uso."
+if [ -z "${H360_SEM_LOCK:-}" ]; then exec 9>/run/haras360-tarefa.lock; flock -n 9 || falha "Já existe uma tarefa em andamento."; fi
+
+status_tarefa executando rollback "Voltando de $ATUAL para $ALVO." "$ATUAL" "$ALVO"
+info "Voltando de $ATUAL para $ALVO"
+ln -sfn "$H360_RELEASES/$ALVO" "$H360_BASE/.atual.tmp"; mv -T "$H360_BASE/.atual.tmp" "$H360_ATUAL"
+systemctl restart haras360
+if aguardar_saude "$ALVO" 60; then
+  instalar_scripts_do_release "$H360_RELEASES/$ALVO"
+  status_tarefa concluido rollback "Haras360 de volta à versão $ALVO." "$ATUAL" "$ALVO"
+  auditar rollback_concluido "$ATUAL para $ALVO"
+  info "Em uso: $ALVO"
+  exit 0
+fi
+aviso "A versão $ALVO não respondeu. Mantendo $ATUAL."
+ln -sfn "$H360_RELEASES/$ATUAL" "$H360_BASE/.atual.tmp"; mv -T "$H360_BASE/.atual.tmp" "$H360_ATUAL"
+systemctl restart haras360
+aguardar_saude "$ATUAL" 60 || true
+status_tarefa falhou rollback "A versão $ALVO não iniciou; o sistema continuou em $ATUAL." "$ATUAL" "$ALVO"
+auditar rollback_concluido "$ATUAL para $ALVO: não iniciou, mantida $ATUAL" falha
+falha "A versão $ALVO não iniciou. Mantida a versão $ATUAL."

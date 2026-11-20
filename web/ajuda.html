@@ -1,0 +1,87 @@
+<title>Haras360 Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Zilla+Slab:wght@500;600;700&display=swap">
+<style>
+/*SHARED_CSS*/
+.cab{background:var(--forest);color:var(--forest-ink);padding-inline:clamp(16px,4vw,48px);padding-block:36px 30px}
+.cab-in{max-width:1100px;margin:0 auto}
+.cab h1{font-size:clamp(1.8rem,1.3rem + 2vw,2.6rem)}
+.cab p{color:var(--forest-muted);max-width:62ch;margin-top:10px}
+.corpo{max-width:1100px;margin:0 auto;padding-inline:clamp(16px,4vw,48px);padding-block:28px 80px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:40px}
+.sumario{position:sticky;top:16px;align-self:start;display:flex;flex-direction:column;gap:2px;font-size:.9rem}
+.sumario a{color:var(--muted);text-decoration:none;padding:5px 10px;border-radius:6px;border-left:2px solid var(--line)}
+.sumario a:hover{color:var(--ink);border-left-color:var(--accent)}
+article{display:flex;flex-direction:column;gap:46px;min-width:0}
+section{display:flex;flex-direction:column;gap:12px;scroll-margin-top:16px}
+section h2{font-size:1.5rem}
+section p,section li{max-width:70ch}
+section ol,section ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+figure{margin:6px 0 0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+figure img{display:block;width:100%;height:auto}
+figcaption{font-size:.84rem;color:var(--muted);padding:8px 12px;border-top:1px solid var(--line-2)}
+.perfil{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:99px;padding:2px 9px;background:var(--accent-soft);color:var(--accent)}
+kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+@media (max-width:860px){.corpo{grid-template-columns:minmax(0,1fr)}.sumario{position:static;flex-direction:row;flex-wrap:wrap;gap:4px}.sumario a{border-left:0;background:var(--surface-2)}}
+</style>
+<header class="cab"><div class="cab-in"><div class="eyebrow" style="color:var(--forest-muted)">Ajuda</div><h1>Manual do Haras360</h1><p>Como usar o portal do gestor, o Portal Campo e a administração da plataforma. As telas mostram o Haras Demonstração, com dados fictícios.</p></div></header>
+<div class="corpo">
+  <nav class="sumario" aria-label="Sumário">
+    <a href="#acesso">Primeiro acesso e 2FA</a><a href="#painel">Painel</a><a href="#importar">Importar ABCCMM</a><a href="#animais">Animais e prontuário</a><a href="#agenda">Agenda e protocolos</a><a href="#campo">Portal Campo</a><a href="#equipe">Equipe e sessões</a><a href="#parametros">Parametrizações</a><a href="#auditoria">Auditoria</a><a href="#admin">Administração da plataforma</a><a href="#atualizacao">Atualização e backup</a>
+  </nav>
+  <article>
+    <section id="acesso"><h2>Primeiro acesso e verificação em duas etapas</h2>
+      <p>Entre em <span class="mono">/entrar</span> com o e-mail e a senha inicial recebidos. Gestores e administradores ativam a verificação em duas etapas (2FA) no primeiro acesso; o caseiro entra só com a senha.</p>
+      <ol><li>Instale no celular um aplicativo autenticador (Google Authenticator, Microsoft Authenticator ou Authy).</li><li>Leia o QR Code exibido e digite o código de 6 dígitos.</li><li>Guarde os 8 códigos de recuperação fora do celular. Cada um vale uma única entrada.</li></ol>
+      <figure><img src="/ajuda/img/2fa.png" alt="Tela de ativação do 2FA com QR Code" loading="lazy"><figcaption>Ativação do 2FA no primeiro acesso do gestor.</figcaption></figure>
+      <p>Perdeu o celular? Na tela do código, use "Perdi o celular: usar código de recuperação". Depois, gere novos códigos no menu com o seu nome. Se não tiver mais códigos, outro gestor ou o administrador redefine o seu 2FA.</p>
+    </section>
+    <section id="painel"><h2>Painel</h2><span class="perfil">Gestor</span>
+      <p>Mostra o que precisa de atenção: procedimentos atrasados, os previstos para os próximos 7 dias, pendências da ABCCMM, gestações em andamento e os últimos registros feitos pelo caseiro.</p>
+      <figure><img src="/ajuda/img/painel.png" alt="Painel do gestor" loading="lazy"><figcaption>Painel do gestor com a barra de menus no topo.</figcaption></figure>
+      <p>Os menus ficam agrupados: Plantel (Animais, Importar ABCCMM), Manejo (Agenda, Protocolos), Equipe, Assistente, Administração e Ajuda. O sino mostra os avisos não lidos.</p>
+    </section>
+    <section id="importar"><h2>Importar o Relatório de Plantel ABCCMM</h2><span class="perfil">Gestor</span>
+      <ol><li>No Sistema de Gestão ABCCMM, gere o Relatório de Plantel em PDF.</li><li>Em Plantel › Importar ABCCMM, envie o PDF. A leitura acontece no seu navegador.</li><li>Confira a lista: o sistema compara com o total informado no relatório e marca animais novos, a atualizar e já cadastrados.</li><li>Clique em Importar. A agenda sanitária é calculada na hora.</li></ol>
+      <figure><img src="/ajuda/img/importar.png" alt="Tela de importação do Relatório de Plantel" loading="lazy"><figcaption>Envio do PDF da ABCCMM.</figcaption></figure>
+      <p>Animais sem registro ou sem exame de DNA geram pendências documentais. O CPF do associado não é gravado.</p>
+    </section>
+    <section id="animais"><h2>Animais e prontuário</h2><span class="perfil">Gestor</span>
+      <p>A ficha do animal tem três abas: Prontuário (histórico com fotos), Agenda (próximas etapas calculadas) e Dados e genealogia (cadastro, pai, mãe e avós, com importação do certificado em PDF quando houver).</p>
+      <figure><img src="/ajuda/img/ficha.png" alt="Ficha de uma égua gestante" loading="lazy"><figcaption>Ficha de uma égua gestante, com a barra de gestação.</figcaption></figure>
+    </section>
+    <section id="agenda"><h2>Agenda sanitária e protocolos</h2><span class="perfil">Gestor</span>
+      <p>O motor de regras calcula a próxima etapa de cada vacina e manejo a partir do nascimento, do último registro e dos protocolos. Exemplos: série inicial dos potros, primeiro reforço aos 12 meses, reinício da primovacinação quando o reforço vence além da tolerância, rinopneumonite no 5º, 7º e 9º mês da gestação.</p>
+      <figure><img src="/ajuda/img/agenda.png" alt="Agenda sanitária" loading="lazy"><figcaption>Agenda agrupada por prazo.</figcaption></figure>
+      <p>Em Manejo › Protocolos você ajusta idades, séries, intervalos e ativa ou desativa cada item. Os padrões seguem a VetJr. UFMG para vacinas e práticas de mercado para os demais manejos; valide com o veterinário do plantel.</p>
+    </section>
+    <section id="campo"><h2>Portal Campo do caseiro</h2><span class="perfil">Caseiro</span>
+      <p>Feito para o celular: tarefas do dia, fichas dos animais, registro com fotos e ocorrências. Ao tocar em Registrar em uma tarefa, o formulário já vem preenchido.</p>
+      <figure><img src="/ajuda/img/campo.png" alt="Portal Campo no celular" loading="lazy" style="max-width:420px"><figcaption>Portal Campo na largura de um celular.</figcaption></figure>
+      <p>Para trabalhar sem internet no campo, o caseiro usará o aplicativo Android, previsto para a versão 1.1.</p>
+    </section>
+    <section id="equipe"><h2>Equipe e sessões</h2><span class="perfil">Gestor</span>
+      <p>Adicione gestores e caseiros com senha inicial. Para cada pessoa você pode redefinir a senha, redefinir o 2FA de outro gestor e desativar o acesso. Em Sessões e aparelhos ativos aparecem os navegadores e celulares conectados; encerre os que não reconhecer.</p>
+      <figure><img src="/ajuda/img/equipe.png" alt="Equipe e sessões" loading="lazy"><figcaption>Usuários, situação do 2FA e sessões ativas.</figcaption></figure>
+    </section>
+    <section id="parametros"><h2>Parametrizações do haras</h2><span class="perfil">Gestor</span>
+      <p>Logotipo do haras, dados do haras, reforço da raiva anual ou semestral, dias de gestação usados na previsão de parto e tolerância para reiniciar a primovacinação.</p><p>O logotipo aparece na barra superior do Portal do Gestor e do Portal Campo. Envie PNG, JPG ou WebP com fundo branco ou transparente: o sistema recorta as margens vazias e reduz a imagem. O administrador também pode enviar ou trocar o logotipo ao cadastrar o haras.</p>
+      <figure><img src="/ajuda/img/parametros.png" alt="Parametrizações do haras" loading="lazy"><figcaption>Parametrizações do haras.</figcaption></figure>
+    </section>
+    <section id="auditoria"><h2>Auditoria</h2><span class="perfil">Gestor</span><span class="perfil">Administrador</span>
+      <p>Registra logins (inclusive recusados), 2FA, importações, exclusões com o conteúdo excluído, mudanças de protocolo e de parametrização, usuários, atualizações e backups. Filtre por ação, texto e período.</p>
+      <figure><img src="/ajuda/img/auditoria.png" alt="Auditoria" loading="lazy"><figcaption>Consulta da auditoria.</figcaption></figure>
+    </section>
+    <section id="admin"><h2>Administração da plataforma</h2><span class="perfil">Administrador</span>
+      <p>O administrador cria haras e gestores, define o plano de cada haras e mantém as parametrizações globais: planos e módulos, faixas de preço, login e sessões, e-mail.</p>
+      <figure><img src="/ajuda/img/admin-haras.png" alt="Lista de haras" loading="lazy"><figcaption>Haras, planos e usuários.</figcaption></figure>
+      <figure><img src="/ajuda/img/admin-parametros.png" alt="Planos e módulos" loading="lazy"><figcaption>Grade de planos e módulos. Por padrão tudo vem liberado.</figcaption></figure>
+    </section>
+    <section id="atualizacao"><h2>Atualização e backup</h2><span class="perfil">Administrador</span>
+      <ol><li>Na Release da versão no GitHub, baixe <span class="mono">haras360-X.Y.Z.tar.gz</span> e anote o SHA-256.</li><li>No Windows, rode <kbd>python assinar-pacote.py haras360-X.Y.Z.tar.gz</kbd> e digite a senha da chave (a mesma do Journey). Sai o arquivo <span class="mono">.sig</span>.</li><li>Em Administração › Atualização e backup, envie o pacote e a assinatura.</li></ol>
+      <p>O servidor confere o SHA-256 e a assinatura, faz backup, aplica as migrações, troca de versão e testa. Se falhar, volta sozinho. As três últimas versões ficam guardadas para voltar com um clique.</p>
+      <figure><img src="/ajuda/img/admin-atualizacao.png" alt="Atualização e backup" loading="lazy"><figcaption>Envio do pacote assinado, versões guardadas e backup.</figcaption></figure>
+      <p>O backup completo roda todo dia às 02:30, fica 7 dias no servidor e vai para o bucket privado da OCI.</p>
+    </section>
+  </article>
+</div>

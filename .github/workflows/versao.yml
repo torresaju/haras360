@@ -2,7 +2,8 @@ name: Versão
 
 # Quando a main recebe um merge, lê o arquivo VERSION e, se a tag vX.Y.Z ainda
 # não existir, cria a tag e a Release com a nota da versão em docs/HISTORICO.md.
-# Arquivos de entrega (como o APK da v1.1.0) serão anexados por este workflow.
+# Anexa à Release o pacote de atualização haras360-X.Y.Z.tar.gz e o SHA-256 dele,
+# para ser assinado no Windows e enviado pela tela Administração > Atualização.
 
 on:
   push:
@@ -65,4 +66,15 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "$TAG" -m "$(cat titulo.txt)"
           git push origin "$TAG"
-          gh release create "$TAG" --title "$(cat titulo.txt)" --notes-file nota.md --verify-tag
+          bash deploy/gerar-pacote.sh "$TAG" dist
+          {
+            cat nota.md
+            echo
+            echo "### Pacote de atualização"
+            echo
+            echo "Baixe \`haras360-${TAG#v}.tar.gz\`, assine no Windows com \`python assinar-pacote.py haras360-${TAG#v}.tar.gz\` e envie em Administração › Atualização e backup."
+            echo
+            echo "SHA-256: \`$(cut -d' ' -f1 dist/haras360-${TAG#v}.tar.gz.sha256)\`"
+          } > nota-final.md
+          gh release create "$TAG" --title "$(cat titulo.txt)" --notes-file nota-final.md --verify-tag \
+            dist/haras360-${TAG#v}.tar.gz dist/haras360-${TAG#v}.tar.gz.sha256 deploy/assinar-pacote.py

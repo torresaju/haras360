@@ -1,0 +1,55 @@
+name: Instalação
+
+# Instala o Haras360 em um Ubuntu limpo com o instalador real e testa atualização assinada,
+# volta automática, recusa de pacote adulterado, volta manual e backup.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Remover o MySQL que vem na imagem do GitHub (a VM real não tem)
+        run: |
+          sudo systemctl stop mysql || true
+          sudo apt-get purge -y -qq 'mysql-*' > /dev/null || true
+          sudo rm -rf /etc/mysql /var/lib/mysql
+
+      - name: Ferramentas do teste
+        run: pip install cryptography==50.0.2 pyotp==2.12.1 httpx==0.28.1
+
+      - name: Chave de assinatura de teste
+        env:
+          HARAS360_CHAVE_PRIVADA: ${{ runner.temp }}/chave-teste.pem
+          HARAS360_SENHA_CHAVE: senha-da-chave-de-teste
+        run: python deploy/assinar-pacote.py gerar-chaves && mv chave-publica.pem "$RUNNER_TEMP/"
+
+      - name: Gerar pacote e instalar com o instalador real
+        run: |
+          bash deploy/gerar-pacote.sh HEAD "$RUNNER_TEMP/dist"
+          mkdir -p "$RUNNER_TEMP/inst" && cp "$RUNNER_TEMP"/dist/haras360-*.tar.gz "$RUNNER_TEMP/inst/"
+          cd "$RUNNER_TEMP/inst" && tar xzf haras360-*.tar.gz
+          sudo H360_ADMIN_NOME="Admin CI" H360_ADMIN_EMAIL=admin@teste.local H360_ADMIN_SENHA=senha-de-teste-123 \
+               H360_SEM_SWAP=1 H360_SEM_FIREWALL=1 bash haras360-*/deploy/instalar-servidor.sh
+          sudo haras360-chave "$RUNNER_TEMP/chave-publica.pem"
+          sudo haras360 listar
+
+      - name: Atualização, volta automática, pacote adulterado, volta manual e backup
+        run: python tests/instalacao/verificar_instalacao.py "$RUNNER_TEMP/chave-teste.pem" senha-da-chave-de-teste
+
+      - name: Registros do servidor
+        if: always()
+        run: |
+          sudo systemctl status haras360 haras360-tarefa.path --no-pager || true
+          sudo journalctl -u haras360 -u haras360-tarefa -u haras360-backup -n 200 --no-pager || true
+          sudo cat /var/lib/haras360/tarefa.log || true
+          sudo ls -la /opt/haras360/releases /opt/haras360/compartilhado/backups || true

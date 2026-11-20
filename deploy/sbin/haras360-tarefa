@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Executa o pedido gravado pela tela de administração (acionado pela unidade haras360-tarefa.path).
+# O pedido é tratado como dado não confiável: só três ações e campos validados.
+set -euo pipefail
+. /usr/local/lib/haras360/comum.sh
+exige_root
+PEDIDO="$H360_FILA/pedido.json"
+[ -f "$PEDIDO" ] || exit 0
+install -d -m 700 "$H360_VARLIB"
+PROC="$H360_VARLIB/pedido-em-execucao.json"
+mv -f -- "$PEDIDO" "$PROC"   # some da fila na hora: o path unit não dispara de novo
+
+read -r ACAO VERSAO < <(python3 - "$PROC" <<'PY'
+import json, re, sys
+try:
+    p = json.load(open(sys.argv[1], encoding="utf-8"))
+except Exception:
+    print("invalido -"); sys.exit()
+a = p.get("acao") if p.get("acao") in ("atualizar", "rollback", "backup") else "invalido"
+v = str(p.get("versao") or "-")
+print(a, v if re.fullmatch(r"\d+\.\d+\.\d+", v) else "-")
+PY
+)
+export H360_LOG_TAREFA="$H360_VARLIB/tarefa.log"
+: > "$H360_LOG_TAREFA"
+
+case "$ACAO" in
+  atualizar)
+    [ "$VERSAO" != "-" ] || { status_tarefa falhou atualizar "Pedido sem versão válida."; exit 1; }
+    H360_NOME_PACOTE="haras360-$VERSAO.tar.gz" /usr/local/sbin/haras360-update "$H360_FILA/entrada/pacote.tar.gz" "$H360_FILA/entrada/pacote.sig" || true
+    rm -f "$H360_FILA/entrada/pacote.tar.gz" "$H360_FILA/entrada/pacote.sig"
+    ;;
+  rollback)
+    [ "$VERSAO" != "-" ] || { status_tarefa falhou rollback "Pedido sem versão válida."; exit 1; }
+    /usr/local/sbin/haras360-rollback "$VERSAO" || true
+    ;;
+  backup)
+    status_tarefa executando backup "Backup em andamento."
+    if H360_STATUS_TAREFA=1 /usr/local/sbin/haras360-backup; then status_tarefa concluido backup "Backup concluído."; else status_tarefa falhou backup "O backup falhou. Veja o registro abaixo."; fi
+    ;;
+  *)
+    status_tarefa falhou desconhecida "Pedido inválido ignorado."
+    ;;
+esac
+rm -f "$PROC"

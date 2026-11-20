@@ -1,0 +1,1139 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Haras360 Administração</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Zilla+Slab:wght@500;600;700&display=swap">
+<style>
+[hidden]{display:none!important}
+body{margin:0}
+img{max-width:100%}
+:root{
+  /* Layout: barra lateral verde-floresta fixa + área de trabalho em grade; no celular a barra vira faixa superior rolável */
+  --bg:#eceee8; --surface:#fafbf7; --surface-2:#f1f3ed; --ink:#1b231e; --muted:#58645c; --line:#d4d9cf; --line-2:#e3e7df;
+  --forest:#1e3a2b; --forest-2:#27493a; --forest-ink:#e8f0e9; --forest-muted:#a3baa9;
+  --accent:#96541d; --accent-soft:#f2e4d4; --accent-ink:#ffffff;
+  --late:#ad3327; --late-soft:#f6e0db; --soon:#9b640c; --soon-soft:#f5e9cf; --ok:#2a6f46; --ok-soft:#dbeee1; --info:#2c5b84; --info-soft:#dee8f2;
+  --shadow:0 1px 2px rgba(20,32,24,.06),0 8px 24px rgba(20,32,24,.07);
+  --f-display:"Zilla Slab",Rockwell,"Roboto Slab",Georgia,serif;
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101511; --surface:#171f19; --surface-2:#1d261f; --ink:#e3eae3; --muted:#97a59b; --line:#2b362e; --line-2:#232d26;
+  --forest:#0b150f; --forest-2:#16251b; --forest-ink:#dde8df; --forest-muted:#85a08d;
+  --accent:#d38b4c; --accent-soft:#38261a; --accent-ink:#1b120a;
+  --late:#ec7c6a; --late-soft:#3a1d18; --soon:#e1aa52; --soon-soft:#352810; --ok:#6cbf88; --ok-soft:#163022; --info:#7eaedb; --info-soft:#172838;
+  --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#101511; --surface:#171f19; --surface-2:#1d261f; --ink:#e3eae3; --muted:#97a59b; --line:#2b362e; --line-2:#232d26;
+  --forest:#0b150f; --forest-2:#16251b; --forest-ink:#dde8df; --forest-muted:#85a08d;
+  --accent:#d38b4c; --accent-soft:#38261a; --accent-ink:#1b120a;
+  --late:#ec7c6a; --late-soft:#3a1d18; --soon:#e1aa52; --soon-soft:#352810; --ok:#6cbf88; --ok-soft:#163022; --info:#7eaedb; --info-soft:#172838;
+  --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.005em}
+h1{font-size:clamp(1.6rem,1.2rem + 1.4vw,2.2rem)}
+h2{font-size:1.3rem}
+h3{font-size:1.06rem}
+p{margin:0}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-size:.86em;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+.eyebrow{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spread{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1000px){.grid2{grid-template-columns:minmax(0,1fr)}}
+
+/* botões */
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem;line-height:1.2;text-decoration:none;color:var(--ink);white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--accent);padding-inline:8px}
+.btn.ghost:hover{background:var(--accent-soft)}
+.btn.sm{padding:5px 10px;font-size:.82rem}
+.btn.danger{color:var(--late)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn svg{width:16px;height:16px;flex:none}
+
+/* superfícies */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.card.flush{padding:0;overflow:hidden}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.sec{display:flex;flex-direction:column;gap:18px}
+
+/* chips de estado */
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.76rem;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap;border:1px solid transparent}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.85}
+.chip.nodot::before{display:none}
+.c-late{background:var(--late-soft);color:var(--late)}
+.c-soon{background:var(--soon-soft);color:var(--soon)}
+.c-ok{background:var(--ok-soft);color:var(--ok)}
+.c-info{background:var(--info-soft);color:var(--info)}
+.c-accent{background:var(--accent-soft);color:var(--accent)}
+.c-muted{background:var(--surface-2);color:var(--muted)}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:2px;text-align:left;cursor:pointer}
+.kpi:hover{border-color:var(--muted)}
+.kpi b{font-family:var(--f-display);font-size:2rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.84rem;color:var(--muted)}
+.kpi.late b{color:var(--late)} .kpi.soon b{color:var(--soon)} .kpi.info b{color:var(--info)}
+
+/* tarefas */
+.tasks{display:flex;flex-direction:column}
+.task{display:grid;grid-template-columns:4px 64px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 16px 11px 0;border-top:1px solid var(--line-2)}
+.task:first-child{border-top:0}
+.task .bar{align-self:stretch;border-radius:0 3px 3px 0;background:var(--line)}
+.task.atrasado .bar{background:var(--late)} .task.hoje .bar,.task.semana .bar{background:var(--soon)} .task.pendente .bar{background:var(--info)} .task.mes .bar{background:var(--ok)}
+.task .when{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);line-height:1.25}
+.task .when b{display:block;font-size:.95rem;color:var(--ink);font-weight:500}
+.task .what{min-width:0}
+.task .what strong{font-weight:600}
+.task .what .sub{font-size:.84rem;color:var(--muted)}
+@media (max-width:560px){.task{grid-template-columns:4px 54px minmax(0,1fr)}.task .act{grid-column:3}}
+
+/* tabelas */
+.tbl-wrap{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse;font-size:.9rem}
+.tbl th{text-align:left;font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:11px 12px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tbody tr.click{cursor:pointer}
+.tbl tbody tr.click:hover td{background:var(--surface-2)}
+.tbl .num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* formulários */
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field>label,.lbl{font-size:.8rem;font-weight:600;color:var(--muted)}
+.inp{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 11px;min-width:0}
+.inp:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+textarea.inp{min-height:84px;resize:vertical}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.fgrid .full{grid-column:1/-1}
+@media (max-width:560px){.fgrid{grid-template-columns:minmax(0,1fr)}}
+.checks{display:flex;flex-wrap:wrap;gap:8px}
+.check{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:.88rem;background:var(--surface)}
+.check:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.check input{accent-color:var(--accent)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:7px 14px;cursor:pointer;font-weight:600;font-size:.86rem}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.drop{border:1.5px dashed var(--line);border-radius:var(--r);padding:28px 18px;text-align:center;background:var(--surface-2);display:flex;flex-direction:column;gap:10px;align-items:center}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+
+/* abas */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;cursor:pointer;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+
+/* prontuário */
+.timeline{display:flex;flex-direction:column}
+.ev{display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;padding:14px 0;border-top:1px solid var(--line-2)}
+.ev:first-child{border-top:0}
+.ev .d{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);padding-top:2px}
+.ev .body{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ev .meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--muted)}
+.ev .obs{font-size:.92rem;overflow-wrap:anywhere}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.thumbs button{padding:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;cursor:zoom-in;width:72px;height:72px;background:var(--surface-2)}
+.thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+@media (max-width:560px){.ev{grid-template-columns:minmax(0,1fr);gap:4px}}
+
+/* gestação */
+.gest{display:flex;flex-direction:column;gap:8px}
+.gbar{height:8px;border-radius:99px;background:var(--surface-2);position:relative;overflow:hidden;border:1px solid var(--line-2)}
+.gbar i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:99px}
+.gmarks{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:.7rem;color:var(--muted)}
+
+/* modal e toast */
+.modal{position:fixed;inset:0;background:rgba(10,16,12,.5);display:flex;align-items:flex-start;justify-content:center;z-index:50;padding:max(24px,env(safe-area-inset-top,0px)) 16px 24px;overflow-y:auto}
+.sheet{background:var(--surface);color:var(--ink);border-radius:14px;width:min(640px,100%);box-shadow:0 20px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;max-height:none}
+.sheet header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line)}
+.sheet .sbody{padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.sheet footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--line);flex-wrap:wrap}
+.sheet.wide{width:min(900px,100%)}
+.x{border:0;background:none;cursor:pointer;font-size:1.4rem;line-height:1;color:var(--muted);padding:4px 8px;border-radius:6px}
+.x:hover{background:var(--surface-2)}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:10px;font-size:.9rem;max-width:min(560px,calc(100% - 32px));z-index:60;box-shadow:var(--shadow)}
+.note{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:10px 12px;font-size:.86rem;color:var(--muted)}
+.note.warn{background:var(--soon-soft);border-color:transparent;color:var(--soon)}
+.note.bad{background:var(--late-soft);border-color:transparent;color:var(--late)}
+.note.good{background:var(--ok-soft);border-color:transparent;color:var(--ok)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+
+/* chat */
+.chat{display:flex;flex-direction:column;height:min(68vh,640px)}
+.msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:18px}
+.msg{max-width:78%;padding:10px 14px;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.93rem}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:4px}
+.msg.bot{align-self:flex-start;background:var(--surface-2);border:1px solid var(--line-2);border-bottom-left-radius:4px}
+.msg .src{display:block;margin-top:6px;font-size:.74rem;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.chat form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+.sugs{display:flex;gap:6px;flex-wrap:wrap;padding:0 18px 12px}
+.sugs button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:5px 11px;font-size:.82rem;cursor:pointer}
+.sugs button:hover{border-color:var(--accent);color:var(--accent)}
+@media (max-width:560px){.msg{max-width:92%}}
+
+@media (prefers-reduced-motion:no-preference){
+  .view-in{animation:vin .22s ease-out}
+  @keyframes vin{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- barra superior com menus agrupados (gestor e administrador) ---------- */
+:root{--forest-accent:#e3ab6c}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--forest);color:var(--forest-ink);padding-inline:clamp(16px,3vw,32px)}
+.topbar-in{display:flex;align-items:center;gap:18px;min-height:60px;max-width:1400px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;flex:none}
+.brand svg{width:30px;height:30px;flex:none;color:var(--forest-accent)}
+.brand b{font-family:var(--f-display);font-size:1.3rem;font-weight:700;display:block;line-height:1}
+.brand small{display:block;font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--forest-muted);margin-top:2px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.menu{display:flex;align-items:center;gap:2px;margin-left:auto}
+.menu>li,.menu>div{list-style:none;position:relative}
+.mi{display:flex;align-items:center;gap:6px;border:0;background:none;color:var(--forest-muted);padding:8px 11px;border-radius:7px;cursor:pointer;font-weight:600;font-size:.9rem;white-space:nowrap;text-decoration:none}
+.mi:hover,.mi[aria-expanded="true"]{color:var(--forest-ink);background:var(--forest-2)}
+.mi[aria-current="page"]{color:var(--forest-ink);box-shadow:inset 0 -2px 0 var(--forest-accent);border-radius:7px 7px 0 0}
+.mi .caret{width:10px;height:10px;opacity:.7}
+.mi.off{opacity:.45}
+.drop-m{position:absolute;right:0;top:calc(100% + 6px);min-width:230px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:6px;display:flex;flex-direction:column;gap:2px;z-index:50}
+.menu>div:not(:last-child) .drop-m{right:auto;left:0}
+.di{display:flex;align-items:center;gap:10px;border:0;background:none;color:var(--ink);padding:9px 10px;border-radius:7px;cursor:pointer;font-size:.9rem;text-align:left;text-decoration:none;width:100%}
+.di:hover{background:var(--surface-2)}
+.di[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.di.off{color:var(--muted)}
+.di .tag{margin-left:auto;font-size:.68rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:1px 7px}
+.di small{display:block;color:var(--muted);font-size:.78rem}
+.dsep{height:1px;background:var(--line-2);margin:4px 2px}
+.tb-acts{display:flex;align-items:center;gap:6px;flex:none}
+.tb-ic{position:relative;border:0;background:none;color:var(--forest-ink);width:38px;height:38px;border-radius:8px;display:grid;place-items:center;cursor:pointer}
+.tb-ic:hover{background:var(--forest-2)}
+.tb-ic svg{width:20px;height:20px}
+.tb-ic .badge{position:absolute;top:2px;right:0;margin:0}
+.badge{background:var(--late);color:#fff;font-size:.68rem;font-weight:700;padding:1px 6px;border-radius:99px;font-variant-numeric:tabular-nums}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--forest-accent);color:var(--forest);display:grid;place-items:center;font-weight:700;font-size:.78rem;flex:none}
+.userbtn{display:flex;align-items:center;gap:9px;border:0;background:none;color:var(--forest-ink);padding:4px 8px 4px 4px;border-radius:99px;cursor:pointer;text-align:left}
+.userbtn:hover,.userbtn[aria-expanded="true"]{background:var(--forest-2)}
+.userbtn span.n{font-size:.86rem;font-weight:600;line-height:1.15}
+.userbtn span.n small{display:block;font-weight:500;color:var(--forest-muted);font-size:.74rem}
+.hamb{display:none}
+.pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.pagehead .acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+main.wrapm{padding-inline:clamp(16px,3vw,32px);padding-block:24px 72px;max-width:1400px;margin:0 auto;min-width:0}
+.off-note{display:flex;gap:10px;align-items:flex-start}
+@media (max-width:980px){
+  .hamb{display:grid}
+  .menu{display:none;position:absolute;left:0;right:0;top:100%;background:var(--forest);flex-direction:column;align-items:stretch;padding:8px 16px 16px;gap:2px;max-height:calc(100dvh - 60px);overflow-y:auto;box-shadow:0 12px 24px rgba(0,0,0,.25)}
+  .menu.aberto{display:flex}
+  .menu>div{width:100%}
+  .mi{width:100%;justify-content:space-between;padding:11px 10px}
+  .mi[aria-current="page"]{box-shadow:inset 3px 0 0 var(--forest-accent);border-radius:7px}
+  .drop-m{position:static;box-shadow:none;border:0;background:var(--forest-2);margin:2px 0 6px;min-width:0}
+  .drop-m .di{color:var(--forest-ink)}
+  .drop-m .di:hover{background:var(--forest)}
+  .drop-m .di[aria-current="page"]{background:var(--forest);color:var(--forest-accent)}
+  .drop-m .di small,.drop-m .di .tag{color:var(--forest-muted);border-color:var(--forest-muted)}
+  .userbtn span.n{display:none}
+  .topbar-in{gap:10px}
+}
+
+/* logotipo do haras na barra superior */
+.logo-h{display:grid;place-items:center;background:#fff;border-radius:8px;height:42px;min-width:42px;max-width:110px;padding:3px 6px;flex:none}
+.logo-h img{max-height:36px;max-width:98px;object-fit:contain;display:block}
+.brand .nome-h{font-size:1.05rem;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logo-prev{display:grid;place-items:center;background:#fff;border:1px solid var(--line);border-radius:10px;width:160px;height:160px;padding:10px;flex:none}
+.logo-prev img{max-width:100%;max-height:100%;object-fit:contain}
+.logo-prev.vazio{color:var(--muted);font-size:.84rem;text-align:center;background:var(--surface-2)}
+@media (max-width:980px){.brand .nome-h{max-width:150px}}
+
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px 20px;margin:0}
+.facts div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.facts dt{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.facts dd{margin:0;font-weight:500;overflow-wrap:anywhere}
+.matrix td:not(:first-child),.matrix th:not(:first-child){text-align:center}
+.tbl input.inp,.tbl select.inp{padding:6px 8px;font-size:.88rem}
+.w-num{width:90px}
+.aud td{vertical-align:top}
+.aud .det{font-size:.8rem;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;max-width:420px}
+.glos dt{font-weight:700;margin-top:12px}
+.glos dd{margin:2px 0 0;color:var(--muted)}
+.hcard{display:flex;flex-direction:column;gap:12px}
+.users{display:flex;flex-direction:column}
+.users>div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line-2)}
+.log{font-family:var(--f-mono);font-size:.8rem;background:var(--surface-2);border-radius:8px;padding:10px 12px;max-height:260px;overflow:auto;white-space:pre-wrap}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.kpi b{font-family:var(--f-display);font-size:1.8rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.84rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+
+<header class="topbar" id="topbar"></header>
+<main class="wrapm">
+  <div class="pagehead"><div><div class="eyebrow" id="v-eyebrow"></div><h1 id="v-title"></h1></div><div class="acts" id="v-acts"></div></div>
+  <div id="view" class="view-in"></div>
+</main>
+<div id="modal" class="modal" hidden></div>
+<div id="toast" role="status" hidden></div>
+
+<script>window.H360_PORTAL = 'admin';</script>
+<script>
+/* Haras360 · cliente da API */
+const API = (function () {
+  async function req(metodo, url, corpo, bruto) {
+    let r;
+    const headers = { 'X-Haras360': '1', 'X-Portal': window.H360_PORTAL || '' };
+    if (!bruto) headers['Content-Type'] = 'application/json';
+    try {
+      r = await fetch(url, { method: metodo, credentials: 'same-origin', headers, body: corpo === undefined ? undefined : (bruto ? corpo : JSON.stringify(corpo)) });
+    } catch (e) { throw new Error('Sem conexão com o servidor. Verifique a internet e tente de novo.'); }
+    let dados = null;
+    try { dados = await r.json(); } catch (e) { }
+    if (r.status === 401 && !/\/api\/(login|me\/senha|me\/codigos)/.test(url)) {
+      location.href = '/entrar?volta=' + encodeURIComponent(location.pathname);
+      throw new Error('Sessão expirada. Faça login novamente.');
+    }
+    if (!r.ok) {
+      const d = dados && dados.detail;
+      throw new Error(typeof d === 'string' ? d : r.status === 413 ? 'Arquivo grande demais.' : 'Não foi possível concluir (erro ' + r.status + '). Confira os dados e tente de novo.');
+    }
+    return dados;
+  }
+  return {
+    get: u => req('GET', u), post: (u, b) => req('POST', u, b || {}), put: (u, b) => req('PUT', u, b), patch: (u, b) => req('PATCH', u, b), del: u => req('DELETE', u),
+    upload: (u, formData) => req('POST', u, formData, true)
+  };
+})();
+
+</script>
+<script>
+/* Haras360 · núcleo do navegador: utilidades, catálogos, leitura de PDF ABCCMM e assistente. O motor de regras roda na API. */
+const H = (function () {
+  const DAY = 86400000;
+  const pad = n => String(n).padStart(2, '0');
+
+  /* ---------- datas ---------- */
+  function hoje() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+  function dt(s) {
+    if (s instanceof Date) { const x = new Date(s); x.setHours(0, 0, 0, 0); return x; }
+    const [y, m, d] = String(s).slice(0, 10).split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  function iso(d) { d = dt(d); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function addDias(d, n) { const x = dt(d); x.setDate(x.getDate() + n); return x; }
+  function addMeses(d, n) {
+    const x = dt(d); const day = x.getDate(); x.setDate(1); x.setMonth(x.getMonth() + n);
+    const last = new Date(x.getFullYear(), x.getMonth() + 1, 0).getDate(); x.setDate(Math.min(day, last)); return x;
+  }
+  function dias(a, b) { return Math.round((dt(b) - dt(a)) / DAY); }
+  function br(s) { if (!s) return '-'; const d = dt(s); return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear(); }
+  function brCurta(s) { const d = dt(s); const m = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']; return pad(d.getDate()) + ' ' + m[d.getMonth()]; }
+  function brParaIso(s) { const [d, m, y] = s.split('/'); return y + '-' + m + '-' + d; }
+  function idadeMeses(nasc) {
+    const n = dt(nasc), t = hoje();
+    let m = (t.getFullYear() - n.getFullYear()) * 12 + (t.getMonth() - n.getMonth());
+    if (t.getDate() < n.getDate()) m--; return Math.max(0, m);
+  }
+  function idadeTxt(nasc) {
+    if (!nasc) return '-';
+    const m = idadeMeses(nasc);
+    if (m < 24) return m + (m === 1 ? ' mês' : ' meses');
+    const a = Math.floor(m / 12), r = m % 12;
+    return a + ' anos' + (r ? ' e ' + r + (r === 1 ? ' mês' : ' meses') : '');
+  }
+  function relativo(due) {
+    const d = dias(hoje(), due);
+    if (d === 0) return 'hoje';
+    if (d === 1) return 'amanhã';
+    if (d === -1) return 'ontem';
+    if (d < 0) return 'há ' + (-d) + ' dias';
+    return 'em ' + d + ' dias';
+  }
+  function uid() { return Math.random().toString(36).slice(2, 10); }
+  function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+  function norm(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+  function moeda(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+  function mascaraCPF(c) { const d = String(c || '').replace(/\D/g, ''); if (d.length !== 11) return c || '-'; return d.slice(0, 3) + '.***.***-' + d.slice(9); }
+
+  /* ---------- catálogos ---------- */
+  const CATS = {
+    vacina: { nome: 'Vacinação', tom: 'info' },
+    vermifugacao: { nome: 'Vermifugação', tom: 'ok' },
+    odontologia: { nome: 'Odontologia', tom: 'accent' },
+    ferrageamento: { nome: 'Ferrageamento', tom: 'muted' },
+    exame: { nome: 'Exame clínico', tom: 'info' },
+    reprodutivo: { nome: 'Reprodução', tom: 'accent' },
+    ocorrencia: { nome: 'Ocorrência', tom: 'soon' },
+    documental: { nome: 'Documentação', tom: 'late' }
+  };
+  const EVENTOS_REPRO = ['Cobertura', 'Inseminação', 'Diagnóstico positivo', 'Diagnóstico negativo', 'Parto', 'Aborto'];
+  const GESTACAO_DIAS = 340;
+
+  const FAIXAS = [
+    { de: 1, ate: 3, valor: 0, nome: 'Gratuito' },
+    { de: 4, ate: 10, valor: 12.9, nome: 'Faixa 1' },
+    { de: 11, ate: 20, valor: 10.9, nome: 'Faixa 2' },
+    { de: 21, ate: 30, valor: 8.9, nome: 'Faixa 3' }
+  ];
+  let LIMITE_ANIMAIS = 30;
+  function mensalidade(n) {
+    let t = 0;
+    for (const f of FAIXAS) { const q = Math.max(0, Math.min(n, f.ate) - f.de + 1); t += q * f.valor; }
+    return Math.round(t * 100) / 100;
+  }
+
+  /* ---------- leitura do estado calculado pela API (motor de regras no servidor) ---------- */
+  function protocolo(st, id) { return st.protocolos.find(p => p.id === id); }
+  function animal(st, id) { return st.animais.find(a => a.id === id); }
+  function gestacao(st, a) { return a && st.gestacoes ? (st.gestacoes[a.id] || null) : null; }
+  function tarefas(st, opts) { opts = opts || {}; return (st.tarefas || []).filter(t => !opts.animalId || t.animalId === opts.animalId); }
+  function notificacoes(st) { return st.notificacoes || []; }
+  const STATUS_TXT = { atrasado: 'Atrasado', hoje: 'Hoje', semana: 'Próximos 7 dias', mes: 'Próximos 30 dias', futuro: 'Programado', pendente: 'Pendência' };
+  const TIPOS_NOTIF = {
+    atrasado: 'Procedimento atrasado',
+    semana: 'Procedimento nos próximos 7 dias',
+    parto: 'Previsão de parto',
+    documental: 'Pendência documental ABCCMM',
+    campo: 'Registro feito pelo operador de campo'
+  };
+
+  function tituloRegistro(st, r) {
+    if (r.tipo === 'vacina') return 'Vacina ' + (r.protocolos || []).map(id => (protocolo(st, id) || { nome: id }).nome).join(' + ');
+    if (r.tipo === 'reprodutivo') return r.evento || 'Evento reprodutivo';
+    if (r.tipo === 'ocorrencia') return r.titulo || 'Ocorrência';
+    if (r.tipo === 'exame') return 'Exame: ' + (r.exame || 'clínico');
+    if (r.tipo === 'odontologia') return r.procedimento || 'Odontologia';
+    if (r.tipo === 'ferrageamento') return 'Ferrageamento';
+    if (r.tipo === 'vermifugacao') return 'Vermifugação';
+    return CATS[r.tipo] ? CATS[r.tipo].nome : 'Registro';
+  }
+  function doseTxt(d) { if (d === 'reforco') return 'Reforço'; if (d === 'unica' || !d) return ''; return d + 'ª dose'; }
+
+  /* ---------- auditoria e glossário ---------- */
+  const ACOES_AUDIT = {
+    login: 'Login', login_falha: 'Login recusado', logout: 'Saída', '2fa_cadastro': '2FA cadastrado', '2fa_falha': 'Código 2FA recusado',
+    '2fa_redefinido': '2FA redefinido', '2fa_codigos_novos': 'Novos códigos de recuperação', senha_troca: 'Troca de senha', senha_redefinida: 'Senha redefinida',
+    sessao_encerrada: 'Sessão encerrada', usuario_criado: 'Usuário criado', usuario_ativado: 'Usuário reativado', usuario_desativado: 'Usuário desativado',
+    animal_criado: 'Animal cadastrado', animal_editado: 'Animal editado', importacao: 'Importação ABCCMM', registro_excluido: 'Registro excluído',
+    protocolos_alterados: 'Protocolos alterados', protocolos_restaurados: 'Protocolos restaurados', parametro_alterado: 'Parametrização alterada',
+    haras_criado: 'Haras criado', logo_alterado: 'Logotipo alterado', haras_alterado: 'Haras alterado', atualizacao_solicitada: 'Atualização solicitada', atualizacao_concluida: 'Atualização concluída',
+    atualizacao_falhou: 'Atualização falhou', rollback_solicitado: 'Volta de versão solicitada', rollback_concluido: 'Volta de versão concluída',
+    backup_solicitado: 'Backup solicitado', backup_concluido: 'Backup concluído', backup_falhou: 'Backup falhou'
+  };
+  const GLOSSARIO = [
+    ['ABCCMM', 'Associação Brasileira dos Criadores do Cavalo Mangalarga Marchador, responsável pelo registro genealógico da raça.'],
+    ['Relatório de Plantel', 'PDF emitido pelo Sistema de Gestão ABCCMM com os animais de um associado. É a fonte da importação no Haras360.'],
+    ['Livro', 'Categoria em que o animal está inscrito no registro genealógico, por exemplo "MM6 - Definitivo Fechado Fêmea".'],
+    ['DNA VP', 'Exame de DNA com verificação de parentesco realizado. "Sem exame" gera pendência documental.'],
+    ['Bloqueado', 'Situação do animal na ABCCMM que impede alguns serviços até ser regularizada.'],
+    ['AIE', 'Anemia Infecciosa Equina. Exame com resultado negativo e dentro da validade é exigido para o trânsito (GTA).'],
+    ['Mormo', 'Doença bacteriana dos equídeos. O exame negativo é exigido para trânsito e eventos.'],
+    ['GTA', 'Guia de Trânsito Animal, documento obrigatório para transportar equídeos.'],
+    ['Primovacinação', 'Série inicial de doses de uma vacina. Se o reforço vencer além da tolerância, a série recomeça.'],
+    ['Reforço', 'Dose aplicada depois da série inicial, em geral anual ou semestral.'],
+    ['Desmama', 'Separação do potro da mãe, por volta dos 6 meses. Marca a 1ª dose de rinopneumonite.'],
+    ['Cobertura', 'Monta ou inseminação. Com o diagnóstico positivo, o sistema calcula a previsão de parto.'],
+    ['Vacina multivalente', 'Vacina que protege contra várias doenças em uma aplicação. No registro, marque todas as doenças cobertas.'],
+    ['2FA', 'Verificação em duas etapas: além da senha, um código de 6 dígitos do aplicativo autenticador do celular.']
+  ];
+
+  /* ---------- leitura de PDF (Relatório de Plantel ABCCMM) ---------- */
+  async function linhasPDF(file) {
+    if (!window.pdfjsLib) throw new Error('O leitor de PDF não carregou. Verifique a conexão e recarregue a página.');
+    try { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; } catch (e) { }
+    const data = new Uint8Array(await file.arrayBuffer());
+    const pdf = await pdfjsLib.getDocument({ data, isEvalSupported: false }).promise;
+    const linhas = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const pg = await pdf.getPage(i);
+      const tc = await pg.getTextContent();
+      const its = tc.items.filter(it => it.str && it.str.trim()).map(it => ({ s: it.str, x: it.transform[4], y: it.transform[5], w: it.width || 0, h: Math.abs(it.transform[3]) || 8 }));
+      its.sort((p, q) => q.y - p.y || p.x - q.x);
+      const rows = [];
+      for (const it of its) {
+        const row = rows.find(r => Math.abs(r.y - it.y) <= Math.max(2, it.h * 0.4));
+        if (row) row.items.push(it); else rows.push({ y: it.y, items: [it] });
+      }
+      rows.sort((p, q) => q.y - p.y);
+      for (const row of rows) {
+        row.items.sort((p, q) => p.x - q.x);
+        let s = '', fim = null;
+        for (const it of row.items) { if (fim !== null && it.x - fim > 0.8) s += ' '; s += it.s; fim = it.x + it.w; }
+        s = s.replace(/\s+/g, ' ').trim();
+        if (s) linhas.push(s);
+      }
+    }
+    return linhas;
+  }
+
+  const RE_ANIMAL = /^(.+?)\s+(?:(MM\s?\d+\s*-\s*.+?)\s+)?(?:(\d{4,8})\s+)?([MF])\s+(\S+)\s+(Viv[oa]|Mort[oa])\s+(.+?)\s+(\d{2}\/\d{2}\/\d{4})(?:\s+(\d{6,20}))?$/i;
+  function lerPlantel(linhas) {
+    const texto = linhas.join('\n');
+    const plano = linhas.join(' ');
+    const res = { valido: /RELAT[ÓO]RIO DE PLANTEL/i.test(texto) || /ABCCMM|Mangalarga/i.test(texto), associado: '', cpf: '', impresso: '', totalInformado: null, machos: null, femeas: null, animais: [], ignoradas: [] };
+    let m = plano.match(/Associado\(a\):\s*(.+?)\s*-\s*CPF:\s*([\d.\-]+)/i);
+    if (m) { res.associado = m[1].trim(); res.cpf = m[2].replace(/\D/g, ''); }
+    m = plano.match(/Impresso em\s*(\d{2}\/\d{2}\/\d{4})/i); if (m) res.impresso = brParaIso(m[1]);
+    m = plano.match(/Total de animais:\s*(\d+)/i); if (m) res.totalInformado = Number(m[1]);
+    for (const l of linhas) {
+      if (!/\d{2}\/\d{2}\/\d{4}/.test(l) || /Impresso em|Associado\(a\)/i.test(l)) continue;
+      const x = l.match(RE_ANIMAL);
+      if (!x) { res.ignoradas.push(l); continue; }
+      res.animais.push({
+        nome: x[1].trim().toUpperCase(),
+        livro: (x[2] || '').trim(),
+        registro: x[3] || '',
+        sexo: x[4].toUpperCase(),
+        bloqueado: !/^(-|n[aã]o|n)$/i.test(x[5]),
+        vivo: /viv/i.test(x[6]),
+        dna: x[7].trim(),
+        nascimento: brParaIso(x[8]),
+        chip: x[9] || ''
+      });
+    }
+    res.machos = res.animais.filter(a => a.sexo === 'M').length;
+    res.femeas = res.animais.filter(a => a.sexo === 'F').length;
+    return res;
+  }
+
+  function compararImportacao(st, lidos) {
+    return lidos.map(n => {
+      const ex = st.animais.find(a => (n.registro && a.registro === n.registro) || (n.chip && a.chip === n.chip) || norm(a.nome) === norm(n.nome));
+      if (!ex) return { novo: n, situacao: 'novo', diffs: [] };
+      const campos = ['nome', 'livro', 'registro', 'sexo', 'bloqueado', 'vivo', 'dna', 'nascimento', 'chip'];
+      const diffs = campos.filter(c => String(ex[c] ?? '') !== String(n[c] ?? ''));
+      return { novo: n, existente: ex, situacao: diffs.length ? 'atualizar' : 'igual', diffs };
+    });
+  }
+
+  /* certificado ou outro PDF com genealogia: busca rótulos usuais */
+  function lerGenealogia(linhas) {
+    const g = {};
+    const regras = [
+      ['avoPaterno', /av[ôo]\s*paterno\s*[:\-]?\s*(.+)/i],
+      ['avoPaterna', /av[óo]\s*paterna\s*[:\-]?\s*(.+)/i],
+      ['avoMaterno', /av[ôo]\s*materno\s*[:\-]?\s*(.+)/i],
+      ['avoMaterna', /av[óo]\s*materna\s*[:\-]?\s*(.+)/i],
+      ['pai', /^(?:.*\s)?pai\s*[:\-]\s*(.+)/i],
+      ['mae', /^(?:.*\s)?m[ãa]e\s*[:\-]\s*(.+)/i]
+    ];
+    for (const l of linhas) {
+      for (const [k, re] of regras) {
+        if (g[k]) continue;
+        const m = l.match(re);
+        if (m) { const v = m[1].replace(/\s+(registro|reg\.?|n[ºo])\s*.*$/i, '').trim(); if (v && v.length < 80) { g[k] = v.toUpperCase(); break; } }
+      }
+    }
+    return g;
+  }
+
+  /* ---------- assistente (base de demonstração) ---------- */
+  function responder(st, pergunta) {
+    const q = norm(pergunta);
+    const has = (...k) => k.some(w => q.includes(w));
+    const alvo = st.animais.find(a => q.includes(norm(a.nome).split(' ')[0]));
+    const ts = tarefas(st);
+    const vac = id => protocolo(st, id);
+    const lista = arr => arr.map(t => '• ' + t.animal + ': ' + t.titulo + ' (' + t.etapa + ', ' + br(t.due) + ')').join('\n');
+
+    if (alvo && has('parto', 'gestac', 'prenhe', 'parir')) {
+      const g = gestacao(st, alvo);
+      if (!g) return { t: alvo.nome + ' não tem gestação ativa registrada no prontuário.' };
+      return { t: alvo.nome + ' está com ' + g.dias + ' dias de gestação (' + g.mes + 'º mês). A cobertura foi em ' + br(g.cobertura) + (g.garanhao ? ' com ' + g.garanhao : '') + ', e o parto está previsto para ' + br(g.parto) + ', ' + relativo(g.parto) + '. A estimativa usa ' + GESTACAO_DIAS + ' dias; o veterinário deve confirmar por ultrassonografia.', f: 'Dados do prontuário' };
+    }
+    if (alvo && has('vacina', 'pendente', 'atras', 'proxim', 'agenda')) {
+      const t = ts.filter(x => x.animalId === alvo.id && x.status !== 'futuro');
+      if (!t.length) return { t: alvo.nome + ' não tem procedimentos atrasados nem previstos para os próximos 30 dias.', f: 'Motor de regras' };
+      return { t: 'Pendências e próximos 30 dias de ' + alvo.nome + ':\n' + lista(t), f: 'Motor de regras' };
+    }
+    if (has('atrasad', 'pendenc', 'vencid')) {
+      const t = ts.filter(x => x.status === 'atrasado');
+      if (!t.length) return { t: 'Nenhum procedimento atrasado no plantel.', f: 'Motor de regras' };
+      return { t: 'Há ' + t.length + ' procedimento(s) atrasado(s):\n' + lista(t), f: 'Motor de regras' };
+    }
+    if (has('raiva')) {
+      const r = vac('raiva');
+      return { t: 'Raiva é obrigatória. 1ª dose aos 4 meses, 2ª dose 30 dias depois e reforço anual. Em estados endêmicos o reforço passa a ser semestral. Neste haras o reforço está configurado como ' + (st.haras.raivaSemestral ? 'semestral' : 'anual') + '. Via ' + (r ? r.via : 'SC ou IM') + ', conforme a bula.', f: 'Protocolo VetJr. UFMG' };
+    }
+    if (has('gestante', 'prenha', 'gestacao', 'rinopneu', 'herpes')) return { t: 'Para rinopneumonite: 1ª dose na desmama, 2ª dose 3 a 4 semanas depois e 3ª dose 6 meses após a segunda. Éguas gestantes recebem doses no 5º, 7º e 9º mês de gestação. O Haras360 agenda essas doses automaticamente quando um diagnóstico positivo é registrado.', f: 'Protocolo VetJr. UFMG' };
+    if (has('reinici', 'perdeu', 'perdi', 'esqueci', 'nunca vacin')) return { t: 'Animais que nunca foram vacinados ou que perderam o prazo do reforço devem refazer a primovacinação daquela vacina, ou seja, reiniciar o esquema desde a 1ª dose. O sistema sinaliza "Reiniciar primovacinação" quando o reforço passa de 15 dias do vencimento.', f: 'Protocolo VetJr. UFMG' };
+    if (has('potro', 'potra', 'filhote', '12 meses')) return { t: 'Potros iniciam a vacinação entre 3 e 4 meses (tétano, encefalomielite e influenza a partir de 3; raiva e leptospirose a partir de 4; rinopneumonite na desmama). Concluído o esquema inicial, o primeiro reforço é feito a partir dos 12 meses de idade, e o sistema já programa nessa data.', f: 'Protocolo VetJr. UFMG' };
+    if (has('multival', 'trivalen', 'bivalen', 'combinad')) return { t: 'Vacinas multivalentes protegem contra mais de uma doença na mesma aplicação, geralmente com custo menor. No Haras360 basta marcar todas as doenças cobertas em um único registro, e cada protocolo é atualizado.', f: 'Protocolo VetJr. UFMG' };
+    if (has('transport', 'gta', 'viagem', 'evento', 'exposic', 'leilao')) return { t: 'Para transporte, a vacina de encefalomielite é obrigatória, e o trânsito de equídeos costuma exigir exames negativos de Anemia Infecciosa (AIE) e Mormo dentro da validade. O sistema usa 60 dias como validade padrão, editável em Protocolos. Confirme a exigência do órgão de defesa agropecuária do seu estado e do evento.', f: 'Protocolo VetJr. UFMG e padrão de mercado' };
+    if (has('obrigator')) return { t: 'Pelo protocolo de referência: raiva é obrigatória; encefalomielite é obrigatória para transporte e em alguns estabelecimentos; rinopneumonite é exigida por alguns estabelecimentos. Tétano, influenza e leptospirose são fortemente recomendadas, e garrotilho depende do risco do plantel.', f: 'Protocolo VetJr. UFMG' };
+    if (has('dna')) return { t: 'O Relatório de Plantel informa a situação do exame de DNA de cada animal. Quando aparece "Sem exame", o Haras360 abre uma pendência documental, porque o exame é necessário para o registro genealógico.', f: 'Relatório de Plantel ABCCMM' };
+    if (has('livro', 'mm5', 'mm6', 'definitivo', 'registro')) return { t: 'O campo "Livro" do relatório indica a categoria em que o animal está inscrito no registro genealógico, por exemplo "MM6 - Definitivo Fechado Fêmea". Animais sem livro e sem número de registro geram a pendência "Registro ABCCMM pendente". Na versão final, o assistente explicará cada categoria citando o artigo do Regulamento do Registro Genealógico.', f: 'Relatório de Plantel ABCCMM' };
+    if (has('plano', 'preco', 'mensal', 'cobran', 'pagar', 'gratis', 'gratuito')) { const n = st.animais.filter(a => a.vivo).length; return { t: 'O plano é gratuito até 3 animais. A partir do 4º, cobra-se por animal em faixas decrescentes. Com ' + n + ' animais ativos, a mensalidade simulada é ' + moeda(mensalidade(n)) + '. Os valores atuais são ilustrativos.', f: 'Plano Haras360' }; }
+    if (has('vermif', 'verme')) return { t: 'O padrão configurado é vermifugação a cada 90 dias a partir dos 2 meses de idade. Esse intervalo é um padrão de mercado e deve ser ajustado pelo veterinário, de preferência com base em exame de OPG (contagem de ovos nas fezes).', f: 'Padrão de mercado' };
+    if (has('dente', 'odonto', 'aparelho')) return { t: 'A avaliação odontológica está programada a cada 12 meses a partir dos 2 anos. Quando um aparelho dentário é registrado, o sistema agenda o retorno em 24 meses.', f: 'Padrão de mercado' };
+    if (has('ferra', 'casco')) return { t: 'O ferrageamento é agendado a cada 45 dias a partir do primeiro registro de ferrageamento do animal. Ajuste o intervalo em Protocolos conforme o ferrador.', f: 'Padrão de mercado' };
+    return { t: 'Ainda não tenho essa resposta na base atual. Na próxima versão, o assistente será treinado com o Estatuto e o Regulamento do Registro Genealógico da ABCCMM e responderá citando o artigo correspondente. Experimente perguntar sobre vacinas, gestação, transporte, DNA ou plano.', f: 'Demonstração' };
+  }
+
+  return {
+    hoje, dt, iso, addDias, addMeses, dias, br, brCurta, brParaIso, idadeMeses, idadeTxt, relativo, uid, esc, norm, moeda, mascaraCPF,
+    CATS, EVENTOS_REPRO, GESTACAO_DIAS, FAIXAS, LIMITE_ANIMAIS, STATUS_TXT, TIPOS_NOTIF,
+    mensalidade,
+    protocolo, animal, gestacao, tarefas, notificacoes, tituloRegistro, doseTxt,
+    ACOES_AUDIT, GLOSSARIO,
+    linhasPDF, lerPlantel, compararImportacao, lerGenealogia, responder
+  };
+})();
+
+</script>
+<script>
+/* Haras360 · componentes de interface compartilhados pelos dois portais */
+const UI = (function () {
+  const { esc, br, brCurta, relativo } = H;
+  const $ = s => document.querySelector(s);
+
+  const I = (p, extra) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"' + (extra || '') + '>' + p + '</svg>';
+  const ICON = {
+    plus: I('<path d="M12 5v14M5 12h14"/>'),
+    home: I('<path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/>'),
+    horse: I('<path d="M5 20l2-6c-1-2-1-4 1-6l3-3 1 2 3-1c2 0 4 2 4 4l1 3-2 1-2-2-2 2v6"/><path d="M14 20v-4"/>'),
+    upload: I('<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>'),
+    cal: I('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),
+    rules: I('<path d="M4 6h10M4 12h16M4 18h7"/><circle cx="17" cy="6" r="2"/><circle cx="14" cy="18" r="2"/>'),
+    bell: I('<path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>'),
+    team: I('<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 15c3 0 5 2 5 4"/>'),
+    chat: I('<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>'),
+    card: I('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>'),
+    back: I('<path d="M15 5l-7 7 7 7"/>'),
+    cam: I('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>'),
+    check: I('<path d="M5 12l5 5 9-10"/>'),
+    file: I('<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>'),
+    send: I('<path d="M4 12l16-8-6 16-3-6z"/>'),
+    alert: I('<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/>')
+  };
+
+  /* ---------- toast e modal ---------- */
+  let tt;
+  function toast(msg) {
+    let t = $('#toast');
+    t.textContent = msg; t.hidden = false;
+    clearTimeout(tt); tt = setTimeout(() => { t.hidden = true; }, 4200);
+  }
+  let onClose = null;
+  function abrir({ titulo, corpo, rodape, largo }) {
+    const m = $('#modal');
+    m.innerHTML = '<div class="sheet' + (largo ? ' wide' : '') + '" role="dialog" aria-modal="true" aria-labelledby="mt"><header><h2 id="mt">' + titulo + '</h2><button class="x" data-act="fechar" aria-label="Fechar">×</button></header><div class="sbody">' + corpo + '</div>' + (rodape ? '<footer>' + rodape + '</footer>' : '') + '</div>';
+    m.hidden = false;
+    document.body.style.overflow = 'hidden';
+    const f = m.querySelector('input:not([type=hidden]):not([type=checkbox]),select,textarea');
+    if (f) setTimeout(() => f.focus(), 30);
+    return m;
+  }
+  function fechar() { const m = $('#modal'); m.hidden = true; m.innerHTML = ''; document.body.style.overflow = ''; if (onClose) { const f = onClose; onClose = null; f(); } }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#modal').hidden) fechar(); });
+  document.addEventListener('click', e => { if (e.target.id === 'modal') fechar(); });
+
+  /* ---------- tons ---------- */
+  const TOM = { atrasado: 'c-late', hoje: 'c-soon', semana: 'c-soon', mes: 'c-ok', futuro: 'c-muted', pendente: 'c-info' };
+  const TOMCAT = t => 'c-' + ((H.CATS[t] || {}).tom || 'muted');
+  function chipStatus(s) { return '<span class="chip ' + TOM[s] + '">' + H.STATUS_TXT[s] + '</span>'; }
+  function chipCat(c) { return '<span class="chip nodot ' + TOMCAT(c) + '">' + esc((H.CATS[c] || { nome: c }).nome) + '</span>'; }
+
+  /* ---------- linha de tarefa ---------- */
+  function linhaTarefa(t, o) {
+    o = o || {};
+    const quando = t.doc ? '<b>Pend.</b>doc.' : '<b>' + brCurta(t.due) + '</b>' + relativo(t.due);
+    const animal = o.semAnimal ? '' : '<a href="#" data-act="ver-animal" data-id="' + t.animalId + '">' + esc(t.animal) + '</a> · ';
+    const acao = t.doc ? '' : t.parto ? '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(t.id) + '">Registrar parto</button>' : '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(t.id) + '">' + ICON.check + 'Registrar</button>';
+    return '<div class="task ' + t.status + '"><span class="bar"></span><div class="when">' + quando + '</div><div class="what"><div class="row" style="gap:8px"><strong>' + esc(t.titulo) + '</strong><span class="chip nodot c-muted">' + esc(t.etapa) + '</span>' + (t.status === 'atrasado' ? '<span class="chip c-late">Atrasado</span>' : '') + '</div><div class="sub">' + animal + esc(t.nota || '') + '</div></div><div class="act">' + acao + '</div></div>';
+  }
+
+  /* ---------- prontuário ---------- */
+  function linhaTempo(st, regs, o) {
+    o = o || {};
+    if (!regs.length) return '<div class="empty">Nenhum registro nesta categoria.</div>';
+    return '<div class="timeline">' + regs.map(r => {
+      const meta = [];
+      const dose = H.doseTxt(r.dose); if (r.tipo === 'vacina' && dose) meta.push(dose);
+      if (r.produto) meta.push('Produto: ' + esc(r.produto));
+      if (r.lote) meta.push('Lote <span class="mono">' + esc(r.lote) + '</span>');
+      if (r.ferrador) meta.push('Ferrador: ' + esc(r.ferrador));
+      if (r.resultado) meta.push('Resultado: ' + esc(r.resultado));
+      if (r.garanhao) meta.push('Garanhão: ' + esc(r.garanhao));
+      if (r.dataCobertura && r.evento === 'Diagnóstico positivo') meta.push('Cobertura em ' + br(r.dataCobertura));
+      if (r.gravidade) meta.push('Gravidade: ' + esc(r.gravidade));
+      const fotos = (r.fotos || []).length ? '<div class="thumbs">' + r.fotos.map((f, i) => '<button data-act="ver-foto" data-r="' + r.id + '" data-i="' + i + '" aria-label="Ampliar foto ' + (i + 1) + '"><img src="' + f + '" alt=""></button>').join('') + '</div>' : '';
+      const nome = o.comAnimal ? (() => { const a = H.animal(st, r.animalId); return a ? '<a href="#" data-act="ver-animal" data-id="' + a.id + '">' + esc(a.nome) + '</a> · ' : ''; })() : '';
+      const del = o.excluir ? '<button class="btn ghost sm danger" data-act="excluir-reg" data-id="' + r.id + '">Excluir</button>' : '';
+      return '<div class="ev"><div class="d">' + br(r.data) + '</div><div class="body"><div class="spread"><div class="row" style="gap:8px">' + chipCat(r.tipo) + '<strong>' + esc(H.tituloRegistro(st, r)) + '</strong></div>' + del + '</div>' + (meta.length ? '<div class="meta">' + meta.map(m => '<span>' + m + '</span>').join('') + '</div>' : '') + (r.obs ? '<p class="obs">' + esc(r.obs) + '</p>' : '') + fotos + '<div class="meta">' + nome + '<span>' + esc(r.autor) + ' · ' + esc(r.origem) + '</span></div></div></div>';
+    }).join('') + '</div>';
+  }
+
+  function verFoto(st, rid, i) {
+    const r = st.registros.find(x => x.id === rid); if (!r) return;
+    abrir({ titulo: esc(H.tituloRegistro(st, r)), corpo: '<img src="' + r.fotos[i] + '" alt="Foto do registro" style="border-radius:8px;width:100%"><p class="muted small">' + br(r.data) + ' · ' + esc(r.autor) + '</p>', largo: true });
+  }
+
+  /* ---------- fotos ---------- */
+  function comprimir(file, max, q) {
+    max = max || 1600; q = q || 0.8;
+    return new Promise((res, rej) => {
+      const fr = new FileReader();
+      fr.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const k = Math.min(1, max / Math.max(img.width, img.height));
+          const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          res(c.toDataURL('image/jpeg', q));
+        };
+        img.onerror = () => rej(new Error('Arquivo de imagem inválido'));
+        img.src = fr.result;
+      };
+      fr.onerror = () => rej(new Error('Não foi possível ler o arquivo'));
+      fr.readAsDataURL(file);
+    });
+  }
+
+  /* ---------- logotipo do haras: reduz para 512 px mantendo a transparência ---------- */
+  function prepararLogo(file) {
+    return new Promise((res, rej) => {
+      if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { rej(new Error('Use uma imagem PNG, JPG ou WebP.')); return; }
+      const fr = new FileReader();
+      fr.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          // recorta as margens vazias (brancas ou transparentes) para o logotipo ocupar bem o espaço
+          const o = document.createElement('canvas'); o.width = img.width; o.height = img.height;
+          const ox = o.getContext('2d'); ox.drawImage(img, 0, 0);
+          const px = ox.getImageData(0, 0, o.width, o.height).data;
+          let x0 = o.width, y0 = o.height, x1 = -1, y1 = -1;
+          for (let y = 0; y < o.height; y += 2) for (let x = 0; x < o.width; x += 2) {
+            const i = (y * o.width + x) * 4;
+            if (px[i + 3] > 24 && (px[i] < 235 || px[i + 1] < 235 || px[i + 2] < 235)) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+          }
+          let sx = 0, sy = 0, sw = o.width, sh = o.height;
+          if (x1 > x0 && y1 > y0) { const m = Math.round(Math.max(x1 - x0, y1 - y0) * 0.04); sx = Math.max(0, x0 - m); sy = Math.max(0, y0 - m); sw = Math.min(o.width, x1 + m + 2) - sx; sh = Math.min(o.height, y1 + m + 2) - sy; }
+          const k = Math.min(1, 512 / Math.max(sw, sh));
+          const c = document.createElement('canvas'); c.width = Math.round(sw * k); c.height = Math.round(sh * k);
+          c.getContext('2d').drawImage(o, sx, sy, sw, sh, 0, 0, c.width, c.height);
+          let url = c.toDataURL('image/png');
+          if (url.length > 1300000) url = c.toDataURL('image/webp', 0.9);
+          if (url.length > 1300000) { rej(new Error('O logotipo ficou grande demais. Use uma imagem mais simples.')); return; }
+          res(url);
+        };
+        img.onerror = () => rej(new Error('Não foi possível abrir a imagem.'));
+        img.src = fr.result;
+      };
+      fr.onerror = () => rej(new Error('Não foi possível ler o arquivo.'));
+      fr.readAsDataURL(file);
+    });
+  }
+
+  /* ---------- formulário de registro ---------- */
+  let fotosPend = [];
+  const OPC = (arr, sel) => arr.map(v => { const [val, lab] = Array.isArray(v) ? v : [v, v]; return '<option value="' + esc(val) + '"' + (String(val) === String(sel) ? ' selected' : '') + '>' + esc(lab) + '</option>'; }).join('');
+
+  function extras(st, tipo, p) {
+    p = p || {};
+    if (tipo === 'vacina') {
+      const vs = st.protocolos.filter(x => x.cat === 'vacina');
+      return '<div class="field full"><span class="lbl">Doenças cobertas (marque todas em vacinas multivalentes)</span><div class="checks">' + vs.map(v => '<label class="check"><input type="checkbox" name="prot" value="' + v.id + '"' + ((p.protocolos || []).includes(v.id) ? ' checked' : '') + '>' + esc(v.nome) + '</label>').join('') + '</div></div>' +
+        '<div class="field"><label for="f-dose">Dose</label><select id="f-dose" class="inp">' + OPC([[1, '1ª dose'], [2, '2ª dose'], [3, '3ª dose'], ['reforco', 'Reforço']], p.dose || 'reforco') + '</select></div>' +
+        '<div class="field"><label for="f-lote">Lote</label><input id="f-lote" class="inp" value="' + esc(p.lote || '') + '" placeholder="Ex.: RB2291"></div>' +
+        '<div class="field full"><label for="f-produto">Produto / marca</label><input id="f-produto" class="inp" value="' + esc(p.produto || '') + '" placeholder="Ex.: Trivalente tétano + encefalomielite + influenza"></div>';
+    }
+    if (tipo === 'vermifugacao') return '<div class="field full"><label for="f-produto">Vermífugo (princípio ativo)</label><input id="f-produto" class="inp" value="' + esc(p.produto || '') + '" placeholder="Ex.: Ivermectina + praziquantel"></div>';
+    if (tipo === 'odontologia') return '<div class="field full"><label for="f-proc">Procedimento</label><select id="f-proc" class="inp">' + OPC(['Avaliação', 'Avaliação e correção', 'Aparelho dentário instalado', 'Retorno de aparelho', 'Extração', 'Outro'], p.procedimento || ((p.protocolos || []).includes('aparelho') ? 'Retorno de aparelho' : 'Avaliação')) + '</select></div>';
+    if (tipo === 'ferrageamento') return '<div class="field full"><label for="f-ferrador">Ferrador</label><input id="f-ferrador" class="inp" value="' + esc(p.ferrador || '') + '"></div>';
+    if (tipo === 'exame') {
+      const sel = (p.protocolos || []).includes('aie') ? 'Anemia Infecciosa (AIE)' : (p.protocolos || []).includes('mormo') ? 'Mormo' : (p.exame || 'Anemia Infecciosa (AIE)');
+      return '<div class="field"><label for="f-exame">Exame</label><select id="f-exame" class="inp">' + OPC(['Anemia Infecciosa (AIE)', 'Mormo', 'Hemograma', 'Ultrassonografia', 'Raio-X', 'Outro'], sel) + '</select></div><div class="field"><label for="f-res">Resultado</label><input id="f-res" class="inp" value="' + esc(p.resultado || '') + '" placeholder="Ex.: Negativo"></div>';
+    }
+    if (tipo === 'reprodutivo') {
+      const machos = st.animais.filter(a => a.sexo === 'M').map(a => '<option value="' + esc(a.nome) + '">');
+      return '<div class="field"><label for="f-evento">Evento</label><select id="f-evento" class="inp">' + OPC(H.EVENTOS_REPRO, p.evento || 'Cobertura') + '</select></div><div class="field"><label for="f-garanhao">Garanhão</label><input id="f-garanhao" class="inp" list="dl-machos" value="' + esc(p.garanhao || '') + '"><datalist id="dl-machos">' + machos.join('') + '</datalist></div><div class="field"><label for="f-cob">Data da cobertura (diagnóstico positivo)</label><input id="f-cob" type="date" class="inp" value="' + esc(p.dataCobertura || '') + '"></div>';
+    }
+    if (tipo === 'ocorrencia') return '<div class="field"><label for="f-titulo">O que aconteceu</label><input id="f-titulo" class="inp" value="' + esc(p.titulo || '') + '" placeholder="Ex.: Mancando da pata traseira"></div><div class="field"><label for="f-grav">Gravidade</label><select id="f-grav" class="inp">' + OPC(['Leve', 'Moderada', 'Grave'], p.gravidade || 'Leve') + '</select></div>';
+    return '';
+  }
+
+  function formRegistro(st, pre, ctx) {
+    pre = pre || {}; fotosPend = [];
+    const tipos = Object.keys(H.CATS).filter(k => k !== 'documental');
+    const animais = st.animais.filter(a => a.vivo);
+    const tipo = pre.tipo || 'vacina';
+    const corpo = '<form id="fr" class="stack" novalidate><div class="fgrid">' +
+      '<div class="field"><label for="f-animal">Animal</label><select id="f-animal" class="inp">' + OPC(animais.map(a => [a.id, a.nome]), pre.animalId) + '</select></div>' +
+      '<div class="field"><label for="f-data">Data</label><input id="f-data" type="date" class="inp" value="' + (pre.data || H.iso(H.hoje())) + '" max="' + H.iso(H.hoje()) + '"></div>' +
+      '<div class="field full"><label for="f-tipo">Tipo de registro</label><select id="f-tipo" class="inp">' + OPC(tipos.map(k => [k, H.CATS[k].nome]), tipo) + '</select></div>' +
+      '</div><div id="f-extra" class="fgrid">' + extras(st, tipo, pre) + '</div>' +
+      '<div class="field"><label for="f-obs">Observações</label><textarea id="f-obs" class="inp" placeholder="Descreva o que foi feito ou observado">' + esc(pre.obs || '') + '</textarea></div>' +
+      '<div class="field"><span class="lbl">Fotos (até 4)</span><div class="row"><label class="btn" for="f-fotos">' + ICON.cam + 'Adicionar fotos</label><input id="f-fotos" type="file" accept="image/*" multiple hidden><span class="small muted" id="f-fstat">Nenhuma foto</span></div><div class="thumbs" id="f-thumbs"></div></div>' +
+      '<p class="note" id="f-erro" hidden></p></form>';
+    abrir({ titulo: pre.tituloModal || 'Novo registro no prontuário', corpo, rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-registro">' + ICON.check + 'Salvar registro</button>' });
+    $('#f-tipo').addEventListener('change', e => { $('#f-extra').innerHTML = extras(st, e.target.value, {}); });
+    $('#f-fotos').addEventListener('change', async e => {
+      const files = [...e.target.files].slice(0, 4 - fotosPend.length);
+      for (const f of files) { try { fotosPend.push(await comprimir(f)); } catch (err) { toast(err.message); } }
+      e.target.value = '';
+      desenharFotos();
+    });
+    formRegistro.ctx = ctx;
+  }
+  function desenharFotos() {
+    $('#f-thumbs').innerHTML = fotosPend.map((f, i) => '<button type="button" data-act="rem-foto" data-i="' + i + '" title="Remover foto" style="cursor:pointer"><img src="' + f + '" alt="Foto ' + (i + 1) + '"></button>').join('');
+    $('#f-fstat').textContent = fotosPend.length ? fotosPend.length + ' de 4 · toque para remover' : 'Nenhuma foto';
+  }
+  function remFoto(i) { fotosPend.splice(i, 1); desenharFotos(); }
+
+  function lerRegistro(st) {
+    const v = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+    const tipo = v('f-tipo');
+    const r = { id: H.uid(), animalId: v('f-animal'), data: v('f-data'), tipo, protocolos: [], dose: 'unica', obs: v('f-obs'), fotos: fotosPend.slice() };
+    const erro = m => { const e = $('#f-erro'); e.textContent = m; e.className = 'note bad'; e.hidden = false; return null; };
+    if (!r.animalId) return erro('Escolha o animal.');
+    if (!r.data) return erro('Informe a data do registro.');
+    if (r.data > H.iso(H.hoje())) return erro('A data não pode ser futura. Para agendar, o sistema calcula a próxima etapa automaticamente.');
+    if (tipo === 'vacina') {
+      r.protocolos = [...document.querySelectorAll('input[name=prot]:checked')].map(i => i.value);
+      if (!r.protocolos.length) return erro('Marque ao menos uma doença coberta pela vacina.');
+      const d = v('f-dose'); r.dose = d === 'reforco' ? 'reforco' : Number(d);
+      r.produto = v('f-produto'); r.lote = v('f-lote');
+    } else if (tipo === 'vermifugacao') { r.protocolos = ['vermi']; r.produto = v('f-produto'); }
+    else if (tipo === 'odontologia') { r.procedimento = v('f-proc'); r.protocolos = /aparelho/i.test(r.procedimento) ? ['aparelho'] : ['odonto']; }
+    else if (tipo === 'ferrageamento') { r.protocolos = ['ferrag']; r.ferrador = v('f-ferrador'); }
+    else if (tipo === 'exame') { r.exame = v('f-exame'); r.resultado = v('f-res'); if (/AIE/.test(r.exame)) r.protocolos = ['aie']; if (/Mormo/.test(r.exame)) r.protocolos = ['mormo']; }
+    else if (tipo === 'reprodutivo') {
+      r.evento = v('f-evento'); r.garanhao = v('f-garanhao').toUpperCase(); r.dataCobertura = v('f-cob');
+      const a = H.animal(st, r.animalId);
+      if (a && a.sexo !== 'F' && r.evento !== 'Cobertura') return erro('Eventos de gestação só se aplicam a fêmeas.');
+      if (r.evento === 'Diagnóstico positivo' && !r.dataCobertura) return erro('Informe a data da cobertura para calcular a previsão de parto.');
+    } else if (tipo === 'ocorrencia') { r.titulo = v('f-titulo'); r.gravidade = v('f-grav'); if (!r.titulo) return erro('Descreva a ocorrência em poucas palavras.'); }
+    return r;
+  }
+
+  /* pré-preenche o formulário a partir de uma tarefa do motor de regras */
+  function preDeTarefa(t) {
+    if (t.parto) return { animalId: t.animalId, tipo: 'reprodutivo', evento: 'Parto', tituloModal: 'Registrar parto' };
+    return { animalId: t.animalId, tipo: t.cat, protocolos: t.protocoloId ? [t.protocoloId] : [], dose: t.dose, tituloModal: 'Registrar ' + t.titulo.toLowerCase() };
+  }
+
+  /* ---------- assistente ---------- */
+  const SUGS = ['Quais procedimentos estão atrasados?', 'Quando é o parto da Diva?', 'O que muda na vacina de raiva em região endêmica?', 'Quais exames preciso para transportar um cavalo?', 'Como vacinar uma égua gestante?', 'Perdi o prazo do reforço, o que fazer?'];
+  function chatHTML(hist, titulo, sub) {
+    return '<div class="card flush chat"><div style="padding:16px 18px;border-bottom:1px solid var(--line)"><h2>' + titulo + '</h2><p class="small muted">' + sub + '</p></div><div class="msgs" id="msgs">' +
+      hist.map(m => '<div class="msg ' + m.de + '">' + esc(m.t) + (m.f ? '<span class="src">Base: ' + esc(m.f) + '</span>' : '') + '</div>').join('') +
+      '</div>' + (hist.length <= 1 ? '<div class="sugs">' + SUGS.map(s => '<button type="button" data-act="sug" data-q="' + esc(s) + '">' + esc(s) + '</button>').join('') + '</div>' : '') +
+      '<form id="chat-f"><input id="chat-q" class="inp" placeholder="Pergunte sobre vacinas, normas, gestação ou o plantel" autocomplete="off"><button class="btn pri" aria-label="Enviar">' + ICON.send + '</button></form></div>';
+  }
+
+  /* ---------- barra superior com menus agrupados ---------- */
+  const CARET = '<svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+  const MARCA = '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M11 34V20a9 9 0 0 1 18 0v14"/><path d="M7 34h8M25 34h8"/><circle cx="14" cy="22" r="1.2" fill="currentColor"/><circle cx="26" cy="22" r="1.2" fill="currentColor"/><circle cx="16" cy="14.5" r="1.2" fill="currentColor"/><circle cx="24" cy="14.5" r="1.2" fill="currentColor"/></svg>';
+  function itemMenu(it, atual, cls) {
+    const sel = atual === it.id || (it.tambem || []).includes(atual);
+    if (it.href) return '<a class="' + cls + '" href="' + it.href + '" target="_blank" rel="noopener">' + esc(it.rotulo) + (it.desc ? '<small>' + esc(it.desc) + '</small>' : '') + '</a>';
+    if (it.off) return '<button class="' + cls + ' off" data-act="fora-plano" data-m="' + esc(it.rotulo) + '" title="Disponível em outro plano">' + esc(it.rotulo) + '<span class="tag">Plano</span></button>';
+    return '<button class="' + cls + '" data-act="nav" data-v="' + it.id + '"' + (sel ? ' aria-current="page"' : '') + '>' + (cls === 'di' && it.desc ? '<span>' + esc(it.rotulo) + '<small>' + esc(it.desc) + '</small></span>' : esc(it.rotulo)) + '</button>';
+  }
+  function topbar(o) {
+    const menu = o.menu.map((m, i) => {
+      if (!m.itens) return '<div>' + itemMenu(m, o.atual, 'mi') + '</div>';
+      const sel = m.itens.some(it => it.id === o.atual || (it.tambem || []).includes(o.atual));
+      const todosOff = m.itens.every(it => it.off);
+      return '<div><button class="mi' + (todosOff ? ' off' : '') + '" data-dd="g' + i + '" aria-expanded="false" aria-haspopup="true"' + (sel ? ' aria-current="page"' : '') + '>' + esc(m.grupo) + CARET + '</button>' +
+        '<div class="drop-m" id="dd-g' + i + '" hidden>' + m.itens.map(it => it.sep ? '<div class="dsep"></div>' : itemMenu(it, o.atual, 'di')).join('') + '</div></div>';
+    }).join('');
+    const ini = (o.usuario.nome || '?').split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
+    const userMenu = '<div class="drop-m" id="dd-user" hidden><div style="padding:8px 10px"><b>' + esc(o.usuario.nome) + '</b><small class="muted" style="display:block">' + esc(o.usuario.email) + '</small></div><div class="dsep"></div>' +
+      o.usuarioItens.map(it => '<button class="di" data-act="' + it.act + '">' + esc(it.rotulo) + '</button>').join('') + '<div class="dsep"></div><button class="di" data-act="sair">Sair</button></div>';
+    const marca = o.logo ? '<span class="logo-h"><img src="' + esc(o.logo) + '" alt="Logotipo de ' + esc(o.sub) + '"></span><div><b class="nome-h">' + esc(o.sub) + '</b><small>Haras360</small></div>' : MARCA + '<div><b>Haras360</b><small>' + esc(o.sub) + '</small></div>';
+    return '<div class="topbar-in"><a class="brand" href="' + o.home + '">' + marca + '</a>' +
+      '<nav class="menu" id="menu-principal" aria-label="Menu principal">' + menu + '</nav>' +
+      '<div class="tb-acts">' + (o.sino ? '<button class="tb-ic" data-act="nav" data-v="' + o.sino.view + '" aria-label="Notificações">' + ICON.bell + (o.sino.n ? '<span class="badge">' + o.sino.n + '</span>' : '') + '</button>' : '') +
+      '<div style="position:relative"><button class="userbtn" data-dd="user" aria-expanded="false" aria-haspopup="true"><span class="avatar">' + esc(ini) + '</span><span class="n">' + esc(o.usuario.nome.split(' ')[0]) + '<small>' + esc(o.perfilTxt) + '</small></span></button>' + userMenu + '</div>' +
+      '<button class="tb-ic hamb" data-act="hamb" aria-label="Abrir menu" aria-controls="menu-principal" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div></div>';
+  }
+  function fecharMenus(exceto) {
+    document.querySelectorAll('[data-dd][aria-expanded="true"]').forEach(b => { if (b !== exceto) { b.setAttribute('aria-expanded', 'false'); const d = document.getElementById('dd-' + b.dataset.dd); if (d) d.hidden = true; } });
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-dd]');
+    if (b) { const ab = b.getAttribute('aria-expanded') === 'true'; fecharMenus(b); b.setAttribute('aria-expanded', String(!ab)); const d = document.getElementById('dd-' + b.dataset.dd); if (d) d.hidden = ab; return; }
+    if (e.target.closest('[data-act="hamb"]')) { const m = document.getElementById('menu-principal'), h = e.target.closest('[data-act="hamb"]'); const ab = m.classList.toggle('aberto'); h.setAttribute('aria-expanded', String(ab)); return; }
+    if (!e.target.closest('.drop-m') || e.target.closest('[data-act]')) { fecharMenus(); const m = document.getElementById('menu-principal'); if (m && e.target.closest('[data-act="nav"]')) m.classList.remove('aberto'); }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharMenus(); });
+
+  /* confirmação na própria página: o primeiro clique arma, o segundo executa */
+  function confirmar(el, txt, fn) {
+    if (el.dataset.armed) { delete el.dataset.armed; fn(); return; }
+    el.dataset.armed = '1'; const old = el.innerHTML; el.innerHTML = txt; el.classList.add('danger');
+    setTimeout(() => { if (el.isConnected && el.dataset.armed) { delete el.dataset.armed; el.innerHTML = old; el.classList.remove('danger'); } }, 4000);
+  }
+
+  /* códigos de recuperação do 2FA: mostrados uma única vez */
+  function mostrarCodigos(codigos, titulo) {
+    abrir({ titulo: titulo || 'Códigos de recuperação', corpo: '<p>Guarde estes códigos em local seguro, fora do celular. Cada um permite entrar uma única vez se você perder o aplicativo autenticador.</p><div class="codigos mono" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;font-size:1rem;background:var(--surface-2);padding:14px;border-radius:8px">' + codigos.map(c => '<span>' + esc(c) + '</span>').join('') + '</div><p class="note warn">Estes códigos não serão mostrados de novo.</p>', rodape: '<button class="btn" data-act="copiar-codigos">Copiar</button><button class="btn pri" data-act="fechar">Já guardei</button>' });
+    mostrarCodigos.atual = codigos;
+  }
+  document.addEventListener('click', async e => {
+    if (!e.target.closest('[data-act="copiar-codigos"]')) return;
+    try { await navigator.clipboard.writeText((mostrarCodigos.atual || []).join('\n')); toast('Códigos copiados.'); } catch (err) { toast('Selecione os códigos e copie manualmente.'); }
+  });
+
+  return { ICON, toast, topbar, prepararLogo, fecharMenus, confirmar, mostrarCodigos, abrir, fechar, chipStatus, chipCat, linhaTarefa, linhaTempo, verFoto, formRegistro, lerRegistro, remFoto, preDeTarefa, chatHTML, comprimir, TOM, set onClose(f) { onClose = f; } };
+})();
+
+</script>
+<script>
+(function () {
+  let S = null, view = 'haras', poll = null;
+  const $ = s => document.querySelector(s);
+  const esc = H.esc, IC = UI.ICON;
+  async function recarregar() { S = await API.get('/api/admin/painel'); }
+  async function executar(el, fn, ok) {
+    if (el && el.disabled) return null;
+    const txt = el ? el.innerHTML : '';
+    if (el) { el.disabled = true; el.innerHTML = 'Salvando...'; }
+    try { const r = await fn(); await recarregar(); if (ok !== false) UI.toast(typeof ok === 'string' ? ok : (r && r.resumo) || 'Alteração salva.'); return r || true; }
+    catch (e) { UI.toast(e.message); return null; }
+    finally { if (el && el.isConnected) { el.disabled = false; el.innerHTML = txt; } }
+  }
+  const menu = () => [
+    { id: 'haras', rotulo: 'Haras' },
+    { grupo: 'Administração', itens: [{ id: 'parametros', rotulo: 'Parametrizações', desc: 'Planos, preços, login e e-mail' }, { id: 'auditoria', rotulo: 'Auditoria' }, { id: 'atualizacao', rotulo: 'Atualização e backup' }] },
+    { grupo: 'Ajuda', itens: [{ id: 'sobre', rotulo: 'Sobre' }, { href: '/ajuda', rotulo: 'Manual', desc: 'Abre em nova aba' }, { id: 'glossario', rotulo: 'Glossário' }] }
+  ];
+  const TITULOS = { haras: ['Plataforma', 'Haras e gestores'], parametros: ['Administração', 'Parametrizações globais'], auditoria: ['Administração', 'Auditoria'], atualizacao: ['Administração', 'Atualização e backup'], sobre: ['Ajuda', 'Sobre o Haras360'], glossario: ['Ajuda', 'Glossário'] };
+  function go(v) { view = v; render(); window.scrollTo(0, 0); }
+  function render() {
+    $('#topbar').innerHTML = UI.topbar({ menu: menu(), atual: view, home: '/admin', sub: 'Administração da plataforma', usuario: S.usuario, perfilTxt: 'Administrador',
+      usuarioItens: [{ act: 'minha-senha', rotulo: 'Alterar minha senha' }, { act: 'novos-codigos', rotulo: 'Novos códigos de recuperação do 2FA' }] });
+    const [eb, ti] = TITULOS[view];
+    $('#v-eyebrow').textContent = eb; $('#v-title').textContent = ti; document.title = 'Haras360 · ' + ti;
+    $('#v-acts').innerHTML = view === 'haras' ? '<button class="btn pri" data-act="novo-haras">' + IC.plus + 'Novo haras</button>' : '';
+    const v = $('#view'); v.classList.remove('view-in'); void v.offsetWidth; v.classList.add('view-in');
+    v.innerHTML = VIEWS[view]();
+    if (AFTER[view]) AFTER[view]();
+    clearInterval(poll); poll = null;
+    if (view === 'atualizacao' && (S.atualizacao.pendente || S.atualizacao.estado === 'executando')) poll = setInterval(acompanhar, 4000);
+  }
+  const valor = v => v === null || v === undefined ? 'A definir' : (Number(v) === 0 ? 'Grátis' : H.moeda(Number(v)));
+
+  /* ================= HARAS ================= */
+  function vHaras() {
+    const ativos = S.haras.filter(h => h.ativo), animais = S.haras.reduce((t, h) => t + h.animais, 0);
+    const receita = ativos.reduce((t, h) => t + (h.mensalidade || 0), 0), semPreco = ativos.some(h => h.mensalidade === null);
+    const planos = Object.keys(S.parametros.planos);
+    return '<div class="sec"><div class="kpis"><div class="kpi"><span>Haras ativos</span><b>' + ativos.length + '</b><span>de ' + S.haras.length + ' cadastrados</span></div><div class="kpi"><span>Animais ativos</span><b>' + animais + '</b><span>em todos os haras</span></div><div class="kpi"><span>Receita mensal</span><b>' + (semPreco ? 'A definir' : H.moeda(receita)) + '</b><span>pelas faixas de preço</span></div><div class="kpi"><span>Versão</span><b class="mono" style="font-size:1.4rem">' + esc(S.versao) + '</b><span>banco na migração ' + S.versaoBanco + '</span></div></div>' +
+      (S.haras.length ? S.haras.map(h => '<div class="card hcard"><div class="spread"><div class="row" style="gap:14px">' + (h.logo ? '<span class="logo-h" style="border:1px solid var(--line)"><img src="' + esc(h.logo) + '" alt=""></span>' : '') + '<div><h2>' + esc(h.nome) + '</h2><p class="small muted">' + esc(h.municipio || 'Município não informado') + ' · criado em ' + H.br(h.criado) + '</p></div></div><div class="row">' + (h.ativo ? '<span class="chip c-ok">Ativo</span>' : '<span class="chip c-muted">Desativado</span>') +
+        '<label class="small muted" for="pl-' + h.id + '">Plano</label><select id="pl-' + h.id + '" class="inp" style="width:auto" data-chg="plano" data-id="' + h.id + '">' + planos.map(p => '<option' + (p === h.plano ? ' selected' : '') + '>' + esc(p) + '</option>').join('') + '</select>' +
+        '<label class="btn ghost sm" for="lg-' + h.id + '">' + (h.logo ? 'Trocar logotipo' : 'Enviar logotipo') + '</label><input type="file" id="lg-' + h.id + '" data-chg="logo" data-id="' + h.id + '" accept="image/png,image/jpeg,image/webp" hidden>' + (h.logo ? '<button class="btn ghost sm" data-act="remover-logo" data-id="' + h.id + '">Remover logotipo</button>' : '') +
+        '<button class="btn ghost sm' + (h.ativo ? ' danger' : '') + '" data-act="toggle-haras" data-id="' + h.id + '">' + (h.ativo ? 'Desativar' : 'Reativar') + '</button></div></div>' +
+        '<dl class="facts"><div><dt>Animais ativos</dt><dd>' + h.animais + ' de ' + h.limite + '</dd></div><div><dt>Mensalidade</dt><dd>' + (h.mensalidade === null ? 'A definir' : H.moeda(h.mensalidade)) + '</dd></div><div><dt>Usuários</dt><dd>' + h.usuarios.length + '</dd></div></dl>' +
+        '<div class="users">' + h.usuarios.map(u => '<div><div><b>' + esc(u.nome) + '</b> <span class="chip nodot ' + (u.perfil === 'gestor' ? 'c-accent' : 'c-info') + '">' + (u.perfil === 'gestor' ? 'Gestor' : 'Caseiro') + '</span>' + (u.perfil === 'gestor' ? (u.doisFatores ? ' <span class="chip c-ok">2FA</span>' : ' <span class="chip c-soon">2FA pendente</span>') : '') + (u.ativo ? '' : ' <span class="chip c-muted">Desativado</span>') + '<br><span class="small muted">' + esc(u.email) + '</span></div><div class="row" style="gap:4px"><button class="btn ghost sm" data-act="senha-user" data-id="' + u.id + '" data-n="' + esc(u.nome) + '">Redefinir senha</button>' + (u.doisFatores ? '<button class="btn ghost sm" data-act="dois-fatores" data-id="' + u.id + '">Redefinir 2FA</button>' : '') + '</div></div>').join('') + '</div></div>').join('')
+        : '<div class="card empty">Nenhum haras cadastrado. Use "Novo haras" para criar o primeiro.</div>') + '</div>';
+  }
+
+  /* ================= PARAMETRIZAÇÕES ================= */
+  let planosEd = null, faixasEd = null;
+  function vParametros() {
+    const p = S.parametros;
+    planosEd = JSON.parse(JSON.stringify(p.planos)); faixasEd = JSON.parse(JSON.stringify(p.faixas));
+    const num = (id, l, v, min, max, aj) => '<div class="field"><label for="' + id + '">' + l + '</label><input id="' + id + '" class="inp mono" type="number" min="' + min + '" max="' + max + '" value="' + v + '">' + (aj ? '<span class="small muted">' + aj + '</span>' : '') + '</div>';
+    return '<div class="sec" style="max-width:980px">' +
+      '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><div><h2>Planos e módulos</h2><p class="small muted">Defina o que cada plano inclui. Módulo fora do plano aparece esmaecido para o haras, e a API recusa o uso.</p></div><button class="btn sm" data-act="add-plano">' + IC.plus + 'Novo plano</button></div><div class="tbl-wrap" id="planos-t"></div></div>' +
+      '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><div><h2>Faixas de preço</h2><p class="small muted">Valor por animal ativo ao mês, progressivo por faixa. Deixe em branco o que ainda não foi definido.</p></div><button class="btn sm" data-act="add-faixa">' + IC.plus + 'Nova faixa</button></div><div class="tbl-wrap" id="faixas-t"></div></div>' +
+      '<div class="card stack"><h2>Login e sessões</h2><div class="fgrid">' + num('g-tent', 'Tentativas de login antes do bloqueio', p.login_tentativas, 3, 50) + num('g-jan', 'Janela de bloqueio (minutos)', p.login_janela_min, 1, 1440) + num('g-sess', 'Duração da sessão no navegador (dias)', p.sessao_dias, 1, 90) + num('g-app', 'Duração da sessão no app (dias)', p.sessao_app_dias, 7, 365, 'O caseiro fica conectado no campo sem precisar de internet para entrar.') + '</div></div>' +
+      '<div class="card stack"><h2>E-mail</h2><p class="small muted">Gravado para o envio de alertas por e-mail, que entra em uma próxima versão.</p><div class="fgrid">' +
+      '<div class="field"><label for="s-host">Servidor SMTP</label><input id="s-host" class="inp" value="' + esc(p.smtp.host) + '" placeholder="smtp.zoho.com"></div>' + num('s-porta', 'Porta', p.smtp.porta, 1, 65535) +
+      '<div class="field"><label for="s-user">Usuário</label><input id="s-user" class="inp" value="' + esc(p.smtp.usuario) + '" autocomplete="off"></div><div class="field"><label for="s-senha">Senha</label><input id="s-senha" type="password" class="inp" autocomplete="new-password" placeholder="' + (p.smtp.senhaDefinida ? 'definida; deixe em branco para manter' : '') + '"></div>' +
+      '<div class="field"><label for="s-rem">Remetente</label><input id="s-rem" class="inp" value="' + esc(p.smtp.remetente) + '" placeholder="Haras360 <alertas@seudominio>"></div><div class="field"><label for="s-tls">Segurança</label><select id="s-tls" class="inp"><option value="1"' + (p.smtp.tls ? ' selected' : '') + '>STARTTLS</option><option value="0"' + (!p.smtp.tls ? ' selected' : '') + '>Nenhuma</option></select></div>' +
+      '<div class="field full"><label for="g-contato">E-mail de contato do administrador</label><input id="g-contato" class="inp" value="' + esc(p.email_contato) + '"></div></div></div>' +
+      '<div class="row" style="justify-content:flex-end"><button class="btn pri" data-act="salvar-globais">' + IC.check + 'Salvar parametrizações</button></div></div>';
+  }
+  function desenharPlanos() {
+    const mods = Object.entries(S.modulos);
+    $('#planos-t').innerHTML = '<table class="tbl matrix"><thead><tr><th>Plano</th><th>Limite de animais</th>' + mods.map(([, l]) => '<th>' + esc(l) + '</th>').join('') + '<th></th></tr></thead><tbody>' +
+      Object.entries(planosEd).map(([nome, p], i) => '<tr><td><input class="inp" data-pl="' + i + '" data-k="nome" value="' + esc(nome) + '" aria-label="Nome do plano"></td><td><input class="inp w-num mono" type="number" min="1" max="500" data-pl="' + i + '" data-k="limite" value="' + p.limite + '" aria-label="Limite de animais"></td>' +
+        mods.map(([k, l]) => '<td><input type="checkbox" data-pl="' + i + '" data-k="m:' + k + '"' + (p.modulos[k] ? ' checked' : '') + ' aria-label="' + esc(l) + ' no plano ' + esc(nome) + '"></td>').join('') +
+        '<td>' + (Object.keys(planosEd).length > 1 ? '<button class="btn ghost sm danger" data-act="rem-plano" data-i="' + i + '">Remover</button>' : '') + '</td></tr>').join('') + '</tbody></table>';
+  }
+  function desenharFaixas() {
+    $('#faixas-t').innerHTML = '<table class="tbl"><thead><tr><th>De</th><th>Até</th><th>Valor por animal (R$)</th><th></th></tr></thead><tbody>' +
+      faixasEd.map((f, i) => '<tr><td><input class="inp w-num mono" type="number" min="1" data-fx="' + i + '" data-k="de" value="' + f.de + '" aria-label="De"></td><td><input class="inp w-num mono" type="number" min="1" data-fx="' + i + '" data-k="ate" value="' + f.ate + '" aria-label="Até"></td><td><input class="inp mono" style="width:140px" type="number" step="0.01" min="0" data-fx="' + i + '" data-k="valor" value="' + (f.valor === null ? '' : f.valor) + '" placeholder="a definir" aria-label="Valor"></td><td>' + (faixasEd.length > 1 ? '<button class="btn ghost sm danger" data-act="rem-faixa" data-i="' + i + '">Remover</button>' : '') + '</td></tr>').join('') + '</tbody></table>';
+  }
+  function lerPlanosDaTela() {
+    const linhas = Object.entries(planosEd).map(([nome, p]) => ({ nome, limite: p.limite, modulos: Object.assign({}, p.modulos) }));
+    document.querySelectorAll('[data-pl]').forEach(el => {
+      const l = linhas[+el.dataset.pl], k = el.dataset.k;
+      if (k === 'nome') l.nome = el.value.trim(); else if (k === 'limite') l.limite = Number(el.value); else l.modulos[k.slice(2)] = el.checked;
+    });
+    const out = {};
+    linhas.forEach(l => { out[l.nome] = { limite: l.limite, modulos: l.modulos }; });
+    return out;
+  }
+  function lerFaixasDaTela() {
+    const fx = faixasEd.map(f => Object.assign({}, f));
+    document.querySelectorAll('[data-fx]').forEach(el => { const f = fx[+el.dataset.fx]; f[el.dataset.k] = el.dataset.k === 'valor' ? (el.value === '' ? null : Number(el.value)) : Number(el.value); });
+    return fx;
+  }
+
+  /* ================= AUDITORIA ================= */
+  const audF = { haras: '', acao: '', texto: '', de: '', ate: '' };
+  function vAuditoria() {
+    return '<div class="sec"><div class="card"><form id="aud-f" class="row" style="align-items:flex-end" novalidate>' +
+      '<div class="field"><label for="af-haras">Haras</label><select id="af-haras" class="inp"><option value="">Todos</option>' + S.haras.map(h => '<option value="' + h.id + '"' + (String(audF.haras) === String(h.id) ? ' selected' : '') + '>' + esc(h.nome) + '</option>').join('') + '</select></div>' +
+      '<div class="field"><label for="af-acao">Ação</label><select id="af-acao" class="inp"><option value="">Todas</option>' + Object.entries(H.ACOES_AUDIT).map(([k, l]) => '<option value="' + k + '"' + (audF.acao === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></div>' +
+      '<div class="field"><label for="af-texto">Usuário, alvo ou IP</label><input id="af-texto" class="inp" value="' + esc(audF.texto) + '"></div>' +
+      '<div class="field"><label for="af-de">De</label><input id="af-de" type="date" class="inp" value="' + audF.de + '"></div><div class="field"><label for="af-ate">Até</label><input id="af-ate" type="date" class="inp" value="' + audF.ate + '"></div>' +
+      '<button class="btn pri">Filtrar</button></form></div><div class="card flush"><div class="tbl-wrap" id="aud-t"><div class="empty">Carregando...</div></div></div></div>';
+  }
+  async function carregarAuditoria() {
+    const box = $('#aud-t'); if (!box) return;
+    const q = new URLSearchParams(Object.entries(audF).filter(([, v]) => v)).toString();
+    let lst; try { lst = await API.get('/api/admin/auditoria' + (q ? '?' + q : '')); } catch (e) { box.innerHTML = '<div class="note bad">' + esc(e.message) + '</div>'; return; }
+    const nomes = Object.fromEntries(S.haras.map(h => [h.id, h.nome]));
+    const det = d => { try { return Object.entries(d).map(([k, v]) => k + ': ' + (typeof v === 'object' ? JSON.stringify(v) : v)).join('\n'); } catch (e) { return ''; } };
+    box.innerHTML = lst.length ? '<table class="tbl aud"><thead><tr><th>Quando</th><th>Haras</th><th>Usuário</th><th>Ação</th><th>Alvo e detalhe</th><th>IP</th></tr></thead><tbody>' + lst.map(x => '<tr><td class="mono small" style="white-space:nowrap">' + H.br(x.quando) + '<br>' + esc(x.quando.slice(11, 19)) + '</td><td class="small">' + esc(x.harasId ? (nomes[x.harasId] || '#' + x.harasId) : 'Plataforma') + '</td><td class="small">' + esc(x.usuario) + '</td><td><span class="chip ' + (x.resultado === 'falha' ? 'c-late' : 'nodot c-muted') + '">' + esc(H.ACOES_AUDIT[x.acao] || x.acao) + '</span></td><td class="small">' + esc(x.alvo) + (x.detalhe ? '<div class="det">' + esc(det(x.detalhe)) + '</div>' : '') + '</td><td class="mono small">' + esc(x.ip) + '</td></tr>').join('') + '</tbody></table>' : '<div class="empty">Nenhum evento com esses filtros.</div>';
+  }
+
+  /* ================= ATUALIZAÇÃO E BACKUP ================= */
+  const ESTADOS = { executando: ['c-soon', 'Em andamento'], concluido: ['c-ok', 'Concluída'], falhou: ['c-late', 'Falhou'] };
+  function vAtualizacao() {
+    const a = S.atualizacao || {}, b = S.backup, vs = S.versoes;
+    const est = a.pendente ? ['c-soon', 'Na fila'] : ESTADOS[a.estado];
+    return '<div class="sec"><div class="grid2"><div class="stack" style="gap:20px">' +
+      '<div class="card stack"><div class="spread"><h2>Atualizar o Haras360</h2><span class="chip nodot c-muted mono">Em uso: ' + esc(vs.emUso) + '</span></div>' +
+      '<ol class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px"><li>Baixe <span class="mono">haras360-X.Y.Z.tar.gz</span> na Release da versão, no GitHub.</li><li>No Windows, assine com <span class="mono">python assinar-pacote.py haras360-X.Y.Z.tar.gz</span> e a senha da chave do Journey. Isso gera o arquivo <span class="mono">.sig</span>.</li><li>Envie os dois arquivos abaixo. O servidor confere a assinatura, faz backup, aplica e testa. Se algo falhar, volta sozinho para a versão atual.</li></ol>' +
+      '<form id="up-f" class="stack" novalidate><div class="fgrid"><div class="field"><label for="up-pac">Pacote (.tar.gz)</label><input id="up-pac" type="file" class="inp" accept=".gz"></div><div class="field"><label for="up-sig">Assinatura (.sig)</label><input id="up-sig" type="file" class="inp" accept=".sig"></div><div class="field full"><label for="up-sha">SHA-256 publicado na Release (opcional)</label><input id="up-sha" class="inp mono" placeholder="confere o arquivo antes de enviar"></div></div>' +
+      '<p class="small muted">Limite de ' + S.limitePacoteMB + ' MB.</p><div class="row" style="justify-content:flex-end"><button class="btn pri" id="up-btn"' + (a.pendente || a.estado === 'executando' ? ' disabled' : '') + '>' + IC.upload + 'Enviar e atualizar</button></div></form></div>' +
+      '<div class="card stack"><div class="spread"><h2>Última tarefa</h2>' + (est ? '<span class="chip ' + est[0] + '">' + est[1] + '</span>' : '<span class="chip nodot c-muted">Nenhuma</span>') + '</div>' +
+      (a.acao ? '<dl class="facts"><div><dt>Tarefa</dt><dd>' + esc({ atualizar: 'Atualização', rollback: 'Volta de versão', backup: 'Backup' }[a.acao] || a.acao) + '</dd></div><div><dt>Início</dt><dd>' + (a.inicio ? H.br(a.inicio) + ' ' + esc(a.inicio.slice(11, 16)) : '-') + '</dd></div><div><dt>Fim</dt><dd>' + (a.fim ? H.br(a.fim) + ' ' + esc(a.fim.slice(11, 16)) : '-') + '</dd></div>' + (a.versaoNova ? '<div><dt>Versão</dt><dd class="mono">' + esc((a.versaoAnterior || '?') + ' → ' + a.versaoNova) + '</dd></div>' : '') + '</dl>' + (a.mensagem ? '<p class="note ' + (a.estado === 'falhou' ? 'bad' : a.estado === 'concluido' ? 'good' : '') + '">' + esc(a.mensagem) + '</p>' : '') + (a.log && a.log.length ? '<div class="log">' + esc(a.log.join('\n')) + '</div>' : '') : '<p class="muted small">Nenhuma atualização, volta de versão ou backup pedido por esta tela ainda.</p>') + '</div></div>' +
+      '<div class="stack" style="gap:20px"><div class="card stack"><h2>Versões guardadas</h2><p class="small muted">As três últimas versões ficam no servidor para voltar rapidamente.</p>' +
+      (vs.versoes.length ? '<div class="tbl-wrap"><table class="tbl"><tbody>' + vs.versoes.map(v => '<tr><td class="mono"><b>' + esc(v.versao) + '</b></td><td class="small muted">' + H.br(v.instalada) + '</td><td class="num">' + (v.atual ? '<span class="chip c-ok">Em uso</span>' : '<button class="btn ghost sm" data-act="rollback" data-v="' + esc(v.versao) + '">Voltar para esta</button>') + '</td></tr>').join('') + '</tbody></table></div>' : '<p class="small muted">Nenhuma versão encontrada (ambiente de desenvolvimento).</p>') + '</div>' +
+      '<div class="card stack"><div class="spread"><h2>Backup</h2><button class="btn sm" data-act="backup-agora">Fazer backup agora</button></div>' +
+      (b ? '<dl class="facts"><div><dt>Último</dt><dd>' + H.br(b.quando) + ' ' + esc((b.quando || '').slice(11, 16)) + '</dd></div><div><dt>Tamanho</dt><dd>' + esc(b.tamanho || '-') + '</dd></div><div><dt>Bucket OCI</dt><dd>' + (b.oci === 'enviado' ? '<span class="chip c-ok">Enviado</span>' : b.oci === 'desativado' ? '<span class="chip c-muted">Não configurado</span>' : '<span class="chip c-late">Falhou</span>') + '</dd></div></dl>' + (b.mensagem ? '<p class="small muted">' + esc(b.mensagem) + '</p>' : '') : '<p class="small muted">Nenhum backup registrado ainda. O backup automático roda todo dia às 02:30.</p>') +
+      '<p class="small muted">Inclui banco, fotos, configuração, chave pública, Caddyfile, serviços, a versão em uso e o instalador. Cópia local por 7 dias e envio ao bucket privado da OCI.</p></div></div></div></div>';
+  }
+  async function acompanhar() {
+    try { const t = await API.get('/api/admin/tarefa'); Object.assign(S, { atualizacao: t.atualizacao, versoes: t.versoes, backup: t.backup });
+      if (t.versao !== S.versao) { location.reload(); return; }
+      if (view === 'atualizacao') { $('#view').innerHTML = vAtualizacao(); AFTER.atualizacao(); }
+      if (!t.atualizacao.pendente && t.atualizacao.estado !== 'executando') { clearInterval(poll); poll = null; }
+    } catch (e) { /* durante o reinício da aplicação a API fica alguns segundos fora */ }
+  }
+  async function sha256Arquivo(f) { const b = await f.arrayBuffer(); const h = await crypto.subtle.digest('SHA-256', b); return [...new Uint8Array(h)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+
+  /* ================= AJUDA ================= */
+  const vSobre = () => '<div class="sec" style="max-width:760px"><div class="card stack"><h2>Haras360</h2><p>Plataforma de gestão de haras para criadores de Mangalarga Marchador.</p><dl class="facts"><div><dt>Versão</dt><dd class="mono">' + esc(S.versao) + '</dd></div><div><dt>Migração do banco</dt><dd class="mono">' + S.versaoBanco + '</dd></div><div><dt>Haras</dt><dd>' + S.haras.length + '</dd></div></dl><div class="row"><a class="btn" href="/ajuda" target="_blank" rel="noopener">Abrir o manual</a></div></div></div>';
+  const vGlossario = () => '<div class="sec" style="max-width:760px"><div class="card"><dl class="glos" style="margin:0">' + H.GLOSSARIO.map(([t, d]) => '<dt>' + esc(t) + '</dt><dd>' + esc(d) + '</dd>').join('') + '</dl></div></div>';
+
+  const VIEWS = { haras: vHaras, parametros: vParametros, auditoria: vAuditoria, atualizacao: vAtualizacao, sobre: vSobre, glossario: vGlossario };
+  const AFTER = {
+    parametros() { desenharPlanos(); desenharFaixas(); },
+    auditoria() {
+      carregarAuditoria();
+      $('#aud-f').addEventListener('submit', e => { e.preventDefault(); audF.haras = $('#af-haras').value; audF.acao = $('#af-acao').value; audF.texto = $('#af-texto').value.trim(); audF.de = $('#af-de').value; audF.ate = $('#af-ate').value; carregarAuditoria(); });
+    },
+    atualizacao() {
+      const f = $('#up-f'); if (!f) return;
+      f.addEventListener('submit', async e => {
+        e.preventDefault();
+        const pac = $('#up-pac').files[0], sig = $('#up-sig').files[0], btn = $('#up-btn');
+        if (!pac || !sig) { UI.toast('Selecione o pacote e a assinatura.'); return; }
+        if (!/^haras360-\d+\.\d+\.\d+\.tar\.gz$/.test(pac.name)) { UI.toast('O pacote deve se chamar haras360-X.Y.Z.tar.gz.'); return; }
+        if (pac.size > S.limitePacoteMB * 1048576) { UI.toast('O pacote passa de ' + S.limitePacoteMB + ' MB.'); return; }
+        btn.disabled = true; btn.textContent = 'Conferindo...';
+        try {
+          const sha = $('#up-sha').value.trim().toLowerCase();
+          if (sha && sha !== await sha256Arquivo(pac)) throw new Error('O SHA-256 do arquivo não confere com o publicado na Release. Baixe o pacote de novo.');
+          btn.textContent = 'Enviando...';
+          const fd = new FormData(); fd.append('pacote', pac); fd.append('assinatura', sig); if (sha) fd.append('sha256', sha);
+          const r = await API.upload('/api/admin/atualizacao', fd);
+          UI.toast(r.resumo); await recarregar(); render();
+        } catch (err) { UI.toast(err.message); btn.disabled = false; btn.innerHTML = IC.upload + 'Enviar e atualizar'; }
+      });
+    }
+  };
+
+  const senhaForm = (id, rot) => '<div class="field"><label for="' + id + '">' + rot + '</label><input id="' + id + '" type="password" class="inp" autocomplete="new-password" minlength="8"></div>';
+  const ACT = {
+    nav: el => go(el.dataset.v),
+    fechar: () => UI.fechar(),
+    sair: async () => { try { await API.post('/api/logout'); } catch (e) { } location.href = '/entrar'; },
+    'novo-haras': () => UI.abrir({ titulo: 'Novo haras', corpo: '<form class="fgrid" novalidate><div class="field full"><label for="nh-nome">Nome do haras</label><input id="nh-nome" class="inp"></div><div class="field"><label for="nh-mun">Município/UF</label><input id="nh-mun" class="inp"></div><div class="field full"><label for="nh-logo">Logotipo (opcional)</label><input id="nh-logo" type="file" class="inp" accept="image/png,image/jpeg,image/webp"></div><div class="field"><label for="nh-plano">Plano</label><select id="nh-plano" class="inp">' + Object.keys(S.parametros.planos).map(p => '<option>' + esc(p) + '</option>').join('') + '</select></div><div class="field full"><label for="nh-gn">Nome do gestor</label><input id="nh-gn" class="inp"></div><div class="field full"><label for="nh-ge">E-mail do gestor (login)</label><input id="nh-ge" type="email" class="inp"></div>' + senhaForm('nh-gs', 'Senha inicial do gestor (mín. 8)') + '</form><p class="small muted">No primeiro acesso o gestor cadastra o 2FA no celular.</p>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="criar-haras">Criar haras</button>' }),
+    'criar-haras': async el => {
+      const v = id => document.getElementById(id).value.trim();
+      let logo = null; const f = document.getElementById('nh-logo').files[0];
+      if (f) { try { logo = await UI.prepararLogo(f); } catch (e) { UI.toast(e.message); return; } }
+      if (await executar(el, () => API.post('/api/admin/haras', { nome: v('nh-nome'), municipio: v('nh-mun'), plano: v('nh-plano'), gestorNome: v('nh-gn'), gestorEmail: v('nh-ge'), gestorSenha: document.getElementById('nh-gs').value, logo }))) { UI.fechar(); render(); }
+    },
+    'toggle-haras': el => { const h = S.haras.find(x => String(x.id) === el.dataset.id); const fn = async () => { if (await executar(el, () => API.patch('/api/admin/haras/' + h.id, { ativo: !h.ativo }))) render(); }; h.ativo ? UI.confirmar(el, 'Confirmar: desconecta todos os usuários', fn) : fn(); },
+    'senha-user': el => UI.abrir({ titulo: 'Redefinir senha de ' + esc(el.dataset.n), corpo: '<form class="stack" novalidate>' + senhaForm('r-senha', 'Nova senha (mín. 8)') + '<input type="hidden" id="r-uid" value="' + el.dataset.id + '"></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-senha-user">Redefinir</button>' }),
+    'salvar-senha-user': async el => { if (await executar(el, () => API.post('/api/admin/usuarios/' + $('#r-uid').value + '/senha', { senha: $('#r-senha').value }))) { UI.fechar(); render(); } },
+    'dois-fatores': el => UI.confirmar(el, 'Confirmar redefinição', async () => { if (await executar(el, () => API.post('/api/admin/usuarios/' + el.dataset.id + '/2fa/redefinir'))) render(); }),
+    'add-plano': () => { planosEd = lerPlanosDaTela(); let n = 'Novo plano', i = 2; while (planosEd[n]) n = 'Novo plano ' + i++; planosEd[n] = { limite: 30, modulos: Object.fromEntries(Object.keys(S.modulos).map(k => [k, true])) }; desenharPlanos(); },
+    'rem-plano': el => { planosEd = lerPlanosDaTela(); const nome = Object.keys(planosEd)[+el.dataset.i]; delete planosEd[nome]; desenharPlanos(); },
+    'add-faixa': () => { faixasEd = lerFaixasDaTela(); const u = faixasEd[faixasEd.length - 1]; faixasEd.push({ de: u.ate + 1, ate: u.ate + 10, valor: null }); desenharFaixas(); },
+    'rem-faixa': el => { faixasEd = lerFaixasDaTela(); faixasEd.splice(+el.dataset.i, 1); desenharFaixas(); },
+    'salvar-globais': async el => {
+      const n = id => Number(document.getElementById(id).value);
+      const corpo = { planos: lerPlanosDaTela(), faixas: lerFaixasDaTela(), login_tentativas: n('g-tent'), login_janela_min: n('g-jan'), sessao_dias: n('g-sess'), sessao_app_dias: n('g-app'), email_contato: $('#g-contato').value.trim(),
+        smtp: { host: $('#s-host').value.trim(), porta: n('s-porta'), usuario: $('#s-user').value.trim(), senha: $('#s-senha').value, remetente: $('#s-rem').value.trim(), tls: $('#s-tls').value === '1' } };
+      if (Object.keys(corpo.planos).some(k => !k)) { UI.toast('Todo plano precisa de nome.'); return; }
+      if (await executar(el, () => API.put('/api/admin/parametros', corpo))) render();
+    },
+    'remover-logo': el => UI.confirmar(el, 'Confirmar remoção', async () => { if (await executar(el, () => API.patch('/api/admin/haras/' + el.dataset.id, { logo: null }), 'Logotipo removido.')) render(); }),
+    rollback: el => UI.confirmar(el, 'Confirmar volta', async () => { if (await executar(el, () => API.post('/api/admin/rollback', { versao: el.dataset.v }))) render(); }),
+    'backup-agora': async el => { if (await executar(el, () => API.post('/api/admin/backup'))) render(); },
+    'minha-senha': () => UI.abrir({ titulo: 'Alterar minha senha', corpo: '<form class="stack" novalidate><div class="field"><label for="m-atual">Senha atual</label><input id="m-atual" type="password" class="inp" autocomplete="current-password"></div>' + senhaForm('m-nova', 'Nova senha (mín. 8)') + '</form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-minha-senha">Alterar</button>' }),
+    'salvar-minha-senha': async el => { if (await executar(el, () => API.post('/api/me/senha', { atual: $('#m-atual').value, nova: $('#m-nova').value }))) UI.fechar(); },
+    'novos-codigos': () => UI.abrir({ titulo: 'Novos códigos de recuperação', corpo: '<form class="stack" novalidate><p>Os códigos atuais deixam de valer. Confirme sua senha.</p><div class="field"><label for="nc-senha">Senha</label><input id="nc-senha" type="password" class="inp" autocomplete="current-password"></div></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="gerar-codigos">Gerar</button>' }),
+    'gerar-codigos': async el => { try { el.disabled = true; const r = await API.post('/api/me/codigos-recuperacao', { senha: $('#nc-senha').value }); UI.fechar(); UI.mostrarCodigos(r.codigos); } catch (e) { el.disabled = false; UI.toast(e.message); } }
+  };
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-act]'); if (!el) return;
+    const f = ACT[el.dataset.act]; if (!f) return;
+    if (el.tagName === 'A' || el.closest('form')) e.preventDefault();
+    f(el, e);
+  });
+  document.addEventListener('change', async e => {
+    const lg = e.target.closest('[data-chg="logo"]');
+    if (lg) {
+      const f = lg.files[0]; lg.value = ''; if (!f) return;
+      try { const img = await UI.prepararLogo(f); if (await executar(null, () => API.patch('/api/admin/haras/' + lg.dataset.id, { logo: img }), 'Logotipo atualizado.')) render(); }
+      catch (err) { UI.toast(err.message); }
+      return;
+    }
+    const el = e.target.closest('[data-chg="plano"]'); if (!el) return;
+    const h = S.haras.find(x => String(x.id) === el.dataset.id);
+    if (!(await executar(null, () => API.patch('/api/admin/haras/' + h.id, { plano: el.value })))) el.value = h.plano;
+    render();
+  });
+  (async () => {
+    $('#view').innerHTML = '<div class="empty">Carregando...</div>';
+    try { await recarregar(); render(); }
+    catch (e) { if (/administrador/.test(e.message)) { location.href = '/entrar'; return; } $('#view').innerHTML = '<div class="note bad">' + esc(e.message) + '</div>'; }
+  })();
+})();
+</script>
+
+</body>
+</html>
