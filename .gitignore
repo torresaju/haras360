@@ -14,3 +14,14 @@ node_modules/
 *.pem
 mobile/build/
 mobile/.dart_tool/
+
+# APK colocado pelo GitHub Actions ao gerar o pacote
+backend/app/static/app/
+mobile/.dart_tool/
+mobile/build/
+mobile/android/key.properties
+*.p12
+*.jks
+mobile/android/
+mobile/.metadata
+mobile/pubspec.lock

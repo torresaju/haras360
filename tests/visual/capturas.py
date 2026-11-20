@@ -94,6 +94,12 @@ with sync_playwright() as pw:
     foto(g, "ficha")
     for aba in ("agenda", "dados", "prontuario"):
         g.click(f'[data-act="tab"][data-t="{aba}"]')
+    # vínculo do app Android do caseiro por QR Code (v1.1.0)
+    ir(g, "equipe")
+    g.click('[data-act="vincular-celular"]')
+    g.wait_for_selector(".qr-box svg")
+    foto(g, "vincular")
+    g.click('#modal [data-act="fechar"]')
     # registro com o formulário pré-preenchido a partir de uma tarefa
     ir(g, "agenda")
     g.locator('[data-act="registrar-tarefa"]').first.click()
@@ -107,6 +113,7 @@ with sync_playwright() as pw:
     entrar(k, "caseiro@demonstracao.local")
     k.wait_for_selector(".cnt")
     foto(k, "campo")
+    assert k.is_visible('[data-act="instalar-app"]'), "falta o botão Instalar o app Android no Portal Campo"
     for v in ("animais", "avisos", "assistente", "hoje"):
         k.click(f'#tnav [data-v="{v}"]')
         k.wait_for_timeout(200)

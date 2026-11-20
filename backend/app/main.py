@@ -9,6 +9,7 @@ from sqlalchemy import select
 from .config import FOTOS_DIR, VERSAO
 from .migracoes import migrar
 from .rotas_admin import r as rotas_admin
+from .rotas_app import r as rotas_app
 from .rotas_auth import r as rotas_auth
 from .rotas_haras import r as rotas_haras
 from .seguranca import confere_senha, get_db, hash_senha  # noqa: F401 (reexportados para o CLI e testes)
@@ -52,6 +53,7 @@ async def protecao(request: Request, call_next):
 app.include_router(rotas_auth)
 app.include_router(rotas_haras)
 app.include_router(rotas_admin)
+app.include_router(rotas_app)
 
 
 def _pagina(nome):

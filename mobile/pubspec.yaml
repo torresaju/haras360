@@ -1,0 +1,35 @@
+name: haras360
+description: App Android do caseiro do Haras360, com trabalho offline e envio no Wi-Fi.
+publish_to: none
+# A versão vem do arquivo VERSION do repositório (o build usa --build-name e --build-number).
+version: 1.1.0+10100
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sqflite: 2.4.1
+  path: ^1.9.0
+  path_provider: 2.1.5
+  http: 1.2.2
+  flutter_secure_storage: 9.2.2
+  workmanager: 0.5.2
+  connectivity_plus: 6.1.1
+  mobile_scanner: 6.0.2
+  image_picker: 1.1.2
+  uuid: 4.5.1
+  url_launcher: 6.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: 5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - recursos/icone/mipmap-xxxhdpi/ic_launcher.png

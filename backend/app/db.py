@@ -171,3 +171,15 @@ class Importacao(Base):
     novos: Mapped[int] = mapped_column(Integer, default=0)
     atualizados: Mapped[int] = mapped_column(Integer, default=0)
     criado_em: Mapped[datetime] = mapped_column(DateTime, default=agora)
+
+
+class VinculoApp(Base):
+    """Código de uso único, lido por QR Code, que vincula um celular ao caseiro (v1.1.0)."""
+    __tablename__ = "vinculos_app"
+    codigo_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id", ondelete="CASCADE"), index=True)
+    haras_id: Mapped[int] = mapped_column(Integer, index=True)
+    criado_por: Mapped[int] = mapped_column(Integer, nullable=True)
+    criado_em: Mapped[datetime] = mapped_column(DateTime, default=agora)
+    expira_em: Mapped[datetime] = mapped_column(DateTime)
+    usado_em: Mapped[datetime] = mapped_column(DateTime, nullable=True)

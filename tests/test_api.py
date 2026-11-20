@@ -3,16 +3,11 @@ import base64
 import json
 
 import pyotp
-import pytest
 from fastapi.testclient import TestClient
 
 from app import regras as R
 from app.config import FILA_DIR
-from app.db import SessionLocal, Usuario
 from app.main import app
-from app.migracoes import migrar
-from app.rotas_admin import criar_haras_com_gestor
-from app.seguranca import hash_senha
 
 H = {"X-Haras360": "1", "X-Portal": "gestor"}
 HC = {"X-Haras360": "1", "X-Portal": "campo"}
@@ -25,18 +20,6 @@ PLANTEL = [
      "nascimento": "2026-01-15", "chip": "900000000000104"},
 ]
 SEGREDOS = {}
-
-
-@pytest.fixture(scope="module")
-def base():
-    migrar(silencioso=True)
-    with SessionLocal() as db:
-        db.add(Usuario(haras_id=None, nome="Admin Teste", email="admin@teste.com", senha_hash=hash_senha("admin1234"), perfil="admin"))
-        h, _g = criar_haras_com_gestor(db, "Haras Teste", "Aracaju/SE", None, "Gestor Teste", "gestor@teste.com", "senha1234")
-        db.add(Usuario(haras_id=h.id, nome="Caseiro Teste", email="caseiro@teste.com", senha_hash=hash_senha("campo1234"), perfil="operador"))
-        h2, _ = criar_haras_com_gestor(db, "Outro Haras", "", None, "Outro Gestor", "outro@teste.com", "senha1234")
-        db.commit()
-        return {"haras": h.id, "outro": h2.id}
 
 
 def entrar(email, senha, hdr=H):

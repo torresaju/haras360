@@ -2,6 +2,20 @@
 
 Uma nota por versão, da mais recente para a mais antiga.
 
+## v1.1.0 · 20/11/2026 · App Android do caseiro
+* **App Android (Flutter, Android 8 ou superior)** para o caseiro: tarefas do dia, animais com ficha e histórico, avisos e registro de vacina, vermífugo, odontologia, casqueamento, exame, reprodução e ocorrência, com até 4 fotos.
+* **Funciona sem internet:** banco local no celular com o último retrato do haras e a fila de registros. A situação das tarefas é recalculada com a data do dia, e o registro feito no pasto já tira a tarefa da lista.
+* **Envio somente no Wi-Fi:**
+  * em segundo plano a cada hora e sempre que o app abre no Wi-Fi, com botão "Sincronizar agora";
+  * registros primeiro, depois as fotos uma a uma (comprimidas no celular), depois o estado do haras;
+  * se a conexão cai, retoma de onde parou, sem duplicar (identificador gerado no celular);
+  * registros recusados pelo servidor ficam visíveis em Envio, com "Tentar de novo".
+* **Vínculo do celular por QR Code:** o gestor gera em Equipe › Vincular celular um código de uso único, válido por 10 minutos. O celular aparece em Sessões e aparelhos ativos e pode ser encerrado. Alternativas: digitar o código ou entrar com e-mail e senha. Comando `haras360 vincular-celular` para suporte.
+* **APK distribuído pelo próprio servidor:** vai dentro do pacote de atualização e fica em Portal Campo › Instalar o app Android, com QR Code. O app avisa quando o servidor tem versão mais nova.
+* **Assinatura do APK** com chave Android própria (RSA 3072, 30 anos), criada no Windows com `deploy/gerar-chave-android.py`. O GitHub guarda só os segredos; a impressão digital do certificado é conferida no build.
+* **API nova:** `/api/usuarios/{id}/vinculo`, `/api/app/vincular`, `/api/app/sincronizar`, `/api/app/fotos`, `/api/app/versao`, `/api/app/instalar` e `/app/haras360.apk`. Migração 002 (códigos de vínculo).
+* **Testes:** 17 testes de unidade do app, 8 testes da API do app e teste de ponta a ponta no emulador Android contra a instância de demonstração (vínculo, registro sem Wi-Fi, envio, capturas de tela).
+
 ## v1.0.0 · 19/11/2026 · Portais e API na segunda VM micro
 * **Servidor sem Docker:** `deploy/instalar-servidor.sh` instala na VM micro da Oracle:
   * swap de 2 GB e MariaDB ajustado para 1 GB;

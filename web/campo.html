@@ -55,6 +55,7 @@
   .cnt b{font-size:1.6rem}
   .quick{grid-template-columns:minmax(0,1fr)}
 }
+.app-card{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 </style>
 
 <header class="hdr">
@@ -123,7 +124,8 @@
     return '<div class="sec"><div class="daybar"><div><div class="eyebrow">Tarefas do dia</div><h1>' + d + '</h1></div></div>' +
       '<div class="cnt"><div class="late"><b>' + at.length + '</b><span>Atrasadas</span></div><div class="soon"><b>' + hj.length + '</b><span>Para hoje</span></div><div><b>' + sm.length + '</b><span>Próximos 7 dias</span></div></div>' +
       '<div class="quick"><button data-act="registrar">' + IC.check + '<span>Novo registro<small>Vacina, vermífugo, casco, exame</small></span></button><button data-act="ocorrencia">' + IC.alert + '<span>Registrar ocorrência<small>Algo diferente com um animal</small></span></button></div>' +
-      bloco('Atrasadas', at, 'Nada atrasado. Bom trabalho.') + bloco('Para hoje', hj, 'Nada marcado para hoje.') + bloco('Próximos 7 dias', sm, 'Nada previsto para a semana.') + '</div>';
+      bloco('Atrasadas', at, 'Nada atrasado. Bom trabalho.') + bloco('Para hoje', hj, 'Nada marcado para hoje.') + bloco('Próximos 7 dias', sm, 'Nada previsto para a semana.') +
+      '<div class="card app-card"><div><h3>Trabalhe sem internet</h3><p class="small muted">Com o app Android, você registra no pasto e envia quando chegar ao Wi-Fi.</p></div><button class="btn" data-act="instalar-app">Instalar o app Android</button></div></div>';
   }
 
   function vAnimais() {
@@ -183,6 +185,16 @@
     'notif-f': el => { notifFiltro = el.dataset.f; render(); },
     ler: async el => { if (await executar(el, () => API.post('/api/notificacoes/lidas', { ids: [el.dataset.id] }), false)) render(); },
     'ler-todas': async el => { const ids = avisos().map(n => n.id).filter(id => !S.lidas.includes(id)); if (!ids.length) return; if (await executar(el, () => API.post('/api/notificacoes/lidas', { ids }), 'Avisos marcados como lidos.')) render(); },
+    'instalar-app': async el => {
+      let r; try { el.disabled = true; r = await API.get('/api/app/instalar'); } catch (e) { UI.toast(e.message); return; } finally { el.disabled = false; }
+      if (!r.disponivel) { UI.toast('O app ainda não está disponível neste servidor. Avise o gestor.'); return; }
+      const mb = (r.tamanho / 1048576).toFixed(0);
+      UI.abrir({ titulo: 'Instalar o app Android', corpo: '<div class="stack"><p>Versão ' + esc(r.versao) + ' · cerca de ' + mb + ' MB. Baixe pelo Wi-Fi.</p>' +
+        '<p><a class="btn pri" href="' + esc(r.url) + '" download>Baixar o app neste celular</a></p>' +
+        '<p class="small muted">Está no computador? Leia este código com a câmera do celular:</p><div class="qr-box">' + r.qr + '</div>' +
+        '<ol class="passos"><li>Abra o arquivo baixado. Se o Android pedir, permita instalar apps desta origem.</li><li>Abra o Haras360 e toque em <b>Ler QR Code</b>.</li><li>Peça ao gestor o QR Code em Equipe › Vincular celular.</li></ol></div>',
+        rodape: '<button class="btn" data-act="fechar">Fechar</button>' });
+    },
     'minha-senha': () => UI.abrir({ titulo: 'Alterar minha senha', corpo: '<form class="stack" novalidate><div class="field"><label for="m-atual">Senha atual</label><input id="m-atual" type="password" class="inp" autocomplete="current-password"></div><div class="field"><label for="m-nova">Nova senha (mín. 8)</label><input id="m-nova" type="password" class="inp" autocomplete="new-password"></div></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-minha-senha">Alterar</button>' }),
     'salvar-minha-senha': async el => {
       const n = document.getElementById('m-nova').value; if (n.length < 8) { UI.toast('A nova senha precisa ter pelo menos 8 caracteres.'); return; }

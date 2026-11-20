@@ -79,6 +79,7 @@ Os usuários entram com as mesmas senhas e o mesmo 2FA.
 | Haras e usuários | `sudo haras360 listar` |
 | Redefinir senha | `sudo haras360 redefinir-senha --email x@y` |
 | Redefinir 2FA | `sudo haras360 redefinir-2fa --email x@y` |
+| Código de vínculo do app do caseiro | `sudo haras360 vincular-celular --email caseiro@y --servidor http://IP:8090` |
 | Versões guardadas | `sudo haras360-rollback` |
 | Trocar a chave pública | `sudo haras360-chave chave-publica.pem` |
 
@@ -92,3 +93,11 @@ Os usuários entram com as mesmas senhas e o mesmo 2FA.
 | `/etc/haras360/haras360.env` | configuração e segredos (permissão 640) |
 | `/etc/haras360/chave-publica.pem` | chave que confere os pacotes |
 | `/etc/caddy/Caddyfile` | porta pública 8090 |
+
+## App Android do caseiro (desde a v1.1.0)
+
+1. **Chave Android (uma única vez, no Windows):** `python gerar-chave-android.py` na pasta `journey-chaves`. Guarde `haras360\haras360-android.p12` e a senha para sempre: sem eles, os celulares não aceitam atualizações do app.
+2. **Segredos no GitHub** (Settings › Secrets and variables › Actions): `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_SENHA`, `ANDROID_CHAVE_ALIAS`, `ANDROID_CHAVE_SENHA`, copiados de `segredos-github.txt`. Opcional: a variável `ANDROID_CERT_SHA256` com a impressão digital, para o build recusar APK assinado com outra chave.
+3. **A cada versão**, o GitHub Actions compila o APK assinado e o coloca dentro do pacote `haras360-X.Y.Z.tar.gz`. Depois da atualização do servidor, o APK fica em `http://IP:8090/app/haras360.apk` e no Portal Campo › Instalar o app Android.
+4. **Vínculo:** o gestor abre Equipe › Vincular celular e o caseiro lê o QR Code no app. Se o gestor não conseguir, gere o código por SSH com `sudo haras360 vincular-celular`.
+5. O app só envia no Wi-Fi. O servidor ainda é acessado por HTTP, então o app permite tráfego sem criptografia; ao migrar para domínio com HTTPS, o vínculo passa a usar `https://`.

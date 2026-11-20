@@ -140,6 +140,20 @@ def c_demonstracao(a):
         print(f"'{h.nome}' criado com plantel fictício.")
 
 
+def c_vincular_celular(a):
+    from .rotas_app import VALIDADE_VINCULO_MIN, link_vinculo, novo_vinculo
+    with SessionLocal() as db:
+        u = _usuario(db, pedir_email(a.email))
+        if u.perfil != "operador" or not u.ativo:
+            sys.exit("O app Android é de uso do caseiro, e o acesso precisa estar ativo.")
+        codigo, _ = novo_vinculo(db, u)
+        auditar(db, "app_vinculo_gerado", nome="linha de comando", haras_id=u.haras_id, alvo=u.nome)
+        db.commit()
+    print(f"Código para {u.nome} (vale {VALIDADE_VINCULO_MIN} minutos, uso único): {codigo}")
+    if a.servidor:
+        print(f"Link do QR Code: {link_vinculo(a.servidor.rstrip('/'), codigo)}")
+
+
 def c_auditar(a):
     with SessionLocal() as db:
         auditar(db, a.acao, nome=a.quem or "servidor", alvo=a.alvo or "", resultado=a.resultado)
@@ -159,11 +173,13 @@ def main():
     c = sub.add_parser("redefinir-2fa"); c.add_argument("--email")
     c = sub.add_parser("demonstracao", help="cria o Haras Demonstração com plantel fictício")
     c.add_argument("--gestor"); c.add_argument("--caseiro"); c.add_argument("--senha")
+    c = sub.add_parser("vincular-celular", help="gera o código de vínculo do app Android de um caseiro")
+    c.add_argument("--email"); c.add_argument("--servidor", help="endereço do servidor, para montar o link do QR Code")
     c = sub.add_parser("auditar", help="registra um evento na auditoria (uso dos scripts)")
     c.add_argument("--acao", required=True); c.add_argument("--alvo"); c.add_argument("--quem"); c.add_argument("--resultado", default="ok")
     a = ap.parse_args()
     {"migrar": c_migrar, "criar-admin": c_criar_admin, "criar-haras": c_criar_haras, "listar": c_listar, "redefinir-senha": c_redefinir_senha,
-     "redefinir-2fa": c_redefinir_2fa, "demonstracao": c_demonstracao, "auditar": c_auditar}[a.cmd](a)
+     "redefinir-2fa": c_redefinir_2fa, "demonstracao": c_demonstracao, "vincular-celular": c_vincular_celular, "auditar": c_auditar}[a.cmd](a)
 
 
 if __name__ == "__main__":

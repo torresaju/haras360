@@ -4,6 +4,8 @@ name: Versão
 # não existir, cria a tag e a Release com a nota da versão em docs/HISTORICO.md.
 # Anexa à Release o pacote de atualização haras360-X.Y.Z.tar.gz e o SHA-256 dele,
 # para ser assinado no Windows e enviado pela tela Administração > Atualização.
+# Desde a v1.1.0, compila o APK do caseiro (workflow App Android) e o coloca dentro do
+# pacote do servidor e na Release, quando assinado com a chave de produção.
 
 on:
   push:
@@ -18,12 +20,39 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    outputs:
+      existe: ${{ steps.v.outputs.existe }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: A tag desta versão já existe?
+        id: v
+        run: |
+          VERSAO="$(tr -d ' \n\r' < VERSION)"
+          if git rev-parse -q --verify "refs/tags/v$VERSAO" >/dev/null; then echo "existe=1" >> "$GITHUB_OUTPUT"; else echo "existe=0" >> "$GITHUB_OUTPUT"; fi
+
+  apk:
+    needs: verificar
+    if: needs.verificar.outputs.existe == '0'
+    uses: ./.github/workflows/android.yml
+    secrets: inherit
+
   tag-e-release:
+    needs: [verificar, apk]
+    if: always() && needs.verificar.outputs.existe == '0' && needs.apk.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: haras360-apk
+          path: dist-apk
 
       - name: Ler versão
         id: v
@@ -66,7 +95,16 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "$TAG" -m "$(cat titulo.txt)"
           git push origin "$TAG"
-          bash deploy/gerar-pacote.sh "$TAG" dist
+          APK_EXTRA=""
+          if [ "${{ needs.apk.outputs.assinado }}" = "1" ]; then
+            APK_DIR="$PWD/dist-apk" bash deploy/gerar-pacote.sh "$TAG" dist
+            cp dist-apk/haras360.apk "dist/haras360-${TAG#v}.apk"
+            APK_EXTRA="dist/haras360-${TAG#v}.apk"
+            APK_NOTA="O app Android (\`haras360-${TAG#v}.apk\`) vai dentro do pacote e fica disponível no Portal Campo › Instalar o app Android."
+          else
+            bash deploy/gerar-pacote.sh "$TAG" dist
+            APK_NOTA="Atenção: os segredos ANDROID_* não estavam cadastrados; o pacote foi gerado sem o app Android."
+          fi
           {
             cat nota.md
             echo
@@ -75,6 +113,8 @@ jobs:
             echo "Baixe \`haras360-${TAG#v}.tar.gz\`, assine no Windows com \`python assinar-pacote.py haras360-${TAG#v}.tar.gz\` e envie em Administração › Atualização e backup."
             echo
             echo "SHA-256: \`$(cut -d' ' -f1 dist/haras360-${TAG#v}.tar.gz.sha256)\`"
+            echo
+            echo "$APK_NOTA"
           } > nota-final.md
           gh release create "$TAG" --title "$(cat titulo.txt)" --notes-file nota-final.md --verify-tag \
-            dist/haras360-${TAG#v}.tar.gz dist/haras360-${TAG#v}.tar.gz.sha256 deploy/assinar-pacote.py
+            dist/haras360-${TAG#v}.tar.gz dist/haras360-${TAG#v}.tar.gz.sha256 deploy/assinar-pacote.py $APK_EXTRA

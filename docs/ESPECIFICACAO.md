@@ -82,3 +82,4 @@ Base: protótipo web validado em 01/10/2026, pacote `haras360-vps.tar.gz` de 01/
 | 19/11/2026 | Sincronização do app somente no Wi-Fi |
 | 19/11/2026 | Gestor no portal web por HTTP, com atalho na tela inicial; caseiro com app Android e Portal Campo; apenas Android neste momento |
 | 19/11/2026 | Especificação aprovada (fases 1 a 7) |
+| 20/11/2026 | v1.1.0 aprovada (partes A a G): vínculo do celular por QR Code em Equipe; APK servido pelo próprio servidor; chave Android gerada pelo Ricardo no Windows, só os segredos no GitHub |

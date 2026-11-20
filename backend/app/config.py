@@ -25,6 +25,9 @@ FILA_DIR = Path(os.environ.get("H360_FILA", COMPARTILHADO / "fila"))
 BACKUPS_DIR = Path(os.environ.get("H360_BACKUPS", COMPARTILHADO / "backups"))
 RELEASES_DIR = Path(os.environ.get("H360_RELEASES", "./releases"))
 
+# APK do app Android, colocado no pacote pelo GitHub Actions (static/app/haras360.apk e versao.json)
+APP_DIR = Path(__file__).resolve().parent / "static" / "app"
+
 MAX_PACOTE_MB = int(os.environ.get("H360_MAX_PACOTE_MB", "100"))
 
 if not SECRET_KEY:
