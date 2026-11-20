@@ -197,6 +197,62 @@ textarea.inp{min-height:84px;resize:vertical}
 }
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
+/* ---------- barra superior com menus agrupados (gestor e administrador) ---------- */
+:root{--forest-accent:#e3ab6c}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--forest);color:var(--forest-ink);padding-inline:clamp(16px,3vw,32px)}
+.topbar-in{display:flex;align-items:center;gap:18px;min-height:60px;max-width:1400px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;flex:none}
+.brand svg{width:30px;height:30px;flex:none;color:var(--forest-accent)}
+.brand b{font-family:var(--f-display);font-size:1.3rem;font-weight:700;display:block;line-height:1}
+.brand small{display:block;font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--forest-muted);margin-top:2px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.menu{display:flex;align-items:center;gap:2px;margin-left:auto}
+.menu>li,.menu>div{list-style:none;position:relative}
+.mi{display:flex;align-items:center;gap:6px;border:0;background:none;color:var(--forest-muted);padding:8px 11px;border-radius:7px;cursor:pointer;font-weight:600;font-size:.9rem;white-space:nowrap;text-decoration:none}
+.mi:hover,.mi[aria-expanded="true"]{color:var(--forest-ink);background:var(--forest-2)}
+.mi[aria-current="page"]{color:var(--forest-ink);box-shadow:inset 0 -2px 0 var(--forest-accent);border-radius:7px 7px 0 0}
+.mi .caret{width:10px;height:10px;opacity:.7}
+.mi.off{opacity:.45}
+.drop-m{position:absolute;right:0;top:calc(100% + 6px);min-width:230px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:6px;display:flex;flex-direction:column;gap:2px;z-index:50}
+.menu>div:not(:last-child) .drop-m{right:auto;left:0}
+.di{display:flex;align-items:center;gap:10px;border:0;background:none;color:var(--ink);padding:9px 10px;border-radius:7px;cursor:pointer;font-size:.9rem;text-align:left;text-decoration:none;width:100%}
+.di:hover{background:var(--surface-2)}
+.di[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.di.off{color:var(--muted)}
+.di .tag{margin-left:auto;font-size:.68rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:1px 7px}
+.di small{display:block;color:var(--muted);font-size:.78rem}
+.dsep{height:1px;background:var(--line-2);margin:4px 2px}
+.tb-acts{display:flex;align-items:center;gap:6px;flex:none}
+.tb-ic{position:relative;border:0;background:none;color:var(--forest-ink);width:38px;height:38px;border-radius:8px;display:grid;place-items:center;cursor:pointer}
+.tb-ic:hover{background:var(--forest-2)}
+.tb-ic svg{width:20px;height:20px}
+.tb-ic .badge{position:absolute;top:2px;right:0;margin:0}
+.badge{background:var(--late);color:#fff;font-size:.68rem;font-weight:700;padding:1px 6px;border-radius:99px;font-variant-numeric:tabular-nums}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--forest-accent);color:var(--forest);display:grid;place-items:center;font-weight:700;font-size:.78rem;flex:none}
+.userbtn{display:flex;align-items:center;gap:9px;border:0;background:none;color:var(--forest-ink);padding:4px 8px 4px 4px;border-radius:99px;cursor:pointer;text-align:left}
+.userbtn:hover,.userbtn[aria-expanded="true"]{background:var(--forest-2)}
+.userbtn span.n{font-size:.86rem;font-weight:600;line-height:1.15}
+.userbtn span.n small{display:block;font-weight:500;color:var(--forest-muted);font-size:.74rem}
+.hamb{display:none}
+.pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.pagehead .acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+main.wrapm{padding-inline:clamp(16px,3vw,32px);padding-block:24px 72px;max-width:1400px;margin:0 auto;min-width:0}
+.off-note{display:flex;gap:10px;align-items:flex-start}
+@media (max-width:980px){
+  .hamb{display:grid}
+  .menu{display:none;position:absolute;left:0;right:0;top:100%;background:var(--forest);flex-direction:column;align-items:stretch;padding:8px 16px 16px;gap:2px;max-height:calc(100dvh - 60px);overflow-y:auto;box-shadow:0 12px 24px rgba(0,0,0,.25)}
+  .menu.aberto{display:flex}
+  .menu>div{width:100%}
+  .mi{width:100%;justify-content:space-between;padding:11px 10px}
+  .mi[aria-current="page"]{box-shadow:inset 3px 0 0 var(--forest-accent);border-radius:7px}
+  .drop-m{position:static;box-shadow:none;border:0;background:var(--forest-2);margin:2px 0 6px;min-width:0}
+  .drop-m .di{color:var(--forest-ink)}
+  .drop-m .di:hover{background:var(--forest)}
+  .drop-m .di[aria-current="page"]{background:var(--forest);color:var(--forest-accent)}
+  .drop-m .di small,.drop-m .di .tag{color:var(--forest-muted);border-color:var(--forest-muted)}
+  .userbtn span.n{display:none}
+  .topbar-in{gap:10px}
+}
+
 :root{--forest-accent:#e3ab6c}
 .hdr{background:var(--forest);color:var(--forest-ink);padding-inline:16px;padding-block:14px 0}
 .hdr-in{max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
@@ -271,14 +327,16 @@ textarea.inp{min-height:84px;resize:vertical}
 <script>
 /* Haras360 · cliente da API */
 const API = (function () {
-  async function req(metodo, url, corpo) {
+  async function req(metodo, url, corpo, bruto) {
     let r;
+    const headers = { 'X-Haras360': '1', 'X-Portal': window.H360_PORTAL || '' };
+    if (!bruto) headers['Content-Type'] = 'application/json';
     try {
-      r = await fetch(url, { method: metodo, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Haras360': '1', 'X-Portal': window.H360_PORTAL || '' }, body: corpo === undefined ? undefined : JSON.stringify(corpo) });
+      r = await fetch(url, { method: metodo, credentials: 'same-origin', headers, body: corpo === undefined ? undefined : (bruto ? corpo : JSON.stringify(corpo)) });
     } catch (e) { throw new Error('Sem conexão com o servidor. Verifique a internet e tente de novo.'); }
     let dados = null;
     try { dados = await r.json(); } catch (e) { }
-    if (r.status === 401 && !/\/api\/(login|me\/senha)/.test(url)) {
+    if (r.status === 401 && !/\/api\/(login|me\/senha|me\/codigos)/.test(url)) {
       location.href = '/entrar?volta=' + encodeURIComponent(location.pathname);
       throw new Error('Sessão expirada. Faça login novamente.');
     }
@@ -288,7 +346,10 @@ const API = (function () {
     }
     return dados;
   }
-  return { get: u => req('GET', u), post: (u, b) => req('POST', u, b || {}), put: (u, b) => req('PUT', u, b), patch: (u, b) => req('PATCH', u, b), del: u => req('DELETE', u) };
+  return {
+    get: u => req('GET', u), post: (u, b) => req('POST', u, b || {}), put: (u, b) => req('PUT', u, b), patch: (u, b) => req('PATCH', u, b), del: u => req('DELETE', u),
+    upload: (u, formData) => req('POST', u, formData, true)
+  };
 })();
 
 </script>
@@ -394,6 +455,34 @@ const H = (function () {
     return CATS[r.tipo] ? CATS[r.tipo].nome : 'Registro';
   }
   function doseTxt(d) { if (d === 'reforco') return 'Reforço'; if (d === 'unica' || !d) return ''; return d + 'ª dose'; }
+
+  /* ---------- auditoria e glossário ---------- */
+  const ACOES_AUDIT = {
+    login: 'Login', login_falha: 'Login recusado', logout: 'Saída', '2fa_cadastro': '2FA cadastrado', '2fa_falha': 'Código 2FA recusado',
+    '2fa_redefinido': '2FA redefinido', '2fa_codigos_novos': 'Novos códigos de recuperação', senha_troca: 'Troca de senha', senha_redefinida: 'Senha redefinida',
+    sessao_encerrada: 'Sessão encerrada', usuario_criado: 'Usuário criado', usuario_ativado: 'Usuário reativado', usuario_desativado: 'Usuário desativado',
+    animal_criado: 'Animal cadastrado', animal_editado: 'Animal editado', importacao: 'Importação ABCCMM', registro_excluido: 'Registro excluído',
+    protocolos_alterados: 'Protocolos alterados', protocolos_restaurados: 'Protocolos restaurados', parametro_alterado: 'Parametrização alterada',
+    haras_criado: 'Haras criado', haras_alterado: 'Haras alterado', atualizacao_solicitada: 'Atualização solicitada', atualizacao_concluida: 'Atualização concluída',
+    atualizacao_falhou: 'Atualização falhou', rollback_solicitado: 'Volta de versão solicitada', rollback_concluido: 'Volta de versão concluída',
+    backup_solicitado: 'Backup solicitado', backup_concluido: 'Backup concluído', backup_falhou: 'Backup falhou'
+  };
+  const GLOSSARIO = [
+    ['ABCCMM', 'Associação Brasileira dos Criadores do Cavalo Mangalarga Marchador, responsável pelo registro genealógico da raça.'],
+    ['Relatório de Plantel', 'PDF emitido pelo Sistema de Gestão ABCCMM com os animais de um associado. É a fonte da importação no Haras360.'],
+    ['Livro', 'Categoria em que o animal está inscrito no registro genealógico, por exemplo "MM6 - Definitivo Fechado Fêmea".'],
+    ['DNA VP', 'Exame de DNA com verificação de parentesco realizado. "Sem exame" gera pendência documental.'],
+    ['Bloqueado', 'Situação do animal na ABCCMM que impede alguns serviços até ser regularizada.'],
+    ['AIE', 'Anemia Infecciosa Equina. Exame com resultado negativo e dentro da validade é exigido para o trânsito (GTA).'],
+    ['Mormo', 'Doença bacteriana dos equídeos. O exame negativo é exigido para trânsito e eventos.'],
+    ['GTA', 'Guia de Trânsito Animal, documento obrigatório para transportar equídeos.'],
+    ['Primovacinação', 'Série inicial de doses de uma vacina. Se o reforço vencer além da tolerância, a série recomeça.'],
+    ['Reforço', 'Dose aplicada depois da série inicial, em geral anual ou semestral.'],
+    ['Desmama', 'Separação do potro da mãe, por volta dos 6 meses. Marca a 1ª dose de rinopneumonite.'],
+    ['Cobertura', 'Monta ou inseminação. Com o diagnóstico positivo, o sistema calcula a previsão de parto.'],
+    ['Vacina multivalente', 'Vacina que protege contra várias doenças em uma aplicação. No registro, marque todas as doenças cobertas.'],
+    ['2FA', 'Verificação em duas etapas: além da senha, um código de 6 dígitos do aplicativo autenticador do celular.']
+  ];
 
   /* ---------- leitura de PDF (Relatório de Plantel ABCCMM) ---------- */
   async function linhasPDF(file) {
@@ -533,6 +622,7 @@ const H = (function () {
     CATS, EVENTOS_REPRO, GESTACAO_DIAS, FAIXAS, LIMITE_ANIMAIS, STATUS_TXT, TIPOS_NOTIF,
     mensalidade,
     protocolo, animal, gestacao, tarefas, notificacoes, tituloRegistro, doseTxt,
+    ACOES_AUDIT, GLOSSARIO,
     linhasPDF, lerPlantel, compararImportacao, lerGenealogia, responder
   };
 })();
@@ -745,7 +835,61 @@ const UI = (function () {
       '<form id="chat-f"><input id="chat-q" class="inp" placeholder="Pergunte sobre vacinas, normas, gestação ou o plantel" autocomplete="off"><button class="btn pri" aria-label="Enviar">' + ICON.send + '</button></form></div>';
   }
 
-  return { ICON, toast, abrir, fechar, chipStatus, chipCat, linhaTarefa, linhaTempo, verFoto, formRegistro, lerRegistro, remFoto, preDeTarefa, chatHTML, comprimir, TOM, set onClose(f) { onClose = f; } };
+  /* ---------- barra superior com menus agrupados ---------- */
+  const CARET = '<svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+  const MARCA = '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M11 34V20a9 9 0 0 1 18 0v14"/><path d="M7 34h8M25 34h8"/><circle cx="14" cy="22" r="1.2" fill="currentColor"/><circle cx="26" cy="22" r="1.2" fill="currentColor"/><circle cx="16" cy="14.5" r="1.2" fill="currentColor"/><circle cx="24" cy="14.5" r="1.2" fill="currentColor"/></svg>';
+  function itemMenu(it, atual, cls) {
+    const sel = atual === it.id || (it.tambem || []).includes(atual);
+    if (it.href) return '<a class="' + cls + '" href="' + it.href + '" target="_blank" rel="noopener">' + esc(it.rotulo) + (it.desc ? '<small>' + esc(it.desc) + '</small>' : '') + '</a>';
+    if (it.off) return '<button class="' + cls + ' off" data-act="fora-plano" data-m="' + esc(it.rotulo) + '" title="Disponível em outro plano">' + esc(it.rotulo) + '<span class="tag">Plano</span></button>';
+    return '<button class="' + cls + '" data-act="nav" data-v="' + it.id + '"' + (sel ? ' aria-current="page"' : '') + '>' + (cls === 'di' && it.desc ? '<span>' + esc(it.rotulo) + '<small>' + esc(it.desc) + '</small></span>' : esc(it.rotulo)) + '</button>';
+  }
+  function topbar(o) {
+    const menu = o.menu.map((m, i) => {
+      if (!m.itens) return '<div>' + itemMenu(m, o.atual, 'mi') + '</div>';
+      const sel = m.itens.some(it => it.id === o.atual || (it.tambem || []).includes(o.atual));
+      const todosOff = m.itens.every(it => it.off);
+      return '<div><button class="mi' + (todosOff ? ' off' : '') + '" data-dd="g' + i + '" aria-expanded="false" aria-haspopup="true"' + (sel ? ' aria-current="page"' : '') + '>' + esc(m.grupo) + CARET + '</button>' +
+        '<div class="drop-m" id="dd-g' + i + '" hidden>' + m.itens.map(it => it.sep ? '<div class="dsep"></div>' : itemMenu(it, o.atual, 'di')).join('') + '</div></div>';
+    }).join('');
+    const ini = (o.usuario.nome || '?').split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
+    const userMenu = '<div class="drop-m" id="dd-user" hidden><div style="padding:8px 10px"><b>' + esc(o.usuario.nome) + '</b><small class="muted" style="display:block">' + esc(o.usuario.email) + '</small></div><div class="dsep"></div>' +
+      o.usuarioItens.map(it => '<button class="di" data-act="' + it.act + '">' + esc(it.rotulo) + '</button>').join('') + '<div class="dsep"></div><button class="di" data-act="sair">Sair</button></div>';
+    return '<div class="topbar-in"><a class="brand" href="' + o.home + '">' + MARCA + '<div><b>Haras360</b><small>' + esc(o.sub) + '</small></div></a>' +
+      '<nav class="menu" id="menu-principal" aria-label="Menu principal">' + menu + '</nav>' +
+      '<div class="tb-acts">' + (o.sino ? '<button class="tb-ic" data-act="nav" data-v="' + o.sino.view + '" aria-label="Notificações">' + ICON.bell + (o.sino.n ? '<span class="badge">' + o.sino.n + '</span>' : '') + '</button>' : '') +
+      '<div style="position:relative"><button class="userbtn" data-dd="user" aria-expanded="false" aria-haspopup="true"><span class="avatar">' + esc(ini) + '</span><span class="n">' + esc(o.usuario.nome.split(' ')[0]) + '<small>' + esc(o.perfilTxt) + '</small></span></button>' + userMenu + '</div>' +
+      '<button class="tb-ic hamb" data-act="hamb" aria-label="Abrir menu" aria-controls="menu-principal" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div></div>';
+  }
+  function fecharMenus(exceto) {
+    document.querySelectorAll('[data-dd][aria-expanded="true"]').forEach(b => { if (b !== exceto) { b.setAttribute('aria-expanded', 'false'); const d = document.getElementById('dd-' + b.dataset.dd); if (d) d.hidden = true; } });
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-dd]');
+    if (b) { const ab = b.getAttribute('aria-expanded') === 'true'; fecharMenus(b); b.setAttribute('aria-expanded', String(!ab)); const d = document.getElementById('dd-' + b.dataset.dd); if (d) d.hidden = ab; return; }
+    if (e.target.closest('[data-act="hamb"]')) { const m = document.getElementById('menu-principal'), h = e.target.closest('[data-act="hamb"]'); const ab = m.classList.toggle('aberto'); h.setAttribute('aria-expanded', String(ab)); return; }
+    if (!e.target.closest('.drop-m') || e.target.closest('[data-act]')) { fecharMenus(); const m = document.getElementById('menu-principal'); if (m && e.target.closest('[data-act="nav"]')) m.classList.remove('aberto'); }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharMenus(); });
+
+  /* confirmação na própria página: o primeiro clique arma, o segundo executa */
+  function confirmar(el, txt, fn) {
+    if (el.dataset.armed) { delete el.dataset.armed; fn(); return; }
+    el.dataset.armed = '1'; const old = el.innerHTML; el.innerHTML = txt; el.classList.add('danger');
+    setTimeout(() => { if (el.isConnected && el.dataset.armed) { delete el.dataset.armed; el.innerHTML = old; el.classList.remove('danger'); } }, 4000);
+  }
+
+  /* códigos de recuperação do 2FA: mostrados uma única vez */
+  function mostrarCodigos(codigos, titulo) {
+    abrir({ titulo: titulo || 'Códigos de recuperação', corpo: '<p>Guarde estes códigos em local seguro, fora do celular. Cada um permite entrar uma única vez se você perder o aplicativo autenticador.</p><div class="codigos mono" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;font-size:1rem;background:var(--surface-2);padding:14px;border-radius:8px">' + codigos.map(c => '<span>' + esc(c) + '</span>').join('') + '</div><p class="note warn">Estes códigos não serão mostrados de novo.</p>', rodape: '<button class="btn" data-act="copiar-codigos">Copiar</button><button class="btn pri" data-act="fechar">Já guardei</button>' });
+    mostrarCodigos.atual = codigos;
+  }
+  document.addEventListener('click', async e => {
+    if (!e.target.closest('[data-act="copiar-codigos"]')) return;
+    try { await navigator.clipboard.writeText((mostrarCodigos.atual || []).join('\n')); toast('Códigos copiados.'); } catch (err) { toast('Selecione os códigos e copie manualmente.'); }
+  });
+
+  return { ICON, toast, topbar, fecharMenus, confirmar, mostrarCodigos, abrir, fechar, chipStatus, chipCat, linhaTarefa, linhaTempo, verFoto, formRegistro, lerRegistro, remFoto, preDeTarefa, chatHTML, comprimir, TOM, set onClose(f) { onClose = f; } };
 })();
 
 </script>
@@ -768,7 +912,8 @@ const UI = (function () {
   const avisos = () => H.notificacoes(S).filter(n => n.tipo !== 'campo' && n.tipo !== 'documental');
   const naoLidos = () => avisos().filter(n => !S.lidas.includes(n.id)).length;
 
-  const NAV = [['hoje', 'Hoje', IC.home], ['animais', 'Animais', IC.horse], ['registrar', 'Registrar', IC.plus], ['avisos', 'Avisos', IC.bell], ['assistente', 'Assistente', IC.chat]];
+  const NAV_TODOS = [['hoje', 'Hoje', IC.home], ['animais', 'Animais', IC.horse], ['registrar', 'Registrar', IC.plus], ['avisos', 'Avisos', IC.bell], ['assistente', 'Assistente', IC.chat]];
+  const NAV = [];
   function go(v, p) { view = v; param = p || null; render(); window.scrollTo(0, 0); }
   function render() {
     const nl = naoLidos();
@@ -783,9 +928,9 @@ const UI = (function () {
   function vHoje() {
     const ts = H.tarefas(S).filter(t => !t.doc);
     const at = ts.filter(t => t.status === 'atrasado'), hj = ts.filter(t => t.status === 'hoje'), sm = ts.filter(t => t.status === 'semana');
-    const d = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const d0 = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }); const d = d0.charAt(0).toUpperCase() + d0.slice(1);
     const bloco = (tit, arr, vazio) => '<div class="card flush"><div class="card-h" style="padding:14px 16px 0"><h3>' + tit + '</h3><span class="small muted">' + arr.length + '</span></div><div class="tasks" style="padding:2px 16px 6px 0">' + (arr.length ? arr.map(t => UI.linhaTarefa(t)).join('') : '<div class="empty">' + vazio + '</div>') + '</div></div>';
-    return '<div class="sec"><div class="daybar"><div><div class="eyebrow">Tarefas do dia</div><h1 style="text-transform:capitalize">' + d + '</h1></div></div>' +
+    return '<div class="sec"><div class="daybar"><div><div class="eyebrow">Tarefas do dia</div><h1>' + d + '</h1></div></div>' +
       '<div class="cnt"><div class="late"><b>' + at.length + '</b><span>Atrasadas</span></div><div class="soon"><b>' + hj.length + '</b><span>Para hoje</span></div><div><b>' + sm.length + '</b><span>Próximos 7 dias</span></div></div>' +
       '<div class="quick"><button data-act="registrar">' + IC.check + '<span>Novo registro<small>Vacina, vermífugo, casco, exame</small></span></button><button data-act="ocorrencia">' + IC.alert + '<span>Registrar ocorrência<small>Algo diferente com um animal</small></span></button></div>' +
       bloco('Atrasadas', at, 'Nada atrasado. Bom trabalho.') + bloco('Para hoje', hj, 'Nada marcado para hoje.') + bloco('Próximos 7 dias', sm, 'Nada previsto para a semana.') + '</div>';
@@ -864,7 +1009,14 @@ const UI = (function () {
   });
   (async () => {
     $('#view').innerHTML = '<div class="empty">Carregando...</div>';
-    try { await recarregar(); render(); } catch (e) { $('#view').innerHTML = '<div class="note bad">' + esc(e.message) + '</div>'; }
+    try {
+      await recarregar();
+      NAV_TODOS.forEach(n => { if (n[0] !== 'assistente' || S.plano.modulos.assistente !== false) NAV.push(n); });
+      render();
+    } catch (e) {
+      if (/usuários de um haras/.test(e.message)) { location.href = '/admin'; return; }
+      $('#view').innerHTML = '<div class="note bad">' + esc(e.message) + '</div>';
+    }
   })();
 })();
 </script>

@@ -8,6 +8,7 @@ import math
 from datetime import date, timedelta
 
 GESTACAO_DIAS = 340
+TOLERANCIA_REINICIO = 15
 
 CATS = {
     "vacina": "Vacinação",
@@ -135,7 +136,7 @@ def reforco_dias(haras, p):
     return p["reforcoDias"]
 
 
-def gestacao(animal, registros):
+def gestacao(animal, registros, dias_gestacao=GESTACAO_DIAS):
     if not animal or animal.get("sexo") != "F":
         return None
     ev = _por_data([r for r in registros if r["animalId"] == animal["id"] and r["tipo"] == "reprodutivo" and r.get("evento")])
@@ -149,9 +150,9 @@ def gestacao(animal, registros):
         return None
     g["dias"] = dias(g["cobertura"], hoje())
     g["mes"] = math.floor(g["dias"] / 30.44) + 1
-    g["parto"] = iso(add_dias(g["cobertura"], GESTACAO_DIAS))
+    g["parto"] = iso(add_dias(g["cobertura"], dias_gestacao))
     g["faltam"] = dias(hoje(), g["parto"])
-    g["pct"] = max(0, min(100, math.floor(g["dias"] / GESTACAO_DIAS * 100 + 0.5)))
+    g["pct"] = max(0, min(100, math.floor(g["dias"] / dias_gestacao * 100 + 0.5)))
     return g
 
 
@@ -208,7 +209,7 @@ def proxima_etapa(haras, animal, p, registros):
                 if m12 > d(last["data"]) and m12 < due:
                     due = m12
                     nota = "Primeiro reforço aos 12 meses de idade, após a primovacinação"
-            if p["cat"] == "vacina" and dias(due, hoje()) > 15:
+            if p["cat"] == "vacina" and dias(due, hoje()) > haras.get("toleranciaReinicio", TOLERANCIA_REINICIO):
                 nota = f"Reforço vencido há {dias(due, hoje())} dias. O protocolo indica reiniciar a primovacinação"
                 etapa = "Reiniciar primovacinação"
                 dose = 1
@@ -216,13 +217,14 @@ def proxima_etapa(haras, animal, p, registros):
 
 
 def tarefas(haras, animais, registros, prots, animal_id=None):
+    dg = haras.get("gestacaoDias", GESTACAO_DIAS)
     out = []
     for a in animais:
         if not a.get("vivo"):
             continue
         if animal_id and a["id"] != animal_id:
             continue
-        g = gestacao(a, registros)
+        g = gestacao(a, registros, dg)
         for p in prots:
             if not p.get("ativo"):
                 continue
@@ -241,7 +243,7 @@ def tarefas(haras, animais, registros, prots, animal_id=None):
                     if any(abs(dias(r["data"], dt)) <= 20 for r in regs):
                         continue
                     out.append({"id": f"{a['id']}:rino-g{m}", "animalId": a["id"], "animal": a["nome"], "protocoloId": "rino", "cat": "vacina", "titulo": "Rinopneumonite", "etapa": f"Gestante, {m}º mês", "nota": "Protocolo de éguas gestantes (5º, 7º e 9º mês)", "dose": "reforco", "due": iso(dt)})
-            nota = f"Cobertura em {br(g['cobertura'])}" + (f" com {g['garanhao']}" if g["garanhao"] else "") + f". Estimativa de {GESTACAO_DIAS} dias"
+            nota = f"Cobertura em {br(g['cobertura'])}" + (f" com {g['garanhao']}" if g["garanhao"] else "") + f". Estimativa de {dg} dias"
             out.append({"id": f"{a['id']}:parto", "animalId": a["id"], "animal": a["nome"], "protocoloId": None, "cat": "reprodutivo", "titulo": "Previsão de parto", "etapa": f"{g['mes']}º mês de gestação", "nota": nota, "dose": None, "due": g["parto"], "parto": True})
         t = iso(hoje())
         base = {"animalId": a["id"], "animal": a["nome"], "cat": "documental", "etapa": "Documentação", "due": t, "doc": True}
@@ -303,7 +305,7 @@ def notificacoes(haras, animais, registros, prots, ts=None):
 def resumo_registro(haras, animais, registros, prots, r):
     a = next((x for x in animais if x["id"] == r["animalId"]), None)
     if r["tipo"] == "reprodutivo" and r.get("evento") == "Diagnóstico positivo":
-        g = gestacao(a, registros)
+        g = gestacao(a, registros, haras.get("gestacaoDias", GESTACAO_DIAS))
         if g:
             return f"Gestação registrada. Parto previsto para {br(g['parto'])} e doses de rinopneumonite no 5º, 7º e 9º mês agendadas."
     p = _protocolo(prots, r["protocolos"][0]) if r.get("protocolos") else None

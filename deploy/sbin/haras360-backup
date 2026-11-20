@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# Backup do ambiente inteiro do Haras360: banco, fotos, configuração, chaves, serviços,
+# pacote da versão em uso e o instalador. Cópia local por 7 dias e envio ao bucket da OCI.
+# Uso: sudo haras360-backup
+#   H360_SEM_ENVIO=1  não envia ao bucket (backup antes de atualizar)
+set -euo pipefail
+. /usr/local/lib/haras360/comum.sh
+exige_root
+if [ -z "${H360_SEM_LOCK:-}" ]; then exec 8>/run/haras360-backup.lock; flock -n 8 || falha "Já existe um backup em andamento."; fi
+
+QUANDO="$(date +%Y%m%d-%H%M%S)"
+NOME="haras360-backup-$QUANDO"
+TMP="$(mktemp -d /var/tmp/haras360-backup.XXXXXX)"
+trap 'rm -rf "$TMP"' EXIT
+D="$TMP/$NOME"; install -d -m 700 "$D"
+VERSAO="$(versao_atual)"
+DB_NAME="$(grep -E '^H360_DB_NOME=' "$H360_ETC/haras360.env" | cut -d= -f2)"; DB_NAME="${DB_NAME:-haras360}"
+
+info "Exportando o banco $DB_NAME"
+mysqldump --single-transaction --quick --routines --default-character-set=utf8mb4 "$DB_NAME" | gzip -6 > "$D/banco.sql.gz"
+info "Copiando fotos"
+tar -czf "$D/fotos.tar.gz" -C "$H360_COMP" fotos 2>/dev/null || tar -czf "$D/fotos.tar.gz" --files-from /dev/null
+info "Copiando configuração, chaves e serviços"
+install -d "$D/config/etc-haras360" "$D/config/systemd" "$D/config/caddy" "$D/config/mariadb"
+cp -a "$H360_ETC/." "$D/config/etc-haras360/"
+cp -a /etc/systemd/system/haras360* "$D/config/systemd/" 2>/dev/null || true
+cp -a /etc/caddy/Caddyfile "$D/config/caddy/" 2>/dev/null || true
+cp -a /etc/mysql/mariadb.conf.d/90-haras360.cnf "$D/config/mariadb/" 2>/dev/null || true
+if [ -n "$VERSAO" ] && [ -f "$H360_PACOTES/haras360-$VERSAO.tar.gz" ]; then
+  cp "$H360_PACOTES/haras360-$VERSAO.tar.gz"* "$D/"
+fi
+if [ -n "$VERSAO" ]; then
+  cp "$H360_RELEASES/$VERSAO/deploy/instalar-servidor.sh" "$H360_RELEASES/$VERSAO/deploy/restaurar-servidor.sh" "$D/" 2>/dev/null || true
+fi
+cat > "$D/LEIA-ME.txt" <<TXT
+Backup do Haras360 gerado em $(date '+%d/%m/%Y %H:%M') no servidor $(hostname), versão $VERSAO.
+Contém senhas e chaves do servidor: guarde apenas em local privado.
+
+Para reconstruir em uma VM nova (Ubuntu):
+  tar xzf $NOME.tar.gz
+  cd $NOME
+  sudo ./restaurar-servidor.sh .
+TXT
+
+install -d -m 700 "$H360_BACKUPS"
+ARQ="$H360_BACKUPS/$NOME.tar.gz"
+tar -czf "$ARQ" -C "$TMP" "$NOME"
+chmod 600 "$ARQ"
+TAM="$(du -h "$ARQ" | cut -f1)"
+info "Backup local: $ARQ ($TAM)"
+find "$H360_BACKUPS" -maxdepth 1 -name 'haras360-backup-*.tar.gz' -mtime +7 -delete
+
+OCI="desativado"; MSG="Backup local concluído."
+if [ -z "${H360_SEM_ENVIO:-}" ] && [ -f "$H360_ETC/backup.env" ]; then
+  OCI_PAR_URL="$(grep -E '^OCI_PAR_URL=' "$H360_ETC/backup.env" | cut -d= -f2-)"
+  if [ -n "$OCI_PAR_URL" ]; then
+    info "Enviando ao bucket da OCI"
+    if curl -fsS --retry 3 --retry-delay 10 --max-time 1800 -X PUT -T "$ARQ" "${OCI_PAR_URL%/}/$NOME.tar.gz" -o /dev/null; then
+      OCI="enviado"; MSG="Backup enviado ao bucket da OCI."
+    else
+      OCI="falhou"; MSG="Backup local concluído, mas o envio ao bucket da OCI falhou. Confira o link pré-autenticado (sudo haras360-configurar-backup)."
+      aviso "$MSG"
+    fi
+  fi
+fi
+[ -n "${H360_SEM_ENVIO:-}" ] && MSG="Backup local antes da atualização."
+
+python3 - "$H360_BACKUPS/ultimo.json" "$NOME.tar.gz" "$TAM" "$OCI" "$MSG" "$VERSAO" <<'PY'
+import json, sys, datetime, os
+c, arq, tam, oci, msg, ver = sys.argv[1:]
+json.dump({"quando": datetime.datetime.now().isoformat(timespec="seconds"), "arquivo": arq, "tamanho": tam, "oci": oci, "mensagem": msg, "versao": ver},
+          open(c, "w", encoding="utf-8"), ensure_ascii=False)
+os.chmod(c, 0o644)
+PY
+chmod 711 "$H360_BACKUPS"
+if [ "$OCI" = "falhou" ]; then auditar backup_falhou "$NOME.tar.gz ($TAM): envio OCI falhou" falha; exit 1; fi
+auditar backup_concluido "$NOME.tar.gz ($TAM), OCI: $OCI"

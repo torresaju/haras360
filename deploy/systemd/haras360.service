@@ -1,0 +1,34 @@
+[Unit]
+Description=Haras360 (API e portais)
+After=network-online.target mariadb.service
+Wants=network-online.target
+Requires=mariadb.service
+
+[Service]
+Type=simple
+User=haras360
+Group=haras360
+EnvironmentFile=/etc/haras360/haras360.env
+WorkingDirectory=/opt/haras360/atual/backend
+ExecStart=/bin/sh -c 'exec /opt/haras360/atual/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port "${H360_PORTA_APP:-8000}" --workers 1 --no-server-header --timeout-keep-alive 15'
+Restart=always
+RestartSec=3
+MemoryMax=350M
+MemoryHigh=300M
+TasksMax=200
+# Endurecimento: só a pasta compartilhada é gravável
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/haras360/compartilhado
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

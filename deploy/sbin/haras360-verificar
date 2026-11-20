@@ -1,0 +1,115 @@
+#!/usr/bin/python3
+"""Confere e extrai com segurança um pacote do Haras360.
+
+Uso: haras360-verificar <pacote.tar.gz> <pacote.tar.gz.sig> <chave-publica.pem> <destino>
+
+1. O nome do arquivo precisa ser haras360-X.Y.Z.tar.gz.
+2. A assinatura Ed25519 cobre "haras360-pacote|<nome>|<sha256>" e é conferida com a
+   chave pública guardada no servidor (nunca com uma chave vinda no próprio pacote).
+3. A extração recusa caminhos absolutos, "..", links e arquivos especiais, e confere
+   cada arquivo contra o manifesto SHA256SUMS de dentro do pacote.
+Imprime a versão em caso de sucesso. Qualquer falha sai com código 1.
+"""
+import base64
+import hashlib
+import json
+import os
+import re
+import sys
+import tarfile
+
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
+
+NOME = re.compile(r"^haras360-(\d+\.\d+\.\d+)\.tar\.gz$")
+
+
+def sair(msg):
+    print(f"erro: {msg}", file=sys.stderr)
+    sys.exit(1)
+
+
+def sha256(caminho):
+    h = hashlib.sha256()
+    with open(caminho, "rb") as f:
+        for bloco in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(bloco)
+    return h.hexdigest()
+
+
+def main():
+    if len(sys.argv) != 5:
+        sair("uso: haras360-verificar <pacote> <assinatura> <chave-publica> <destino>")
+    pacote, assinatura, chave, destino = sys.argv[1:]
+    nome = os.path.basename(pacote)
+    m = NOME.match(nome)
+    if not m:
+        sair("o pacote precisa se chamar haras360-X.Y.Z.tar.gz")
+    versao = m.group(1)
+    try:
+        sig = json.load(open(assinatura, encoding="utf-8"))
+    except (OSError, ValueError):
+        sair("arquivo de assinatura ilegível")
+    calc = sha256(pacote)
+    if sig.get("arquivo") != nome:
+        sair(f"a assinatura é do arquivo {sig.get('arquivo')!r}, não de {nome}")
+    if sig.get("sha256") != calc:
+        sair("o SHA-256 do pacote não confere com o assinado (arquivo alterado ou corrompido)")
+    try:
+        pub = load_pem_public_key(open(chave, "rb").read())
+        pub.verify(base64.b64decode(sig["assinatura"]), f"haras360-pacote|{nome}|{calc}".encode())
+    except InvalidSignature:
+        sair("assinatura inválida: o pacote não foi assinado com a chave deste servidor")
+    except (OSError, ValueError, KeyError) as e:
+        sair(f"não foi possível conferir a assinatura: {e}")
+
+    raiz = f"haras360-{versao}/"
+    os.makedirs(destino, exist_ok=False)
+    with tarfile.open(pacote, "r:gz") as tar:
+        membros = tar.getmembers()
+        for t in membros:
+            n = t.name
+            if n.startswith("/") or ".." in n.split("/") or not (n + "/").startswith(raiz):
+                sair(f"caminho não permitido no pacote: {n}")
+            if not (t.isfile() or t.isdir()):
+                sair(f"tipo de arquivo não permitido no pacote: {n}")
+        for t in membros:
+            rel = t.name[len(raiz):]
+            if not rel:
+                continue
+            alvo = os.path.join(destino, rel)
+            if t.isdir():
+                os.makedirs(alvo, mode=0o755, exist_ok=True)
+                continue
+            os.makedirs(os.path.dirname(alvo), mode=0o755, exist_ok=True)
+            with tar.extractfile(t) as src, open(alvo, "wb") as dst:
+                for bloco in iter(lambda: src.read(1024 * 1024), b""):
+                    dst.write(bloco)
+            os.chmod(alvo, 0o755 if t.mode & 0o111 else 0o644)
+
+    manifesto = os.path.join(destino, "SHA256SUMS")
+    if not os.path.exists(manifesto):
+        sair("pacote sem manifesto SHA256SUMS")
+    listados = set()
+    for linha in open(manifesto, encoding="utf-8"):
+        linha = linha.strip()
+        if not linha:
+            continue
+        h, rel = linha.split(None, 1)
+        rel = rel.lstrip("*")
+        listados.add(rel)
+        if sha256(os.path.join(destino, rel)) != h:
+            sair(f"arquivo diferente do manifesto: {rel}")
+    for pasta, _dirs, arqs in os.walk(destino):
+        for a in arqs:
+            rel = os.path.relpath(os.path.join(pasta, a), destino)
+            if rel != "SHA256SUMS" and rel not in listados:
+                sair(f"arquivo fora do manifesto: {rel}")
+    v = open(os.path.join(destino, "VERSION"), encoding="utf-8").read().strip()
+    if v != versao:
+        sair(f"o arquivo VERSION diz {v}, mas o pacote é {versao}")
+    print(versao)
+
+
+if __name__ == "__main__":
+    main()

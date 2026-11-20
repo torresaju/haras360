@@ -204,5 +204,59 @@ const UI = (function () {
       '<form id="chat-f"><input id="chat-q" class="inp" placeholder="Pergunte sobre vacinas, normas, gestação ou o plantel" autocomplete="off"><button class="btn pri" aria-label="Enviar">' + ICON.send + '</button></form></div>';
   }
 
-  return { ICON, toast, abrir, fechar, chipStatus, chipCat, linhaTarefa, linhaTempo, verFoto, formRegistro, lerRegistro, remFoto, preDeTarefa, chatHTML, comprimir, TOM, set onClose(f) { onClose = f; } };
+  /* ---------- barra superior com menus agrupados ---------- */
+  const CARET = '<svg class="caret" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+  const MARCA = '<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M11 34V20a9 9 0 0 1 18 0v14"/><path d="M7 34h8M25 34h8"/><circle cx="14" cy="22" r="1.2" fill="currentColor"/><circle cx="26" cy="22" r="1.2" fill="currentColor"/><circle cx="16" cy="14.5" r="1.2" fill="currentColor"/><circle cx="24" cy="14.5" r="1.2" fill="currentColor"/></svg>';
+  function itemMenu(it, atual, cls) {
+    const sel = atual === it.id || (it.tambem || []).includes(atual);
+    if (it.href) return '<a class="' + cls + '" href="' + it.href + '" target="_blank" rel="noopener">' + esc(it.rotulo) + (it.desc ? '<small>' + esc(it.desc) + '</small>' : '') + '</a>';
+    if (it.off) return '<button class="' + cls + ' off" data-act="fora-plano" data-m="' + esc(it.rotulo) + '" title="Disponível em outro plano">' + esc(it.rotulo) + '<span class="tag">Plano</span></button>';
+    return '<button class="' + cls + '" data-act="nav" data-v="' + it.id + '"' + (sel ? ' aria-current="page"' : '') + '>' + (cls === 'di' && it.desc ? '<span>' + esc(it.rotulo) + '<small>' + esc(it.desc) + '</small></span>' : esc(it.rotulo)) + '</button>';
+  }
+  function topbar(o) {
+    const menu = o.menu.map((m, i) => {
+      if (!m.itens) return '<div>' + itemMenu(m, o.atual, 'mi') + '</div>';
+      const sel = m.itens.some(it => it.id === o.atual || (it.tambem || []).includes(o.atual));
+      const todosOff = m.itens.every(it => it.off);
+      return '<div><button class="mi' + (todosOff ? ' off' : '') + '" data-dd="g' + i + '" aria-expanded="false" aria-haspopup="true"' + (sel ? ' aria-current="page"' : '') + '>' + esc(m.grupo) + CARET + '</button>' +
+        '<div class="drop-m" id="dd-g' + i + '" hidden>' + m.itens.map(it => it.sep ? '<div class="dsep"></div>' : itemMenu(it, o.atual, 'di')).join('') + '</div></div>';
+    }).join('');
+    const ini = (o.usuario.nome || '?').split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
+    const userMenu = '<div class="drop-m" id="dd-user" hidden><div style="padding:8px 10px"><b>' + esc(o.usuario.nome) + '</b><small class="muted" style="display:block">' + esc(o.usuario.email) + '</small></div><div class="dsep"></div>' +
+      o.usuarioItens.map(it => '<button class="di" data-act="' + it.act + '">' + esc(it.rotulo) + '</button>').join('') + '<div class="dsep"></div><button class="di" data-act="sair">Sair</button></div>';
+    return '<div class="topbar-in"><a class="brand" href="' + o.home + '">' + MARCA + '<div><b>Haras360</b><small>' + esc(o.sub) + '</small></div></a>' +
+      '<nav class="menu" id="menu-principal" aria-label="Menu principal">' + menu + '</nav>' +
+      '<div class="tb-acts">' + (o.sino ? '<button class="tb-ic" data-act="nav" data-v="' + o.sino.view + '" aria-label="Notificações">' + ICON.bell + (o.sino.n ? '<span class="badge">' + o.sino.n + '</span>' : '') + '</button>' : '') +
+      '<div style="position:relative"><button class="userbtn" data-dd="user" aria-expanded="false" aria-haspopup="true"><span class="avatar">' + esc(ini) + '</span><span class="n">' + esc(o.usuario.nome.split(' ')[0]) + '<small>' + esc(o.perfilTxt) + '</small></span></button>' + userMenu + '</div>' +
+      '<button class="tb-ic hamb" data-act="hamb" aria-label="Abrir menu" aria-controls="menu-principal" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div></div>';
+  }
+  function fecharMenus(exceto) {
+    document.querySelectorAll('[data-dd][aria-expanded="true"]').forEach(b => { if (b !== exceto) { b.setAttribute('aria-expanded', 'false'); const d = document.getElementById('dd-' + b.dataset.dd); if (d) d.hidden = true; } });
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-dd]');
+    if (b) { const ab = b.getAttribute('aria-expanded') === 'true'; fecharMenus(b); b.setAttribute('aria-expanded', String(!ab)); const d = document.getElementById('dd-' + b.dataset.dd); if (d) d.hidden = ab; return; }
+    if (e.target.closest('[data-act="hamb"]')) { const m = document.getElementById('menu-principal'), h = e.target.closest('[data-act="hamb"]'); const ab = m.classList.toggle('aberto'); h.setAttribute('aria-expanded', String(ab)); return; }
+    if (!e.target.closest('.drop-m') || e.target.closest('[data-act]')) { fecharMenus(); const m = document.getElementById('menu-principal'); if (m && e.target.closest('[data-act="nav"]')) m.classList.remove('aberto'); }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharMenus(); });
+
+  /* confirmação na própria página: o primeiro clique arma, o segundo executa */
+  function confirmar(el, txt, fn) {
+    if (el.dataset.armed) { delete el.dataset.armed; fn(); return; }
+    el.dataset.armed = '1'; const old = el.innerHTML; el.innerHTML = txt; el.classList.add('danger');
+    setTimeout(() => { if (el.isConnected && el.dataset.armed) { delete el.dataset.armed; el.innerHTML = old; el.classList.remove('danger'); } }, 4000);
+  }
+
+  /* códigos de recuperação do 2FA: mostrados uma única vez */
+  function mostrarCodigos(codigos, titulo) {
+    abrir({ titulo: titulo || 'Códigos de recuperação', corpo: '<p>Guarde estes códigos em local seguro, fora do celular. Cada um permite entrar uma única vez se você perder o aplicativo autenticador.</p><div class="codigos mono" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;font-size:1rem;background:var(--surface-2);padding:14px;border-radius:8px">' + codigos.map(c => '<span>' + esc(c) + '</span>').join('') + '</div><p class="note warn">Estes códigos não serão mostrados de novo.</p>', rodape: '<button class="btn" data-act="copiar-codigos">Copiar</button><button class="btn pri" data-act="fechar">Já guardei</button>' });
+    mostrarCodigos.atual = codigos;
+  }
+  document.addEventListener('click', async e => {
+    if (!e.target.closest('[data-act="copiar-codigos"]')) return;
+    try { await navigator.clipboard.writeText((mostrarCodigos.atual || []).join('\n')); toast('Códigos copiados.'); } catch (err) { toast('Selecione os códigos e copie manualmente.'); }
+  });
+
+  return { ICON, toast, topbar, fecharMenus, confirmar, mostrarCodigos, abrir, fechar, chipStatus, chipCat, linhaTarefa, linhaTempo, verFoto, formRegistro, lerRegistro, remFoto, preDeTarefa, chatHTML, comprimir, TOM, set onClose(f) { onClose = f; } };
 })();

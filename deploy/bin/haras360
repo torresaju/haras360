@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Comandos de administração do Haras360. Exemplos:
+#   sudo haras360 listar
+#   sudo haras360 redefinir-senha --email gestor@exemplo.com
+#   sudo haras360 redefinir-2fa --email gestor@exemplo.com
+#   sudo haras360 criar-haras
+set -euo pipefail
+[ "$(id -u)" -eq 0 ] || { echo "Use: sudo haras360 $*" >&2; exit 1; }
+. /usr/local/lib/haras360/comum.sh
+cli_app "$@"

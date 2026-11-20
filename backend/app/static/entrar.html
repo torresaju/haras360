@@ -197,7 +197,62 @@ textarea.inp{min-height:84px;resize:vertical}
 }
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
+/* ---------- barra superior com menus agrupados (gestor e administrador) ---------- */
 :root{--forest-accent:#e3ab6c}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--forest);color:var(--forest-ink);padding-inline:clamp(16px,3vw,32px)}
+.topbar-in{display:flex;align-items:center;gap:18px;min-height:60px;max-width:1400px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;flex:none}
+.brand svg{width:30px;height:30px;flex:none;color:var(--forest-accent)}
+.brand b{font-family:var(--f-display);font-size:1.3rem;font-weight:700;display:block;line-height:1}
+.brand small{display:block;font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--forest-muted);margin-top:2px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.menu{display:flex;align-items:center;gap:2px;margin-left:auto}
+.menu>li,.menu>div{list-style:none;position:relative}
+.mi{display:flex;align-items:center;gap:6px;border:0;background:none;color:var(--forest-muted);padding:8px 11px;border-radius:7px;cursor:pointer;font-weight:600;font-size:.9rem;white-space:nowrap;text-decoration:none}
+.mi:hover,.mi[aria-expanded="true"]{color:var(--forest-ink);background:var(--forest-2)}
+.mi[aria-current="page"]{color:var(--forest-ink);box-shadow:inset 0 -2px 0 var(--forest-accent);border-radius:7px 7px 0 0}
+.mi .caret{width:10px;height:10px;opacity:.7}
+.mi.off{opacity:.45}
+.drop-m{position:absolute;right:0;top:calc(100% + 6px);min-width:230px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:6px;display:flex;flex-direction:column;gap:2px;z-index:50}
+.menu>div:not(:last-child) .drop-m{right:auto;left:0}
+.di{display:flex;align-items:center;gap:10px;border:0;background:none;color:var(--ink);padding:9px 10px;border-radius:7px;cursor:pointer;font-size:.9rem;text-align:left;text-decoration:none;width:100%}
+.di:hover{background:var(--surface-2)}
+.di[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.di.off{color:var(--muted)}
+.di .tag{margin-left:auto;font-size:.68rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:1px 7px}
+.di small{display:block;color:var(--muted);font-size:.78rem}
+.dsep{height:1px;background:var(--line-2);margin:4px 2px}
+.tb-acts{display:flex;align-items:center;gap:6px;flex:none}
+.tb-ic{position:relative;border:0;background:none;color:var(--forest-ink);width:38px;height:38px;border-radius:8px;display:grid;place-items:center;cursor:pointer}
+.tb-ic:hover{background:var(--forest-2)}
+.tb-ic svg{width:20px;height:20px}
+.tb-ic .badge{position:absolute;top:2px;right:0;margin:0}
+.badge{background:var(--late);color:#fff;font-size:.68rem;font-weight:700;padding:1px 6px;border-radius:99px;font-variant-numeric:tabular-nums}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--forest-accent);color:var(--forest);display:grid;place-items:center;font-weight:700;font-size:.78rem;flex:none}
+.userbtn{display:flex;align-items:center;gap:9px;border:0;background:none;color:var(--forest-ink);padding:4px 8px 4px 4px;border-radius:99px;cursor:pointer;text-align:left}
+.userbtn:hover,.userbtn[aria-expanded="true"]{background:var(--forest-2)}
+.userbtn span.n{font-size:.86rem;font-weight:600;line-height:1.15}
+.userbtn span.n small{display:block;font-weight:500;color:var(--forest-muted);font-size:.74rem}
+.hamb{display:none}
+.pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.pagehead .acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+main.wrapm{padding-inline:clamp(16px,3vw,32px);padding-block:24px 72px;max-width:1400px;margin:0 auto;min-width:0}
+.off-note{display:flex;gap:10px;align-items:flex-start}
+@media (max-width:980px){
+  .hamb{display:grid}
+  .menu{display:none;position:absolute;left:0;right:0;top:100%;background:var(--forest);flex-direction:column;align-items:stretch;padding:8px 16px 16px;gap:2px;max-height:calc(100dvh - 60px);overflow-y:auto;box-shadow:0 12px 24px rgba(0,0,0,.25)}
+  .menu.aberto{display:flex}
+  .menu>div{width:100%}
+  .mi{width:100%;justify-content:space-between;padding:11px 10px}
+  .mi[aria-current="page"]{box-shadow:inset 3px 0 0 var(--forest-accent);border-radius:7px}
+  .drop-m{position:static;box-shadow:none;border:0;background:var(--forest-2);margin:2px 0 6px;min-width:0}
+  .drop-m .di{color:var(--forest-ink)}
+  .drop-m .di:hover{background:var(--forest)}
+  .drop-m .di[aria-current="page"]{background:var(--forest);color:var(--forest-accent)}
+  .drop-m .di small,.drop-m .di .tag{color:var(--forest-muted);border-color:var(--forest-muted)}
+  .userbtn span.n{display:none}
+  .topbar-in{gap:10px}
+}
+
 body{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .lado{background:var(--forest);color:var(--forest-ink);padding:48px clamp(24px,5vw,72px);display:flex;flex-direction:column;justify-content:space-between;gap:40px}
 .lado svg{width:46px;height:46px;color:var(--forest-accent)}
@@ -205,10 +260,17 @@ body{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,
 .lado p{color:var(--forest-muted);max-width:42ch;margin-top:14px}
 .lado ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;color:var(--forest-muted);font-size:.92rem}
 .lado li::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--forest-accent);margin-right:10px;vertical-align:middle}
+.lado .rodape{font-size:.78rem;color:var(--forest-muted)}
 .form{display:flex;align-items:center;justify-content:center;padding:48px 16px}
-.form form{width:min(380px,100%);display:flex;flex-direction:column;gap:16px}
+.passo{width:min(400px,100%);display:flex;flex-direction:column;gap:16px}
 .form h2{font-size:1.6rem}
-@media (max-width:800px){body{grid-template-columns:minmax(0,1fr)}.lado{padding:28px 20px;gap:12px}.lado h1{font-size:1.6rem;margin-top:14px}.lado ul{display:none}}
+.cod{font-family:var(--f-mono);font-size:1.5rem;letter-spacing:.3em;text-align:center}
+.qr{display:flex;justify-content:center;background:#fff;border-radius:10px;padding:10px;border:1px solid var(--line)}
+.qr svg{width:200px;height:200px}
+.segredo{font-family:var(--f-mono);font-size:.86rem;word-break:break-all;background:var(--surface-2);padding:8px 10px;border-radius:6px;user-select:all}
+ol.passos{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+.linkbtn{border:0;background:none;color:var(--accent);cursor:pointer;padding:0;font-size:.88rem;text-align:left;text-decoration:underline}
+@media (max-width:800px){body{grid-template-columns:minmax(0,1fr)}.lado{padding:28px 20px;gap:12px}.lado h1{font-size:1.6rem;margin-top:14px}.lado ul,.lado .rodape{display:none}}
 </style>
 </head>
 <body>
@@ -220,38 +282,129 @@ body{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,
     <p>Prontuário, agenda sanitária e plantel do seu haras em um só lugar, do escritório ao piquete.</p>
   </div>
   <ul><li>Importação do Relatório de Plantel ABCCMM</li><li>Vacinas, vermífugos e cascos agendados automaticamente</li><li>Gestor e caseiro trabalhando no mesmo histórico</li></ul>
+  <p class="rodape">Acesso protegido. Gestores usam verificação em duas etapas.</p>
 </section>
 <main class="form">
-  <form id="f" novalidate>
+  <!-- 1. senha -->
+  <form id="p-senha" class="passo" novalidate>
     <div><div class="eyebrow">Acesso</div><h2>Entrar</h2></div>
     <div class="field"><label for="email">E-mail</label><input id="email" type="email" class="inp" autocomplete="username" required></div>
     <div class="field"><label for="senha">Senha</label><input id="senha" type="password" class="inp" autocomplete="current-password" required></div>
-    <p id="erro" class="note bad" hidden></p>
-    <button class="btn pri" id="ok" style="justify-content:center;padding-block:11px">Entrar</button>
+    <p class="note bad erro" hidden></p>
+    <button class="btn pri" style="justify-content:center;padding-block:11px">Entrar</button>
     <p class="small muted">Esqueceu a senha? Peça ao gestor do haras para redefinir.</p>
   </form>
+
+  <!-- 2. código do aplicativo autenticador -->
+  <form id="p-2fa" class="passo" novalidate hidden>
+    <div><div class="eyebrow">Verificação em duas etapas</div><h2>Código do autenticador</h2></div>
+    <p class="muted">Abra o aplicativo autenticador do celular e digite o código de 6 dígitos do Haras360.</p>
+    <div class="field"><label for="codigo">Código</label><input id="codigo" class="inp cod" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*"></div>
+    <div class="field" id="rec-box" hidden><label for="rec">Código de recuperação</label><input id="rec" class="inp mono" autocomplete="off" placeholder="xxxx-xxxx-xxxx"></div>
+    <p class="note bad erro" hidden></p>
+    <button class="btn pri" style="justify-content:center;padding-block:11px">Confirmar</button>
+    <button type="button" class="linkbtn" id="usar-rec">Perdi o celular: usar código de recuperação</button>
+    <button type="button" class="linkbtn" data-voltar>Voltar</button>
+  </form>
+
+  <!-- 3. cadastro do 2FA no primeiro acesso -->
+  <form id="p-cad" class="passo" novalidate hidden>
+    <div><div class="eyebrow">Primeiro acesso</div><h2>Ative a verificação em duas etapas</h2></div>
+    <ol class="passos">
+      <li>Instale um aplicativo autenticador no celular (Google Authenticator, Microsoft Authenticator ou Authy).</li>
+      <li>No aplicativo, toque em adicionar e leia o QR Code abaixo.</li>
+      <li>Digite o código de 6 dígitos que aparecer.</li>
+    </ol>
+    <div class="qr" id="qr"></div>
+    <details><summary class="small">Não consigo ler o QR Code</summary><p class="small muted" style="margin:6px 0">Digite esta chave no aplicativo (tipo: baseada em tempo):</p><div class="segredo" id="segredo"></div></details>
+    <div class="field"><label for="codigo-cad">Código de 6 dígitos</label><input id="codigo-cad" class="inp cod" inputmode="numeric" autocomplete="one-time-code" maxlength="6"></div>
+    <p class="note bad erro" hidden></p>
+    <button class="btn pri" style="justify-content:center;padding-block:11px">Ativar e entrar</button>
+    <button type="button" class="linkbtn" data-voltar>Voltar</button>
+  </form>
+
+  <!-- 4. códigos de recuperação -->
+  <div id="p-codigos" class="passo" hidden>
+    <div><div class="eyebrow">Verificação ativada</div><h2>Guarde seus códigos de recuperação</h2></div>
+    <p>Cada código permite entrar uma única vez se você perder o celular. Guarde em local seguro, fora do celular. Eles não serão mostrados de novo.</p>
+    <div class="mono" id="lista-codigos" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;font-size:1rem;background:var(--surface-2);padding:14px;border-radius:8px"></div>
+    <div class="row"><button type="button" class="btn" id="copiar">Copiar</button><button type="button" class="btn pri" id="continuar">Já guardei, continuar</button></div>
+  </div>
 </main>
 <script>
 (function () {
-  const f = document.getElementById('f'), erro = document.getElementById('erro'), ok = document.getElementById('ok');
+  const $ = s => document.querySelector(s);
+  const passos = ['p-senha', 'p-2fa', 'p-cad', 'p-codigos'];
   const volta = new URLSearchParams(location.search).get('volta') || '';
-  const destino = perfil => perfil === 'gestor' ? (volta === '/campo' ? '/campo' : '/gestor') : '/campo';
-  fetch('/api/me', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(u => { if (u) location.href = destino(u.perfil); }).catch(() => { });
-  f.addEventListener('submit', async e => {
-    e.preventDefault(); erro.hidden = true;
-    const email = document.getElementById('email').value.trim(), senha = document.getElementById('senha').value;
-    if (!email || !senha) { erro.textContent = 'Informe e-mail e senha.'; erro.hidden = false; return; }
-    ok.disabled = true; ok.textContent = 'Entrando...';
-    try {
-      const r = await fetch('/api/login', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Haras360': '1' }, body: JSON.stringify({ email, senha }) });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(typeof d.detail === 'string' ? d.detail : 'Não foi possível entrar.');
-      location.href = destino(d.perfil);
-    } catch (err) {
-      erro.textContent = err.message === 'Failed to fetch' ? 'Sem conexão com o servidor.' : err.message; erro.hidden = false;
-      ok.disabled = false; ok.textContent = 'Entrar';
-    }
+  let destinoFinal = '/campo', codigos = [];
+  const destino = d => (d === '/gestor' && volta === '/campo') ? '/campo' : d;
+  function mostrar(id) { passos.forEach(p => { $('#' + p).hidden = p !== id; }); const f = $('#' + id + ' input:not([hidden])'); if (f) setTimeout(() => f.focus(), 30); }
+  function erro(form, msg) { const e = form.querySelector('.erro'); e.textContent = msg; e.hidden = !msg; }
+  async function post(url, corpo) {
+    let r;
+    try { r = await fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Haras360': '1' }, body: JSON.stringify(corpo) }); }
+    catch (e) { throw new Error('Sem conexão com o servidor.'); }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(typeof d.detail === 'string' ? d.detail : 'Não foi possível concluir.');
+    return d;
+  }
+  async function enviar(form, fn) {
+    const b = form.querySelector('button.pri'); const t = b.textContent;
+    erro(form, ''); b.disabled = true; b.textContent = 'Aguarde...';
+    try { await fn(); } catch (e) { erro(form, e.message); } finally { b.disabled = false; b.textContent = t; }
+  }
+
+  fetch('/api/me', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(u => { if (u) location.href = destino(u.destino); }).catch(() => { });
+
+  $('#p-senha').addEventListener('submit', e => {
+    e.preventDefault();
+    const f = e.target, email = $('#email').value.trim(), senha = $('#senha').value;
+    if (!email || !senha) { erro(f, 'Informe e-mail e senha.'); return; }
+    enviar(f, async () => {
+      const d = await post('/api/login', { email, senha });
+      if (d.etapa === 'ok') { location.href = destino(d.destino); return; }
+      $('#senha').value = '';
+      if (d.etapa === '2fa') { mostrar('p-2fa'); return; }
+      const r = await fetch('/api/2fa/cadastro', { credentials: 'same-origin' });
+      const c = await r.json();
+      if (!r.ok) throw new Error(c.detail || 'Não foi possível iniciar o cadastro do 2FA.');
+      $('#qr').innerHTML = c.qr; $('#segredo').textContent = c.segredo.replace(/(.{4})/g, '$1 ').trim();
+      mostrar('p-cad');
+    });
   });
+
+  $('#usar-rec').addEventListener('click', () => { const ab = $('#rec-box').hidden; $('#rec-box').hidden = !ab; $('#codigo').closest('.field').hidden = ab; (ab ? $('#rec') : $('#codigo')).focus(); });
+  $('#p-2fa').addEventListener('submit', e => {
+    e.preventDefault();
+    const usandoRec = !$('#rec-box').hidden, codigo = usandoRec ? $('#rec').value.trim() : $('#codigo').value.trim();
+    if (!codigo) { erro(e.target, 'Digite o código.'); return; }
+    enviar(e.target, async () => {
+      const d = await post('/api/2fa/verificar', { codigo });
+      if (typeof d.restantes === 'number') {
+        const n = e.target.querySelector('.erro');
+        n.className = 'note warn erro'; n.hidden = false;
+        n.innerHTML = 'Você entrou com um código de recuperação. Restam ' + d.restantes + '. Gere novos códigos no menu com o seu nome, no canto superior direito. <a href="' + destino(d.destino) + '">Continuar</a>';
+        return;
+      }
+      location.href = destino(d.destino);
+    });
+  });
+
+  $('#p-cad').addEventListener('submit', e => {
+    e.preventDefault();
+    const codigo = $('#codigo-cad').value.trim();
+    if (!/^\d{6}$/.test(codigo)) { erro(e.target, 'Digite os 6 dígitos mostrados no aplicativo.'); return; }
+    enviar(e.target, async () => {
+      const d = await post('/api/2fa/confirmar', { codigo });
+      destinoFinal = destino(d.destino); codigos = d.codigos;
+      $('#lista-codigos').innerHTML = codigos.map(c => '<span>' + c + '</span>').join('');
+      mostrar('p-codigos');
+    });
+  });
+  $('#copiar').addEventListener('click', async () => { try { await navigator.clipboard.writeText(codigos.join('\n')); $('#copiar').textContent = 'Copiado'; } catch (e) { $('#copiar').textContent = 'Selecione e copie'; } });
+  $('#continuar').addEventListener('click', () => { location.href = destinoFinal; });
+  document.querySelectorAll('[data-voltar]').forEach(b => b.addEventListener('click', async () => { await post('/api/logout', {}).catch(() => { }); mostrar('p-senha'); }));
+  ['#codigo', '#codigo-cad'].forEach(s => $(s).addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6); }));
 })();
 </script>
 

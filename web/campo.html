@@ -100,7 +100,8 @@
   const avisos = () => H.notificacoes(S).filter(n => n.tipo !== 'campo' && n.tipo !== 'documental');
   const naoLidos = () => avisos().filter(n => !S.lidas.includes(n.id)).length;
 
-  const NAV = [['hoje', 'Hoje', IC.home], ['animais', 'Animais', IC.horse], ['registrar', 'Registrar', IC.plus], ['avisos', 'Avisos', IC.bell], ['assistente', 'Assistente', IC.chat]];
+  const NAV_TODOS = [['hoje', 'Hoje', IC.home], ['animais', 'Animais', IC.horse], ['registrar', 'Registrar', IC.plus], ['avisos', 'Avisos', IC.bell], ['assistente', 'Assistente', IC.chat]];
+  const NAV = [];
   function go(v, p) { view = v; param = p || null; render(); window.scrollTo(0, 0); }
   function render() {
     const nl = naoLidos();
@@ -115,9 +116,9 @@
   function vHoje() {
     const ts = H.tarefas(S).filter(t => !t.doc);
     const at = ts.filter(t => t.status === 'atrasado'), hj = ts.filter(t => t.status === 'hoje'), sm = ts.filter(t => t.status === 'semana');
-    const d = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const d0 = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }); const d = d0.charAt(0).toUpperCase() + d0.slice(1);
     const bloco = (tit, arr, vazio) => '<div class="card flush"><div class="card-h" style="padding:14px 16px 0"><h3>' + tit + '</h3><span class="small muted">' + arr.length + '</span></div><div class="tasks" style="padding:2px 16px 6px 0">' + (arr.length ? arr.map(t => UI.linhaTarefa(t)).join('') : '<div class="empty">' + vazio + '</div>') + '</div></div>';
-    return '<div class="sec"><div class="daybar"><div><div class="eyebrow">Tarefas do dia</div><h1 style="text-transform:capitalize">' + d + '</h1></div></div>' +
+    return '<div class="sec"><div class="daybar"><div><div class="eyebrow">Tarefas do dia</div><h1>' + d + '</h1></div></div>' +
       '<div class="cnt"><div class="late"><b>' + at.length + '</b><span>Atrasadas</span></div><div class="soon"><b>' + hj.length + '</b><span>Para hoje</span></div><div><b>' + sm.length + '</b><span>Próximos 7 dias</span></div></div>' +
       '<div class="quick"><button data-act="registrar">' + IC.check + '<span>Novo registro<small>Vacina, vermífugo, casco, exame</small></span></button><button data-act="ocorrencia">' + IC.alert + '<span>Registrar ocorrência<small>Algo diferente com um animal</small></span></button></div>' +
       bloco('Atrasadas', at, 'Nada atrasado. Bom trabalho.') + bloco('Para hoje', hj, 'Nada marcado para hoje.') + bloco('Próximos 7 dias', sm, 'Nada previsto para a semana.') + '</div>';
@@ -196,7 +197,14 @@
   });
   (async () => {
     $('#view').innerHTML = '<div class="empty">Carregando...</div>';
-    try { await recarregar(); render(); } catch (e) { $('#view').innerHTML = '<div class="note bad">' + esc(e.message) + '</div>'; }
+    try {
+      await recarregar();
+      NAV_TODOS.forEach(n => { if (n[0] !== 'assistente' || S.plano.modulos.assistente !== false) NAV.push(n); });
+      render();
+    } catch (e) {
+      if (/usuários de um haras/.test(e.message)) { location.href = '/admin'; return; }
+      $('#view').innerHTML = '<div class="note bad">' + esc(e.message) + '</div>';
+    }
   })();
 })();
 </script>

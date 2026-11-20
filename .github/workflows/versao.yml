@@ -1,0 +1,80 @@
+name: Versão
+
+# Quando a main recebe um merge, lê o arquivo VERSION e, se a tag vX.Y.Z ainda
+# não existir, cria a tag e a Release com a nota da versão em docs/HISTORICO.md.
+# Anexa à Release o pacote de atualização haras360-X.Y.Z.tar.gz e o SHA-256 dele,
+# para ser assinado no Windows e enviado pela tela Administração > Atualização.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: versao
+  cancel-in-progress: false
+
+jobs:
+  tag-e-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ler versão
+        id: v
+        run: |
+          VERSAO="$(tr -d ' \n\r' < VERSION)"
+          if ! echo "$VERSAO" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "VERSION inválido: '$VERSAO' (esperado X.Y.Z)"; exit 1
+          fi
+          echo "tag=v$VERSAO" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/v$VERSAO" >/dev/null; then
+            echo "existe=1" >> "$GITHUB_OUTPUT"
+            echo "A tag v$VERSAO já existe. Nada a fazer."
+          else
+            echo "existe=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extrair nota da versão do HISTORICO
+        if: steps.v.outputs.existe == '0'
+        run: |
+          python3 - "${{ steps.v.outputs.tag }}" <<'PY'
+          import re, sys
+          tag = sys.argv[1]
+          texto = open("docs/HISTORICO.md", encoding="utf-8").read()
+          m = re.search(r"^## " + re.escape(tag) + r"\b(.*?)(?=^## |\Z)", texto, re.S | re.M)
+          if not m:
+              sys.exit(f"docs/HISTORICO.md não tem a seção '## {tag}'. Inclua a nota da versão antes do merge.")
+          linhas = m.group(0).splitlines()
+          titulo = linhas[0][3:].strip()
+          open("titulo.txt", "w", encoding="utf-8").write(titulo)
+          open("nota.md", "w", encoding="utf-8").write("\n".join(linhas[1:]).strip() + "\n")
+          PY
+
+      - name: Criar tag e Release
+        if: steps.v.outputs.existe == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.v.outputs.tag }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "$(cat titulo.txt)"
+          git push origin "$TAG"
+          bash deploy/gerar-pacote.sh "$TAG" dist
+          {
+            cat nota.md
+            echo
+            echo "### Pacote de atualização"
+            echo
+            echo "Baixe \`haras360-${TAG#v}.tar.gz\`, assine no Windows com \`python assinar-pacote.py haras360-${TAG#v}.tar.gz\` e envie em Administração › Atualização e backup."
+            echo
+            echo "SHA-256: \`$(cut -d' ' -f1 dist/haras360-${TAG#v}.tar.gz.sha256)\`"
+          } > nota-final.md
+          gh release create "$TAG" --title "$(cat titulo.txt)" --notes-file nota-final.md --verify-tag \
+            dist/haras360-${TAG#v}.tar.gz dist/haras360-${TAG#v}.tar.gz.sha256 deploy/assinar-pacote.py

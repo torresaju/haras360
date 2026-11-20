@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# Atualiza o Haras360 a partir de um pacote assinado, com volta automática em caso de falha.
+# Uso: sudo haras360-update haras360-X.Y.Z.tar.gz haras360-X.Y.Z.tar.gz.sig
+set -euo pipefail
+. /usr/local/lib/haras360/comum.sh
+exige_root
+[ $# -eq 2 ] || falha "Uso: sudo haras360-update <pacote.tar.gz> <pacote.tar.gz.sig>"
+
+exec 9>/run/haras360-tarefa.lock
+flock -n 9 || falha "Já existe uma atualização, volta de versão ou backup em andamento."
+
+ORIG_PAC="$1"; ORIG_SIG="$2"
+NOME="${H360_NOME_PACOTE:-$(basename "$ORIG_PAC")}"
+[[ "$NOME" =~ ^haras360-([0-9]+\.[0-9]+\.[0-9]+)\.tar\.gz$ ]] || falha "O pacote precisa se chamar haras360-X.Y.Z.tar.gz."
+NOVA="${BASH_REMATCH[1]}"
+ANTERIOR="$(versao_atual)"
+[ -n "$ANTERIOR" ] || falha "Instalação não encontrada em $H360_ATUAL."
+[ "$NOVA" != "$ANTERIOR" ] || falha "A versão $NOVA já está em uso."
+[ -f "$H360_ETC/chave-publica.pem" ] || falha "Chave pública ausente em $H360_ETC/chave-publica.pem. Instale com: sudo haras360-chave chave-publica.pem"
+
+status_tarefa executando atualizar "Conferindo o pacote $NOVA." "$ANTERIOR" "$NOVA"
+
+# Cópia para área do root antes de conferir: o arquivo original pode estar em pasta gravável pela aplicação.
+ENTRADA="$H360_VARLIB/entrada"
+rm -rf "$ENTRADA"; install -d -m 700 "$ENTRADA"
+cp -- "$ORIG_PAC" "$ENTRADA/$NOME"; cp -- "$ORIG_SIG" "$ENTRADA/$NOME.sig"
+
+DESTINO="$H360_RELEASES/$NOVA"
+NOVO_TMP="$H360_RELEASES/.novo-$NOVA"
+rm -rf "$NOVO_TMP"
+falhar() {
+  local msg="$1"
+  [ -n "$NOVO_TMP" ] && [ "$NOVO_TMP" != "$H360_RELEASES/$ANTERIOR" ] && rm -rf "$NOVO_TMP"
+  status_tarefa falhou atualizar "$msg" "$ANTERIOR" "$NOVA"
+  auditar atualizacao_falhou "$ANTERIOR para $NOVA: $msg" falha
+  falha "$msg"
+}
+
+info "Conferindo assinatura e manifesto do pacote $NOVA"
+SAIDA_VER="$(/usr/local/sbin/haras360-verificar "$ENTRADA/$NOME" "$ENTRADA/$NOME.sig" "$H360_ETC/chave-publica.pem" "$NOVO_TMP" 2>&1)" || falhar "Pacote recusado. ${SAIDA_VER#erro: }"
+info "Assinatura válida"
+
+# o ambiente Python não pode mudar de pasta depois de criado: os arquivos vão para o destino final antes
+rm -rf "$DESTINO"; mv "$NOVO_TMP" "$DESTINO"; NOVO_TMP="$DESTINO"
+
+info "Preparando o ambiente Python da versão $NOVA"
+status_tarefa executando atualizar "Instalando dependências da versão $NOVA." "$ANTERIOR" "$NOVA"
+python3 -m venv "$DESTINO/venv" || falhar "Não foi possível criar o ambiente Python."
+"$DESTINO/venv/bin/pip" install -q --no-input --disable-pip-version-check --cache-dir "$H360_VARLIB/cache-pip" -r "$DESTINO/backend/requirements.txt" >>"${H360_LOG_TAREFA:-/dev/null}" 2>&1 \
+  || falhar "Falha ao instalar as dependências da versão $NOVA."
+chown -R root:root "$DESTINO"; chmod -R go-w "$DESTINO"
+
+info "Backup antes de trocar a versão"
+status_tarefa executando atualizar "Backup antes da atualização." "$ANTERIOR" "$NOVA"
+H360_SEM_ENVIO=1 H360_SEM_LOCK=1 /usr/local/sbin/haras360-backup >>"${H360_LOG_TAREFA:-/dev/null}" 2>&1 || falhar "O backup antes da atualização falhou. Nada foi alterado."
+NOVO_TMP=""  # a partir daqui a pasta da versão fica, mesmo se algo falhar, para diagnóstico e nova tentativa
+install -d -m 755 "$H360_PACOTES"; cp -- "$ENTRADA/$NOME" "$H360_PACOTES/$NOME"; cp -- "$ENTRADA/$NOME.sig" "$H360_PACOTES/$NOME.sig"
+
+info "Aplicando migrações do banco"
+status_tarefa executando atualizar "Aplicando migrações do banco." "$ANTERIOR" "$NOVA"
+if ! ( set -a; . "$H360_ETC/haras360.env"; set +a; cd "$DESTINO/backend" && runuser -u "$H360_USUARIO" -- "$DESTINO/venv/bin/python" -m app.migracoes ) >>"${H360_LOG_TAREFA:-/dev/null}" 2>&1; then
+  falhar "As migrações da versão $NOVA falharam. A versão $ANTERIOR continua em uso."
+fi
+
+trocar_para() {
+  ln -sfn "$H360_RELEASES/$1" "$H360_BASE/.atual.tmp"
+  mv -T "$H360_BASE/.atual.tmp" "$H360_ATUAL"
+  systemctl restart haras360
+}
+
+info "Trocando para a versão $NOVA e reiniciando"
+status_tarefa executando atualizar "Reiniciando na versão $NOVA." "$ANTERIOR" "$NOVA"
+trocar_para "$NOVA"
+if aguardar_saude "$NOVA" 60; then
+  instalar_scripts_do_release "$DESTINO"
+  systemctl enable --now haras360-tarefa.path haras360-backup.timer >/dev/null 2>&1 || true
+  # guarda as três versões mais recentes (nunca apaga a atual nem a anterior)
+  mapfile -t VERSOES < <(ls -1 "$H360_RELEASES" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -t. -k1,1nr -k2,2nr -k3,3nr)
+  for v in "${VERSOES[@]:3}"; do
+    if [ "$v" != "$NOVA" ] && [ "$v" != "$ANTERIOR" ]; then rm -rf "${H360_RELEASES:?}/$v"; rm -f "$H360_PACOTES/haras360-$v.tar.gz"*; info "Versão antiga $v removida"; fi
+  done
+  status_tarefa concluido atualizar "Atualizado de $ANTERIOR para $NOVA." "$ANTERIOR" "$NOVA"
+  auditar atualizacao_concluida "$ANTERIOR para $NOVA"
+  info "Haras360 atualizado para $NOVA"
+  exit 0
+fi
+
+aviso "A versão $NOVA não respondeu. Voltando para $ANTERIOR."
+journalctl -u haras360 -n 30 --no-pager >>"${H360_LOG_TAREFA:-/dev/null}" 2>&1 || true
+trocar_para "$ANTERIOR"
+if aguardar_saude "$ANTERIOR" 60; then
+  status_tarefa falhou atualizar "A versão $NOVA não iniciou e o sistema voltou sozinho para $ANTERIOR." "$ANTERIOR" "$NOVA"
+  auditar atualizacao_falhou "$ANTERIOR para $NOVA: não iniciou; voltou para $ANTERIOR" falha
+  falha "A versão $NOVA não iniciou. O Haras360 voltou para $ANTERIOR."
+fi
+status_tarefa falhou atualizar "A versão $NOVA não iniciou e a volta para $ANTERIOR também não respondeu. Verifique: journalctl -u haras360" "$ANTERIOR" "$NOVA"
+falha "Falha grave: nem $NOVA nem $ANTERIOR responderam. Verifique com: journalctl -u haras360 -n 100"

@@ -1,0 +1,268 @@
+<title>Haras360 Administração</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Zilla+Slab:wght@500;600;700&display=swap">
+<style>
+/*SHARED_CSS*/
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px 20px;margin:0}
+.facts div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.facts dt{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.facts dd{margin:0;font-weight:500;overflow-wrap:anywhere}
+.matrix td:not(:first-child),.matrix th:not(:first-child){text-align:center}
+.tbl input.inp,.tbl select.inp{padding:6px 8px;font-size:.88rem}
+.w-num{width:90px}
+.aud td{vertical-align:top}
+.aud .det{font-size:.8rem;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;max-width:420px}
+.glos dt{font-weight:700;margin-top:12px}
+.glos dd{margin:2px 0 0;color:var(--muted)}
+.hcard{display:flex;flex-direction:column;gap:12px}
+.users{display:flex;flex-direction:column}
+.users>div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line-2)}
+.log{font-family:var(--f-mono);font-size:.8rem;background:var(--surface-2);border-radius:8px;padding:10px 12px;max-height:260px;overflow:auto;white-space:pre-wrap}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.kpi b{font-family:var(--f-display);font-size:1.8rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.84rem;color:var(--muted)}
+</style>
+
+<header class="topbar" id="topbar"></header>
+<main class="wrapm">
+  <div class="pagehead"><div><div class="eyebrow" id="v-eyebrow"></div><h1 id="v-title"></h1></div><div class="acts" id="v-acts"></div></div>
+  <div id="view" class="view-in"></div>
+</main>
+<div id="modal" class="modal" hidden></div>
+<div id="toast" role="status" hidden></div>
+
+<script>window.H360_PORTAL = 'admin';</script>
+<script>
+/*API*/
+</script>
+<script>
+/*CORE*/
+</script>
+<script>
+/*UI*/
+</script>
+<script>
+(function () {
+  let S = null, view = 'haras', poll = null;
+  const $ = s => document.querySelector(s);
+  const esc = H.esc, IC = UI.ICON;
+  async function recarregar() { S = await API.get('/api/admin/painel'); }
+  async function executar(el, fn, ok) {
+    if (el && el.disabled) return null;
+    const txt = el ? el.innerHTML : '';
+    if (el) { el.disabled = true; el.innerHTML = 'Salvando...'; }
+    try { const r = await fn(); await recarregar(); if (ok !== false) UI.toast(typeof ok === 'string' ? ok : (r && r.resumo) || 'Alteração salva.'); return r || true; }
+    catch (e) { UI.toast(e.message); return null; }
+    finally { if (el && el.isConnected) { el.disabled = false; el.innerHTML = txt; } }
+  }
+  const menu = () => [
+    { id: 'haras', rotulo: 'Haras' },
+    { grupo: 'Administração', itens: [{ id: 'parametros', rotulo: 'Parametrizações', desc: 'Planos, preços, login e e-mail' }, { id: 'auditoria', rotulo: 'Auditoria' }, { id: 'atualizacao', rotulo: 'Atualização e backup' }] },
+    { grupo: 'Ajuda', itens: [{ id: 'sobre', rotulo: 'Sobre' }, { href: '/ajuda', rotulo: 'Manual', desc: 'Abre em nova aba' }, { id: 'glossario', rotulo: 'Glossário' }] }
+  ];
+  const TITULOS = { haras: ['Plataforma', 'Haras e gestores'], parametros: ['Administração', 'Parametrizações globais'], auditoria: ['Administração', 'Auditoria'], atualizacao: ['Administração', 'Atualização e backup'], sobre: ['Ajuda', 'Sobre o Haras360'], glossario: ['Ajuda', 'Glossário'] };
+  function go(v) { view = v; render(); window.scrollTo(0, 0); }
+  function render() {
+    $('#topbar').innerHTML = UI.topbar({ menu: menu(), atual: view, home: '/admin', sub: 'Administração da plataforma', usuario: S.usuario, perfilTxt: 'Administrador',
+      usuarioItens: [{ act: 'minha-senha', rotulo: 'Alterar minha senha' }, { act: 'novos-codigos', rotulo: 'Novos códigos de recuperação do 2FA' }] });
+    const [eb, ti] = TITULOS[view];
+    $('#v-eyebrow').textContent = eb; $('#v-title').textContent = ti; document.title = 'Haras360 · ' + ti;
+    $('#v-acts').innerHTML = view === 'haras' ? '<button class="btn pri" data-act="novo-haras">' + IC.plus + 'Novo haras</button>' : '';
+    const v = $('#view'); v.classList.remove('view-in'); void v.offsetWidth; v.classList.add('view-in');
+    v.innerHTML = VIEWS[view]();
+    if (AFTER[view]) AFTER[view]();
+    clearInterval(poll); poll = null;
+    if (view === 'atualizacao' && (S.atualizacao.pendente || S.atualizacao.estado === 'executando')) poll = setInterval(acompanhar, 4000);
+  }
+  const valor = v => v === null || v === undefined ? 'A definir' : (Number(v) === 0 ? 'Grátis' : H.moeda(Number(v)));
+
+  /* ================= HARAS ================= */
+  function vHaras() {
+    const ativos = S.haras.filter(h => h.ativo), animais = S.haras.reduce((t, h) => t + h.animais, 0);
+    const receita = ativos.reduce((t, h) => t + (h.mensalidade || 0), 0), semPreco = ativos.some(h => h.mensalidade === null);
+    const planos = Object.keys(S.parametros.planos);
+    return '<div class="sec"><div class="kpis"><div class="kpi"><span>Haras ativos</span><b>' + ativos.length + '</b><span>de ' + S.haras.length + ' cadastrados</span></div><div class="kpi"><span>Animais ativos</span><b>' + animais + '</b><span>em todos os haras</span></div><div class="kpi"><span>Receita mensal</span><b>' + (semPreco ? 'A definir' : H.moeda(receita)) + '</b><span>pelas faixas de preço</span></div><div class="kpi"><span>Versão</span><b class="mono" style="font-size:1.4rem">' + esc(S.versao) + '</b><span>banco na migração ' + S.versaoBanco + '</span></div></div>' +
+      (S.haras.length ? S.haras.map(h => '<div class="card hcard"><div class="spread"><div><h2>' + esc(h.nome) + '</h2><p class="small muted">' + esc(h.municipio || 'Município não informado') + ' · criado em ' + H.br(h.criado) + '</p></div><div class="row">' + (h.ativo ? '<span class="chip c-ok">Ativo</span>' : '<span class="chip c-muted">Desativado</span>') +
+        '<label class="small muted" for="pl-' + h.id + '">Plano</label><select id="pl-' + h.id + '" class="inp" style="width:auto" data-chg="plano" data-id="' + h.id + '">' + planos.map(p => '<option' + (p === h.plano ? ' selected' : '') + '>' + esc(p) + '</option>').join('') + '</select>' +
+        '<button class="btn ghost sm' + (h.ativo ? ' danger' : '') + '" data-act="toggle-haras" data-id="' + h.id + '">' + (h.ativo ? 'Desativar' : 'Reativar') + '</button></div></div>' +
+        '<dl class="facts"><div><dt>Animais ativos</dt><dd>' + h.animais + ' de ' + h.limite + '</dd></div><div><dt>Mensalidade</dt><dd>' + (h.mensalidade === null ? 'A definir' : H.moeda(h.mensalidade)) + '</dd></div><div><dt>Usuários</dt><dd>' + h.usuarios.length + '</dd></div></dl>' +
+        '<div class="users">' + h.usuarios.map(u => '<div><div><b>' + esc(u.nome) + '</b> <span class="chip nodot ' + (u.perfil === 'gestor' ? 'c-accent' : 'c-info') + '">' + (u.perfil === 'gestor' ? 'Gestor' : 'Caseiro') + '</span>' + (u.perfil === 'gestor' ? (u.doisFatores ? ' <span class="chip c-ok">2FA</span>' : ' <span class="chip c-soon">2FA pendente</span>') : '') + (u.ativo ? '' : ' <span class="chip c-muted">Desativado</span>') + '<br><span class="small muted">' + esc(u.email) + '</span></div><div class="row" style="gap:4px"><button class="btn ghost sm" data-act="senha-user" data-id="' + u.id + '" data-n="' + esc(u.nome) + '">Redefinir senha</button>' + (u.doisFatores ? '<button class="btn ghost sm" data-act="dois-fatores" data-id="' + u.id + '">Redefinir 2FA</button>' : '') + '</div></div>').join('') + '</div></div>').join('')
+        : '<div class="card empty">Nenhum haras cadastrado. Use "Novo haras" para criar o primeiro.</div>') + '</div>';
+  }
+
+  /* ================= PARAMETRIZAÇÕES ================= */
+  let planosEd = null, faixasEd = null;
+  function vParametros() {
+    const p = S.parametros;
+    planosEd = JSON.parse(JSON.stringify(p.planos)); faixasEd = JSON.parse(JSON.stringify(p.faixas));
+    const num = (id, l, v, min, max, aj) => '<div class="field"><label for="' + id + '">' + l + '</label><input id="' + id + '" class="inp mono" type="number" min="' + min + '" max="' + max + '" value="' + v + '">' + (aj ? '<span class="small muted">' + aj + '</span>' : '') + '</div>';
+    return '<div class="sec" style="max-width:980px">' +
+      '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><div><h2>Planos e módulos</h2><p class="small muted">Defina o que cada plano inclui. Módulo fora do plano aparece esmaecido para o haras, e a API recusa o uso.</p></div><button class="btn sm" data-act="add-plano">' + IC.plus + 'Novo plano</button></div><div class="tbl-wrap" id="planos-t"></div></div>' +
+      '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><div><h2>Faixas de preço</h2><p class="small muted">Valor por animal ativo ao mês, progressivo por faixa. Deixe em branco o que ainda não foi definido.</p></div><button class="btn sm" data-act="add-faixa">' + IC.plus + 'Nova faixa</button></div><div class="tbl-wrap" id="faixas-t"></div></div>' +
+      '<div class="card stack"><h2>Login e sessões</h2><div class="fgrid">' + num('g-tent', 'Tentativas de login antes do bloqueio', p.login_tentativas, 3, 50) + num('g-jan', 'Janela de bloqueio (minutos)', p.login_janela_min, 1, 1440) + num('g-sess', 'Duração da sessão no navegador (dias)', p.sessao_dias, 1, 90) + num('g-app', 'Duração da sessão no app (dias)', p.sessao_app_dias, 7, 365, 'O caseiro fica conectado no campo sem precisar de internet para entrar.') + '</div></div>' +
+      '<div class="card stack"><h2>E-mail</h2><p class="small muted">Gravado para o envio de alertas por e-mail, que entra em uma próxima versão.</p><div class="fgrid">' +
+      '<div class="field"><label for="s-host">Servidor SMTP</label><input id="s-host" class="inp" value="' + esc(p.smtp.host) + '" placeholder="smtp.zoho.com"></div>' + num('s-porta', 'Porta', p.smtp.porta, 1, 65535) +
+      '<div class="field"><label for="s-user">Usuário</label><input id="s-user" class="inp" value="' + esc(p.smtp.usuario) + '" autocomplete="off"></div><div class="field"><label for="s-senha">Senha</label><input id="s-senha" type="password" class="inp" autocomplete="new-password" placeholder="' + (p.smtp.senhaDefinida ? 'definida; deixe em branco para manter' : '') + '"></div>' +
+      '<div class="field"><label for="s-rem">Remetente</label><input id="s-rem" class="inp" value="' + esc(p.smtp.remetente) + '" placeholder="Haras360 <alertas@seudominio>"></div><div class="field"><label for="s-tls">Segurança</label><select id="s-tls" class="inp"><option value="1"' + (p.smtp.tls ? ' selected' : '') + '>STARTTLS</option><option value="0"' + (!p.smtp.tls ? ' selected' : '') + '>Nenhuma</option></select></div>' +
+      '<div class="field full"><label for="g-contato">E-mail de contato do administrador</label><input id="g-contato" class="inp" value="' + esc(p.email_contato) + '"></div></div></div>' +
+      '<div class="row" style="justify-content:flex-end"><button class="btn pri" data-act="salvar-globais">' + IC.check + 'Salvar parametrizações</button></div></div>';
+  }
+  function desenharPlanos() {
+    const mods = Object.entries(S.modulos);
+    $('#planos-t').innerHTML = '<table class="tbl matrix"><thead><tr><th>Plano</th><th>Limite de animais</th>' + mods.map(([, l]) => '<th>' + esc(l) + '</th>').join('') + '<th></th></tr></thead><tbody>' +
+      Object.entries(planosEd).map(([nome, p], i) => '<tr><td><input class="inp" data-pl="' + i + '" data-k="nome" value="' + esc(nome) + '" aria-label="Nome do plano"></td><td><input class="inp w-num mono" type="number" min="1" max="500" data-pl="' + i + '" data-k="limite" value="' + p.limite + '" aria-label="Limite de animais"></td>' +
+        mods.map(([k, l]) => '<td><input type="checkbox" data-pl="' + i + '" data-k="m:' + k + '"' + (p.modulos[k] ? ' checked' : '') + ' aria-label="' + esc(l) + ' no plano ' + esc(nome) + '"></td>').join('') +
+        '<td>' + (Object.keys(planosEd).length > 1 ? '<button class="btn ghost sm danger" data-act="rem-plano" data-i="' + i + '">Remover</button>' : '') + '</td></tr>').join('') + '</tbody></table>';
+  }
+  function desenharFaixas() {
+    $('#faixas-t').innerHTML = '<table class="tbl"><thead><tr><th>De</th><th>Até</th><th>Valor por animal (R$)</th><th></th></tr></thead><tbody>' +
+      faixasEd.map((f, i) => '<tr><td><input class="inp w-num mono" type="number" min="1" data-fx="' + i + '" data-k="de" value="' + f.de + '" aria-label="De"></td><td><input class="inp w-num mono" type="number" min="1" data-fx="' + i + '" data-k="ate" value="' + f.ate + '" aria-label="Até"></td><td><input class="inp mono" style="width:140px" type="number" step="0.01" min="0" data-fx="' + i + '" data-k="valor" value="' + (f.valor === null ? '' : f.valor) + '" placeholder="a definir" aria-label="Valor"></td><td>' + (faixasEd.length > 1 ? '<button class="btn ghost sm danger" data-act="rem-faixa" data-i="' + i + '">Remover</button>' : '') + '</td></tr>').join('') + '</tbody></table>';
+  }
+  function lerPlanosDaTela() {
+    const linhas = Object.entries(planosEd).map(([nome, p]) => ({ nome, limite: p.limite, modulos: Object.assign({}, p.modulos) }));
+    document.querySelectorAll('[data-pl]').forEach(el => {
+      const l = linhas[+el.dataset.pl], k = el.dataset.k;
+      if (k === 'nome') l.nome = el.value.trim(); else if (k === 'limite') l.limite = Number(el.value); else l.modulos[k.slice(2)] = el.checked;
+    });
+    const out = {};
+    linhas.forEach(l => { out[l.nome] = { limite: l.limite, modulos: l.modulos }; });
+    return out;
+  }
+  function lerFaixasDaTela() {
+    const fx = faixasEd.map(f => Object.assign({}, f));
+    document.querySelectorAll('[data-fx]').forEach(el => { const f = fx[+el.dataset.fx]; f[el.dataset.k] = el.dataset.k === 'valor' ? (el.value === '' ? null : Number(el.value)) : Number(el.value); });
+    return fx;
+  }
+
+  /* ================= AUDITORIA ================= */
+  const audF = { haras: '', acao: '', texto: '', de: '', ate: '' };
+  function vAuditoria() {
+    return '<div class="sec"><div class="card"><form id="aud-f" class="row" style="align-items:flex-end" novalidate>' +
+      '<div class="field"><label for="af-haras">Haras</label><select id="af-haras" class="inp"><option value="">Todos</option>' + S.haras.map(h => '<option value="' + h.id + '"' + (String(audF.haras) === String(h.id) ? ' selected' : '') + '>' + esc(h.nome) + '</option>').join('') + '</select></div>' +
+      '<div class="field"><label for="af-acao">Ação</label><select id="af-acao" class="inp"><option value="">Todas</option>' + Object.entries(H.ACOES_AUDIT).map(([k, l]) => '<option value="' + k + '"' + (audF.acao === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></div>' +
+      '<div class="field"><label for="af-texto">Usuário, alvo ou IP</label><input id="af-texto" class="inp" value="' + esc(audF.texto) + '"></div>' +
+      '<div class="field"><label for="af-de">De</label><input id="af-de" type="date" class="inp" value="' + audF.de + '"></div><div class="field"><label for="af-ate">Até</label><input id="af-ate" type="date" class="inp" value="' + audF.ate + '"></div>' +
+      '<button class="btn pri">Filtrar</button></form></div><div class="card flush"><div class="tbl-wrap" id="aud-t"><div class="empty">Carregando...</div></div></div></div>';
+  }
+  async function carregarAuditoria() {
+    const box = $('#aud-t'); if (!box) return;
+    const q = new URLSearchParams(Object.entries(audF).filter(([, v]) => v)).toString();
+    let lst; try { lst = await API.get('/api/admin/auditoria' + (q ? '?' + q : '')); } catch (e) { box.innerHTML = '<div class="note bad">' + esc(e.message) + '</div>'; return; }
+    const nomes = Object.fromEntries(S.haras.map(h => [h.id, h.nome]));
+    const det = d => { try { return Object.entries(d).map(([k, v]) => k + ': ' + (typeof v === 'object' ? JSON.stringify(v) : v)).join('\n'); } catch (e) { return ''; } };
+    box.innerHTML = lst.length ? '<table class="tbl aud"><thead><tr><th>Quando</th><th>Haras</th><th>Usuário</th><th>Ação</th><th>Alvo e detalhe</th><th>IP</th></tr></thead><tbody>' + lst.map(x => '<tr><td class="mono small" style="white-space:nowrap">' + H.br(x.quando) + '<br>' + esc(x.quando.slice(11, 19)) + '</td><td class="small">' + esc(x.harasId ? (nomes[x.harasId] || '#' + x.harasId) : 'Plataforma') + '</td><td class="small">' + esc(x.usuario) + '</td><td><span class="chip ' + (x.resultado === 'falha' ? 'c-late' : 'nodot c-muted') + '">' + esc(H.ACOES_AUDIT[x.acao] || x.acao) + '</span></td><td class="small">' + esc(x.alvo) + (x.detalhe ? '<div class="det">' + esc(det(x.detalhe)) + '</div>' : '') + '</td><td class="mono small">' + esc(x.ip) + '</td></tr>').join('') + '</tbody></table>' : '<div class="empty">Nenhum evento com esses filtros.</div>';
+  }
+
+  /* ================= ATUALIZAÇÃO E BACKUP ================= */
+  const ESTADOS = { executando: ['c-soon', 'Em andamento'], concluido: ['c-ok', 'Concluída'], falhou: ['c-late', 'Falhou'] };
+  function vAtualizacao() {
+    const a = S.atualizacao || {}, b = S.backup, vs = S.versoes;
+    const est = a.pendente ? ['c-soon', 'Na fila'] : ESTADOS[a.estado];
+    return '<div class="sec"><div class="grid2"><div class="stack" style="gap:20px">' +
+      '<div class="card stack"><div class="spread"><h2>Atualizar o Haras360</h2><span class="chip nodot c-muted mono">Em uso: ' + esc(vs.emUso) + '</span></div>' +
+      '<ol class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px"><li>Baixe <span class="mono">haras360-X.Y.Z.tar.gz</span> na Release da versão, no GitHub.</li><li>No Windows, assine com <span class="mono">python assinar-pacote.py haras360-X.Y.Z.tar.gz</span>. Isso gera o arquivo <span class="mono">.sig</span>.</li><li>Envie os dois arquivos abaixo. O servidor confere a assinatura, faz backup, aplica e testa. Se algo falhar, volta sozinho para a versão atual.</li></ol>' +
+      '<form id="up-f" class="stack" novalidate><div class="fgrid"><div class="field"><label for="up-pac">Pacote (.tar.gz)</label><input id="up-pac" type="file" class="inp" accept=".gz"></div><div class="field"><label for="up-sig">Assinatura (.sig)</label><input id="up-sig" type="file" class="inp" accept=".sig"></div><div class="field full"><label for="up-sha">SHA-256 publicado na Release (opcional)</label><input id="up-sha" class="inp mono" placeholder="confere o arquivo antes de enviar"></div></div>' +
+      '<p class="small muted">Limite de ' + S.limitePacoteMB + ' MB.</p><div class="row" style="justify-content:flex-end"><button class="btn pri" id="up-btn"' + (a.pendente || a.estado === 'executando' ? ' disabled' : '') + '>' + IC.upload + 'Enviar e atualizar</button></div></form></div>' +
+      '<div class="card stack"><div class="spread"><h2>Última tarefa</h2>' + (est ? '<span class="chip ' + est[0] + '">' + est[1] + '</span>' : '<span class="chip nodot c-muted">Nenhuma</span>') + '</div>' +
+      (a.acao ? '<dl class="facts"><div><dt>Tarefa</dt><dd>' + esc({ atualizar: 'Atualização', rollback: 'Volta de versão', backup: 'Backup' }[a.acao] || a.acao) + '</dd></div><div><dt>Início</dt><dd>' + (a.inicio ? H.br(a.inicio) + ' ' + esc(a.inicio.slice(11, 16)) : '-') + '</dd></div><div><dt>Fim</dt><dd>' + (a.fim ? H.br(a.fim) + ' ' + esc(a.fim.slice(11, 16)) : '-') + '</dd></div>' + (a.versaoNova ? '<div><dt>Versão</dt><dd class="mono">' + esc((a.versaoAnterior || '?') + ' → ' + a.versaoNova) + '</dd></div>' : '') + '</dl>' + (a.mensagem ? '<p class="note ' + (a.estado === 'falhou' ? 'bad' : a.estado === 'concluido' ? 'good' : '') + '">' + esc(a.mensagem) + '</p>' : '') + (a.log && a.log.length ? '<div class="log">' + esc(a.log.join('\n')) + '</div>' : '') : '<p class="muted small">Nenhuma atualização, volta de versão ou backup pedido por esta tela ainda.</p>') + '</div></div>' +
+      '<div class="stack" style="gap:20px"><div class="card stack"><h2>Versões guardadas</h2><p class="small muted">As três últimas versões ficam no servidor para voltar rapidamente.</p>' +
+      (vs.versoes.length ? '<div class="tbl-wrap"><table class="tbl"><tbody>' + vs.versoes.map(v => '<tr><td class="mono"><b>' + esc(v.versao) + '</b></td><td class="small muted">' + H.br(v.instalada) + '</td><td class="num">' + (v.atual ? '<span class="chip c-ok">Em uso</span>' : '<button class="btn ghost sm" data-act="rollback" data-v="' + esc(v.versao) + '">Voltar para esta</button>') + '</td></tr>').join('') + '</tbody></table></div>' : '<p class="small muted">Nenhuma versão encontrada (ambiente de desenvolvimento).</p>') + '</div>' +
+      '<div class="card stack"><div class="spread"><h2>Backup</h2><button class="btn sm" data-act="backup-agora">Fazer backup agora</button></div>' +
+      (b ? '<dl class="facts"><div><dt>Último</dt><dd>' + H.br(b.quando) + ' ' + esc((b.quando || '').slice(11, 16)) + '</dd></div><div><dt>Tamanho</dt><dd>' + esc(b.tamanho || '-') + '</dd></div><div><dt>Bucket OCI</dt><dd>' + (b.oci === 'enviado' ? '<span class="chip c-ok">Enviado</span>' : b.oci === 'desativado' ? '<span class="chip c-muted">Não configurado</span>' : '<span class="chip c-late">Falhou</span>') + '</dd></div></dl>' + (b.mensagem ? '<p class="small muted">' + esc(b.mensagem) + '</p>' : '') : '<p class="small muted">Nenhum backup registrado ainda. O backup automático roda todo dia às 02:30.</p>') +
+      '<p class="small muted">Inclui banco, fotos, configuração, chave pública, Caddyfile, serviços, a versão em uso e o instalador. Cópia local por 7 dias e envio ao bucket privado da OCI.</p></div></div></div></div>';
+  }
+  async function acompanhar() {
+    try { const t = await API.get('/api/admin/tarefa'); Object.assign(S, { atualizacao: t.atualizacao, versoes: t.versoes, backup: t.backup });
+      if (t.versao !== S.versao) { location.reload(); return; }
+      if (view === 'atualizacao') { $('#view').innerHTML = vAtualizacao(); AFTER.atualizacao(); }
+      if (!t.atualizacao.pendente && t.atualizacao.estado !== 'executando') { clearInterval(poll); poll = null; }
+    } catch (e) { /* durante o reinício da aplicação a API fica alguns segundos fora */ }
+  }
+  async function sha256Arquivo(f) { const b = await f.arrayBuffer(); const h = await crypto.subtle.digest('SHA-256', b); return [...new Uint8Array(h)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+
+  /* ================= AJUDA ================= */
+  const vSobre = () => '<div class="sec" style="max-width:760px"><div class="card stack"><h2>Haras360</h2><p>Plataforma de gestão de haras para criadores de Mangalarga Marchador.</p><dl class="facts"><div><dt>Versão</dt><dd class="mono">' + esc(S.versao) + '</dd></div><div><dt>Migração do banco</dt><dd class="mono">' + S.versaoBanco + '</dd></div><div><dt>Haras</dt><dd>' + S.haras.length + '</dd></div></dl><div class="row"><a class="btn" href="/ajuda" target="_blank" rel="noopener">Abrir o manual</a></div></div></div>';
+  const vGlossario = () => '<div class="sec" style="max-width:760px"><div class="card"><dl class="glos" style="margin:0">' + H.GLOSSARIO.map(([t, d]) => '<dt>' + esc(t) + '</dt><dd>' + esc(d) + '</dd>').join('') + '</dl></div></div>';
+
+  const VIEWS = { haras: vHaras, parametros: vParametros, auditoria: vAuditoria, atualizacao: vAtualizacao, sobre: vSobre, glossario: vGlossario };
+  const AFTER = {
+    parametros() { desenharPlanos(); desenharFaixas(); },
+    auditoria() {
+      carregarAuditoria();
+      $('#aud-f').addEventListener('submit', e => { e.preventDefault(); audF.haras = $('#af-haras').value; audF.acao = $('#af-acao').value; audF.texto = $('#af-texto').value.trim(); audF.de = $('#af-de').value; audF.ate = $('#af-ate').value; carregarAuditoria(); });
+    },
+    atualizacao() {
+      const f = $('#up-f'); if (!f) return;
+      f.addEventListener('submit', async e => {
+        e.preventDefault();
+        const pac = $('#up-pac').files[0], sig = $('#up-sig').files[0], btn = $('#up-btn');
+        if (!pac || !sig) { UI.toast('Selecione o pacote e a assinatura.'); return; }
+        if (!/^haras360-\d+\.\d+\.\d+\.tar\.gz$/.test(pac.name)) { UI.toast('O pacote deve se chamar haras360-X.Y.Z.tar.gz.'); return; }
+        if (pac.size > S.limitePacoteMB * 1048576) { UI.toast('O pacote passa de ' + S.limitePacoteMB + ' MB.'); return; }
+        btn.disabled = true; btn.textContent = 'Conferindo...';
+        try {
+          const sha = $('#up-sha').value.trim().toLowerCase();
+          if (sha && sha !== await sha256Arquivo(pac)) throw new Error('O SHA-256 do arquivo não confere com o publicado na Release. Baixe o pacote de novo.');
+          btn.textContent = 'Enviando...';
+          const fd = new FormData(); fd.append('pacote', pac); fd.append('assinatura', sig); if (sha) fd.append('sha256', sha);
+          const r = await API.upload('/api/admin/atualizacao', fd);
+          UI.toast(r.resumo); await recarregar(); render();
+        } catch (err) { UI.toast(err.message); btn.disabled = false; btn.innerHTML = IC.upload + 'Enviar e atualizar'; }
+      });
+    }
+  };
+
+  const senhaForm = (id, rot) => '<div class="field"><label for="' + id + '">' + rot + '</label><input id="' + id + '" type="password" class="inp" autocomplete="new-password" minlength="8"></div>';
+  const ACT = {
+    nav: el => go(el.dataset.v),
+    fechar: () => UI.fechar(),
+    sair: async () => { try { await API.post('/api/logout'); } catch (e) { } location.href = '/entrar'; },
+    'novo-haras': () => UI.abrir({ titulo: 'Novo haras', corpo: '<form class="fgrid" novalidate><div class="field full"><label for="nh-nome">Nome do haras</label><input id="nh-nome" class="inp"></div><div class="field"><label for="nh-mun">Município/UF</label><input id="nh-mun" class="inp"></div><div class="field"><label for="nh-plano">Plano</label><select id="nh-plano" class="inp">' + Object.keys(S.parametros.planos).map(p => '<option>' + esc(p) + '</option>').join('') + '</select></div><div class="field full"><label for="nh-gn">Nome do gestor</label><input id="nh-gn" class="inp"></div><div class="field full"><label for="nh-ge">E-mail do gestor (login)</label><input id="nh-ge" type="email" class="inp"></div>' + senhaForm('nh-gs', 'Senha inicial do gestor (mín. 8)') + '</form><p class="small muted">No primeiro acesso o gestor cadastra o 2FA no celular.</p>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="criar-haras">Criar haras</button>' }),
+    'criar-haras': async el => {
+      const v = id => document.getElementById(id).value.trim();
+      if (await executar(el, () => API.post('/api/admin/haras', { nome: v('nh-nome'), municipio: v('nh-mun'), plano: v('nh-plano'), gestorNome: v('nh-gn'), gestorEmail: v('nh-ge'), gestorSenha: document.getElementById('nh-gs').value }))) { UI.fechar(); render(); }
+    },
+    'toggle-haras': el => { const h = S.haras.find(x => String(x.id) === el.dataset.id); const fn = async () => { if (await executar(el, () => API.patch('/api/admin/haras/' + h.id, { ativo: !h.ativo }))) render(); }; h.ativo ? UI.confirmar(el, 'Confirmar: desconecta todos os usuários', fn) : fn(); },
+    'senha-user': el => UI.abrir({ titulo: 'Redefinir senha de ' + esc(el.dataset.n), corpo: '<form class="stack" novalidate>' + senhaForm('r-senha', 'Nova senha (mín. 8)') + '<input type="hidden" id="r-uid" value="' + el.dataset.id + '"></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-senha-user">Redefinir</button>' }),
+    'salvar-senha-user': async el => { if (await executar(el, () => API.post('/api/admin/usuarios/' + $('#r-uid').value + '/senha', { senha: $('#r-senha').value }))) { UI.fechar(); render(); } },
+    'dois-fatores': el => UI.confirmar(el, 'Confirmar redefinição', async () => { if (await executar(el, () => API.post('/api/admin/usuarios/' + el.dataset.id + '/2fa/redefinir'))) render(); }),
+    'add-plano': () => { planosEd = lerPlanosDaTela(); let n = 'Novo plano', i = 2; while (planosEd[n]) n = 'Novo plano ' + i++; planosEd[n] = { limite: 30, modulos: Object.fromEntries(Object.keys(S.modulos).map(k => [k, true])) }; desenharPlanos(); },
+    'rem-plano': el => { planosEd = lerPlanosDaTela(); const nome = Object.keys(planosEd)[+el.dataset.i]; delete planosEd[nome]; desenharPlanos(); },
+    'add-faixa': () => { faixasEd = lerFaixasDaTela(); const u = faixasEd[faixasEd.length - 1]; faixasEd.push({ de: u.ate + 1, ate: u.ate + 10, valor: null }); desenharFaixas(); },
+    'rem-faixa': el => { faixasEd = lerFaixasDaTela(); faixasEd.splice(+el.dataset.i, 1); desenharFaixas(); },
+    'salvar-globais': async el => {
+      const n = id => Number(document.getElementById(id).value);
+      const corpo = { planos: lerPlanosDaTela(), faixas: lerFaixasDaTela(), login_tentativas: n('g-tent'), login_janela_min: n('g-jan'), sessao_dias: n('g-sess'), sessao_app_dias: n('g-app'), email_contato: $('#g-contato').value.trim(),
+        smtp: { host: $('#s-host').value.trim(), porta: n('s-porta'), usuario: $('#s-user').value.trim(), senha: $('#s-senha').value, remetente: $('#s-rem').value.trim(), tls: $('#s-tls').value === '1' } };
+      if (Object.keys(corpo.planos).some(k => !k)) { UI.toast('Todo plano precisa de nome.'); return; }
+      if (await executar(el, () => API.put('/api/admin/parametros', corpo))) render();
+    },
+    rollback: el => UI.confirmar(el, 'Confirmar volta', async () => { if (await executar(el, () => API.post('/api/admin/rollback', { versao: el.dataset.v }))) render(); }),
+    'backup-agora': async el => { if (await executar(el, () => API.post('/api/admin/backup'))) render(); },
+    'minha-senha': () => UI.abrir({ titulo: 'Alterar minha senha', corpo: '<form class="stack" novalidate><div class="field"><label for="m-atual">Senha atual</label><input id="m-atual" type="password" class="inp" autocomplete="current-password"></div>' + senhaForm('m-nova', 'Nova senha (mín. 8)') + '</form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-minha-senha">Alterar</button>' }),
+    'salvar-minha-senha': async el => { if (await executar(el, () => API.post('/api/me/senha', { atual: $('#m-atual').value, nova: $('#m-nova').value }))) UI.fechar(); },
+    'novos-codigos': () => UI.abrir({ titulo: 'Novos códigos de recuperação', corpo: '<form class="stack" novalidate><p>Os códigos atuais deixam de valer. Confirme sua senha.</p><div class="field"><label for="nc-senha">Senha</label><input id="nc-senha" type="password" class="inp" autocomplete="current-password"></div></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="gerar-codigos">Gerar</button>' }),
+    'gerar-codigos': async el => { try { el.disabled = true; const r = await API.post('/api/me/codigos-recuperacao', { senha: $('#nc-senha').value }); UI.fechar(); UI.mostrarCodigos(r.codigos); } catch (e) { el.disabled = false; UI.toast(e.message); } }
+  };
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-act]'); if (!el) return;
+    const f = ACT[el.dataset.act]; if (!f) return;
+    if (el.tagName === 'A' || el.closest('form')) e.preventDefault();
+    f(el, e);
+  });
+  document.addEventListener('change', async e => {
+    const el = e.target.closest('[data-chg="plano"]'); if (!el) return;
+    const h = S.haras.find(x => String(x.id) === el.dataset.id);
+    if (!(await executar(null, () => API.patch('/api/admin/haras/' + h.id, { plano: el.value })))) el.value = h.plano;
+    render();
+  });
+  (async () => {
+    $('#view').innerHTML = '<div class="empty">Carregando...</div>';
+    try { await recarregar(); render(); }
+    catch (e) { if (/administrador/.test(e.message)) { location.href = '/entrar'; return; } $('#view').innerHTML = '<div class="note bad">' + esc(e.message) + '</div>'; }
+  })();
+})();
+</script>

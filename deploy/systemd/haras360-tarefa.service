@@ -1,0 +1,7 @@
+[Unit]
+Description=Haras360: executa atualização, volta de versão ou backup pedidos na administração
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/haras360-tarefa
+TimeoutStartSec=30min

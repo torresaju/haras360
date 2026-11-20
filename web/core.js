@@ -100,6 +100,34 @@ const H = (function () {
   }
   function doseTxt(d) { if (d === 'reforco') return 'Reforço'; if (d === 'unica' || !d) return ''; return d + 'ª dose'; }
 
+  /* ---------- auditoria e glossário ---------- */
+  const ACOES_AUDIT = {
+    login: 'Login', login_falha: 'Login recusado', logout: 'Saída', '2fa_cadastro': '2FA cadastrado', '2fa_falha': 'Código 2FA recusado',
+    '2fa_redefinido': '2FA redefinido', '2fa_codigos_novos': 'Novos códigos de recuperação', senha_troca: 'Troca de senha', senha_redefinida: 'Senha redefinida',
+    sessao_encerrada: 'Sessão encerrada', usuario_criado: 'Usuário criado', usuario_ativado: 'Usuário reativado', usuario_desativado: 'Usuário desativado',
+    animal_criado: 'Animal cadastrado', animal_editado: 'Animal editado', importacao: 'Importação ABCCMM', registro_excluido: 'Registro excluído',
+    protocolos_alterados: 'Protocolos alterados', protocolos_restaurados: 'Protocolos restaurados', parametro_alterado: 'Parametrização alterada',
+    haras_criado: 'Haras criado', haras_alterado: 'Haras alterado', atualizacao_solicitada: 'Atualização solicitada', atualizacao_concluida: 'Atualização concluída',
+    atualizacao_falhou: 'Atualização falhou', rollback_solicitado: 'Volta de versão solicitada', rollback_concluido: 'Volta de versão concluída',
+    backup_solicitado: 'Backup solicitado', backup_concluido: 'Backup concluído', backup_falhou: 'Backup falhou'
+  };
+  const GLOSSARIO = [
+    ['ABCCMM', 'Associação Brasileira dos Criadores do Cavalo Mangalarga Marchador, responsável pelo registro genealógico da raça.'],
+    ['Relatório de Plantel', 'PDF emitido pelo Sistema de Gestão ABCCMM com os animais de um associado. É a fonte da importação no Haras360.'],
+    ['Livro', 'Categoria em que o animal está inscrito no registro genealógico, por exemplo "MM6 - Definitivo Fechado Fêmea".'],
+    ['DNA VP', 'Exame de DNA com verificação de parentesco realizado. "Sem exame" gera pendência documental.'],
+    ['Bloqueado', 'Situação do animal na ABCCMM que impede alguns serviços até ser regularizada.'],
+    ['AIE', 'Anemia Infecciosa Equina. Exame com resultado negativo e dentro da validade é exigido para o trânsito (GTA).'],
+    ['Mormo', 'Doença bacteriana dos equídeos. O exame negativo é exigido para trânsito e eventos.'],
+    ['GTA', 'Guia de Trânsito Animal, documento obrigatório para transportar equídeos.'],
+    ['Primovacinação', 'Série inicial de doses de uma vacina. Se o reforço vencer além da tolerância, a série recomeça.'],
+    ['Reforço', 'Dose aplicada depois da série inicial, em geral anual ou semestral.'],
+    ['Desmama', 'Separação do potro da mãe, por volta dos 6 meses. Marca a 1ª dose de rinopneumonite.'],
+    ['Cobertura', 'Monta ou inseminação. Com o diagnóstico positivo, o sistema calcula a previsão de parto.'],
+    ['Vacina multivalente', 'Vacina que protege contra várias doenças em uma aplicação. No registro, marque todas as doenças cobertas.'],
+    ['2FA', 'Verificação em duas etapas: além da senha, um código de 6 dígitos do aplicativo autenticador do celular.']
+  ];
+
   /* ---------- leitura de PDF (Relatório de Plantel ABCCMM) ---------- */
   async function linhasPDF(file) {
     if (!window.pdfjsLib) throw new Error('O leitor de PDF não carregou. Verifique a conexão e recarregue a página.');
@@ -238,6 +266,7 @@ const H = (function () {
     CATS, EVENTOS_REPRO, GESTACAO_DIAS, FAIXAS, LIMITE_ANIMAIS, STATUS_TXT, TIPOS_NOTIF,
     mensalidade,
     protocolo, animal, gestacao, tarefas, notificacoes, tituloRegistro, doseTxt,
+    ACOES_AUDIT, GLOSSARIO,
     linhasPDF, lerPlantel, compararImportacao, lerGenealogia, responder
   };
 })();
