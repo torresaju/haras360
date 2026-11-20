@@ -12,6 +12,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 k = load_pem_public_key(open(sys.argv[1], "rb").read())
 assert isinstance(k, Ed25519PublicKey)
 PY
+DIGITAL="$(python3 /usr/local/sbin/haras360-verificar --impressao "$1")"
 install -m 644 -o root -g root "$1" "$H360_ETC/chave-publica.pem"
 auditar parametro_alterado "chave pública de atualização trocada"
-info "Chave pública instalada em $H360_ETC/chave-publica.pem"
+info "Chave pública instalada em $H360_ETC/chave-publica.pem (impressão digital $DIGITAL)"

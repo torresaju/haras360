@@ -37,7 +37,17 @@ def sha256(caminho):
     return h.hexdigest()
 
 
+def impressao(caminho):
+    from cryptography.hazmat.primitives import serialization
+    der = load_pem_public_key(open(caminho, "rb").read()).public_bytes(serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)
+    h = hashlib.sha256(der).hexdigest()
+    return ":".join(h[i:i + 4] for i in range(0, 32, 4))
+
+
 def main():
+    if len(sys.argv) == 3 and sys.argv[1] == "--impressao":
+        print(impressao(sys.argv[2]))
+        return
     if len(sys.argv) != 5:
         sair("uso: haras360-verificar <pacote> <assinatura> <chave-publica> <destino>")
     pacote, assinatura, chave, destino = sys.argv[1:]

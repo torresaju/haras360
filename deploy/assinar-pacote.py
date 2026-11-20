@@ -1,15 +1,21 @@
 """Assina pacotes de atualização do Haras360 (Windows, macOS ou Linux).
 
-Preparação, uma única vez:
-    pip install cryptography
-    python assinar-pacote.py gerar-chaves
-        Cria a chave privada, protegida por senha, em %USERPROFILE%\\.haras360\\chave-privada.pem
-        e grava chave-publica.pem na pasta atual. A chave pública vai para o servidor;
-        a privada nunca sai da sua máquina.
+O Haras360 usa a mesma chave de assinatura do Journey:
+    %USERPROFILE%\\journey-chaves\\journey-assinatura.key   (privada, protegida pela senha do Journey)
+    %USERPROFILE%\\journey-chaves\\atualizacao.pub           (pública, já incluída em deploy/chave-publica.pem)
+O texto assinado começa com "haras360-pacote", diferente do Journey: um pacote assinado
+para um sistema nunca é aceito pelo outro.
 
 A cada versão:
+    pip install cryptography            (uma única vez)
     python assinar-pacote.py haras360-1.0.1.tar.gz
         Pede a senha da chave e grava haras360-1.0.1.tar.gz.sig ao lado do pacote.
+    python assinar-pacote.py haras360-1.0.1.tar.gz --chave C:\\outro\\caminho.key
+        Usa outra chave.
+
+    python assinar-pacote.py gerar-chaves
+        Cria uma chave própria do Haras360 em %USERPROFILE%\\.haras360\\chave-privada.pem (só se um dia
+        quiser separar das chaves do Journey; troque também a chave pública no servidor).
 
     python assinar-pacote.py conferir haras360-1.0.1.tar.gz chave-publica.pem
         Confere uma assinatura (o servidor faz a mesma conferência antes de atualizar).
@@ -34,7 +40,22 @@ except ImportError:
     sys.exit("Instale a biblioteca antes: pip install cryptography")
 
 NOME = re.compile(r"^haras360-\d+\.\d+\.\d+\.tar\.gz$")
-CHAVE = Path(os.environ.get("HARAS360_CHAVE_PRIVADA", Path.home() / ".haras360" / "chave-privada.pem"))
+CHAVE_JOURNEY = Path.home() / "journey-chaves" / "journey-assinatura.key"
+CHAVE_PROPRIA = Path.home() / ".haras360" / "chave-privada.pem"
+
+
+def localizar_chave(explicita=None):
+    if explicita:
+        return Path(explicita)
+    if os.environ.get("HARAS360_CHAVE_PRIVADA"):
+        return Path(os.environ["HARAS360_CHAVE_PRIVADA"])
+    return CHAVE_JOURNEY if CHAVE_JOURNEY.exists() else CHAVE_PROPRIA
+
+
+def impressao_digital(pub):
+    der = pub.public_bytes(serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)
+    h = hashlib.sha256(der).hexdigest()
+    return ":".join(h[i:i + 4] for i in range(0, 32, 4))
 
 
 def senha(confirmar=False):
@@ -63,6 +84,7 @@ def sha256(caminho):
 
 
 def gerar_chaves():
+    CHAVE = Path(os.environ.get("HARAS360_CHAVE_PRIVADA", CHAVE_PROPRIA))
     if CHAVE.exists():
         sys.exit(f"Já existe uma chave em {CHAVE}. Apague-a manualmente se quiser criar outra (e troque a chave pública no servidor).")
     s = senha(confirmar=True)
@@ -78,16 +100,18 @@ def gerar_chaves():
     print(f"Chave privada: {CHAVE}  (guarde uma cópia em local seguro e não perca a senha)")
     print("Chave pública: chave-publica.pem  (envie para o servidor ou para o repositório em deploy/chave-publica.pem)\n")
     print(pub.decode())
+    print("Impressão digital:", impressao_digital(priv.public_key()))
 
 
-def assinar(pacote):
+def assinar(pacote, chave=None):
+    CHAVE = localizar_chave(chave)
     p = Path(pacote)
     if not p.is_file():
         sys.exit(f"Arquivo não encontrado: {pacote}")
     if not NOME.match(p.name):
         sys.exit("O pacote precisa se chamar haras360-X.Y.Z.tar.gz, como baixado da Release.")
     if not CHAVE.exists():
-        sys.exit(f"Chave não encontrada em {CHAVE}. Rode primeiro: python assinar-pacote.py gerar-chaves")
+        sys.exit(f"Chave não encontrada em {CHAVE}. Informe o caminho com --chave.")
     try:
         priv = serialization.load_pem_private_key(CHAVE.read_bytes(), password=senha())
     except (ValueError, TypeError):
@@ -96,6 +120,7 @@ def assinar(pacote):
     sig = priv.sign(f"haras360-pacote|{p.name}|{h}".encode())
     saida = p.with_name(p.name + ".sig")
     saida.write_text(json.dumps({"arquivo": p.name, "sha256": h, "assinatura": base64.b64encode(sig).decode()}, indent=1), encoding="utf-8")
+    print(f"Chave usada: {CHAVE} (impressão digital {impressao_digital(priv.public_key())})")
     print(f"Assinatura gravada em {saida}")
     print(f"SHA-256 do pacote: {h}")
 
@@ -122,6 +147,8 @@ def main():
         conferir(a[1], a[2])
     elif len(a) == 1 and not a[0].startswith("-"):
         assinar(a[0])
+    elif len(a) == 3 and a[1] == "--chave":
+        assinar(a[0], a[2])
     else:
         print(__doc__)
         sys.exit(2)

@@ -2,19 +2,18 @@
 
 Roteiro para a segunda VM AMD micro (Ubuntu 22.04 ou 24.04, 1 GB de memória).
 
-## 1. Chave de assinatura (uma única vez, no Windows)
+## 1. Chave de assinatura
 
-1. Instale o Python 3 em python.org (marque "Add python.exe to PATH").
-2. No Prompt de Comando:
-   ```
-   pip install cryptography
-   python assinar-pacote.py gerar-chaves
-   ```
-   O `assinar-pacote.py` vem anexado em cada Release do GitHub.
-3. Escolha uma senha forte (mínimo 12 caracteres) e não a perca.
-   * A chave privada fica em `%USERPROFILE%\.haras360\chave-privada.pem`. Guarde uma cópia em local seguro, fora do computador.
-   * A chave pública é gravada como `chave-publica.pem` na pasta atual.
-4. Envie o conteúdo de `chave-publica.pem` para entrar no repositório em `deploy/chave-publica.pem`. A chave pública não é segredo. Ela também pode ser instalada direto no servidor com `sudo haras360-chave chave-publica.pem`.
+O Haras360 usa a **mesma chave do Journey**, que fica em `C:\Users\torre\journey-chaves\`:
+
+* `journey-assinatura.key`: chave privada, protegida pela senha do Journey. Nunca sai do computador.
+* `atualizacao.pub`: chave pública, já incluída no pacote em `deploy/chave-publica.pem`. Impressão digital `ba29:5bc9:c550:322d:2b24:bdb1:14fe:ba98`.
+
+O instalador coloca a chave pública em `/etc/haras360/chave-publica.pem` e mostra a impressão digital, para você conferir com a do Journey.
+
+O texto assinado pelo Haras360 começa com `haras360-pacote` e o do Journey com `journey-pacote-v1`. Por isso um pacote assinado para um sistema nunca é aceito pelo outro, mesmo com a mesma chave. Se a chave precisar ser trocada, troque nos dois servidores (`sudo haras360-chave nova.pub` no Haras360).
+
+Para assinar, uma única vez instale a biblioteca (`pip install cryptography`). O `assinar-pacote.py` vem anexado em cada Release e encontra a chave do Journey sozinho.
 
 ## 2. Instalação na VM nova
 
@@ -50,7 +49,7 @@ O backup roda todo dia às 02:30, também pode ser pedido em Administração ›
 ## 4. Atualização
 
 1. Baixe `haras360-X.Y.Z.tar.gz` e `assinar-pacote.py` na Release da versão.
-2. No Windows: `python assinar-pacote.py haras360-X.Y.Z.tar.gz`. Isso gera `haras360-X.Y.Z.tar.gz.sig`.
+2. No Windows: `python assinar-pacote.py haras360-X.Y.Z.tar.gz`. A senha pedida é a mesma da chave do Journey. Isso gera `haras360-X.Y.Z.tar.gz.sig`.
 3. Em Administração › Atualização e backup, envie os dois arquivos. Também é possível por SSH: `sudo haras360-update haras360-X.Y.Z.tar.gz haras360-X.Y.Z.tar.gz.sig`.
 
 O servidor faz o seguinte:

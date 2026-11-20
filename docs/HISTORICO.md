@@ -12,6 +12,10 @@ Uma nota por versão, da mais recente para a mais antiga.
   * o envio pode ser pelo botão Administração › Atualização ou por SSH;
   * antes de trocar de versão: conferência de SHA-256, assinatura e manifesto, backup e migrações aditivas;
   * se a nova versão não responder, volta sozinha; há volta manual e três versões guardadas.
+* **Chave de assinatura compartilhada com o Journey:**
+  * chave pública em `deploy/chave-publica.pem`, impressão digital `ba29:5bc9:c550:322d:2b24:bdb1:14fe:ba98`;
+  * `assinar-pacote.py` usa `journey-chaves\journey-assinatura.key` por padrão;
+  * texto assinado próprio do Haras360, para os pacotes de um sistema não valerem no outro.
 * **Backup do ambiente inteiro**, todo dia às 02:30: banco, fotos, logotipos, configuração, chaves, serviços, pacote em uso e instalador. Envio ao bucket privado da OCI por link pré-autenticado. `restaurar-servidor.sh` reconstrói uma VM nova a partir dele.
 * **Segurança:**
   * 2FA por aplicativo autenticador para administrador e gestor, com códigos de recuperação;

@@ -100,7 +100,11 @@ PORTA="$(grep -E '^H360_PORTA=' "$H360_ETC/haras360.env" | cut -d= -f2)"; PORTA=
 if [ ! -f "$H360_ETC/chave-publica.pem" ] && [ -f "$PACOTE/deploy/chave-publica.pem" ]; then
   install -m 644 "$PACOTE/deploy/chave-publica.pem" "$H360_ETC/chave-publica.pem"
 fi
-[ -f "$H360_ETC/chave-publica.pem" ] || aviso "Sem chave pública de atualização. Instale depois com: sudo haras360-chave chave-publica.pem"
+if [ -f "$H360_ETC/chave-publica.pem" ]; then
+  info "Chave pública de atualização instalada (impressão digital $(python3 "$PACOTE/deploy/sbin/haras360-verificar" --impressao "$H360_ETC/chave-publica.pem"))"
+else
+  aviso "Sem chave pública de atualização. Instale depois com: sudo haras360-chave chave-publica.pem"
+fi
 
 # ---------- 6. versão ----------
 info "Instalando a versão $VERSAO"

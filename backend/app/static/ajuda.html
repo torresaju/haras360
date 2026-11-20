@@ -339,7 +339,7 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       <figure><img src="/ajuda/img/admin-parametros.png" alt="Planos e módulos" loading="lazy"><figcaption>Grade de planos e módulos. Por padrão tudo vem liberado.</figcaption></figure>
     </section>
     <section id="atualizacao"><h2>Atualização e backup</h2><span class="perfil">Administrador</span>
-      <ol><li>Na Release da versão no GitHub, baixe <span class="mono">haras360-X.Y.Z.tar.gz</span> e anote o SHA-256.</li><li>No Windows, rode <kbd>python assinar-pacote.py haras360-X.Y.Z.tar.gz</kbd> e digite a senha da chave. Sai o arquivo <span class="mono">.sig</span>.</li><li>Em Administração › Atualização e backup, envie o pacote e a assinatura.</li></ol>
+      <ol><li>Na Release da versão no GitHub, baixe <span class="mono">haras360-X.Y.Z.tar.gz</span> e anote o SHA-256.</li><li>No Windows, rode <kbd>python assinar-pacote.py haras360-X.Y.Z.tar.gz</kbd> e digite a senha da chave (a mesma do Journey). Sai o arquivo <span class="mono">.sig</span>.</li><li>Em Administração › Atualização e backup, envie o pacote e a assinatura.</li></ol>
       <p>O servidor confere o SHA-256 e a assinatura, faz backup, aplica as migrações, troca de versão e testa. Se falhar, volta sozinho. As três últimas versões ficam guardadas para voltar com um clique.</p>
       <figure><img src="/ajuda/img/admin-atualizacao.png" alt="Atualização e backup" loading="lazy"><figcaption>Envio do pacote assinado, versões guardadas e backup.</figcaption></figure>
       <p>O backup completo roda todo dia às 02:30, fica 7 dias no servidor e vai para o bucket privado da OCI.</p>
