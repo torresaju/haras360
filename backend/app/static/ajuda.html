@@ -283,7 +283,10 @@ section ol,section ul{margin:0;padding-left:20px;display:flex;flex-direction:col
 figure{margin:6px 0 0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
 figure img{display:block;width:100%;height:auto}
 figcaption{font-size:.84rem;color:var(--muted);padding:8px 12px;border-top:1px solid var(--line-2)}
-.perfil{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:99px;padding:2px 9px;background:var(--accent-soft);color:var(--accent)}
+.perfil{align-self:flex-start;display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:99px;padding:2px 9px;background:var(--accent-soft);color:var(--accent)}
+
+.fotos-app{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:640px){.fotos-app{grid-template-columns:minmax(0,1fr)}}
 kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
 @media (max-width:860px){.corpo{grid-template-columns:minmax(0,1fr)}.sumario{position:static;flex-direction:row;flex-wrap:wrap;gap:4px}.sumario a{border-left:0;background:var(--surface-2)}}
 </style>
@@ -293,7 +296,7 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
 <header class="cab"><div class="cab-in"><div class="eyebrow" style="color:var(--forest-muted)">Ajuda</div><h1>Manual do Haras360</h1><p>Como usar o portal do gestor, o Portal Campo e a administração da plataforma. As telas mostram o Haras Demonstração, com dados fictícios.</p></div></header>
 <div class="corpo">
   <nav class="sumario" aria-label="Sumário">
-    <a href="#acesso">Primeiro acesso e 2FA</a><a href="#painel">Painel</a><a href="#importar">Importar ABCCMM</a><a href="#animais">Animais e prontuário</a><a href="#agenda">Agenda e protocolos</a><a href="#campo">Portal Campo</a><a href="#equipe">Equipe e sessões</a><a href="#parametros">Parametrizações</a><a href="#auditoria">Auditoria</a><a href="#admin">Administração da plataforma</a><a href="#atualizacao">Atualização e backup</a>
+    <a href="#acesso">Primeiro acesso e 2FA</a><a href="#painel">Painel</a><a href="#importar">Importar ABCCMM</a><a href="#animais">Animais e prontuário</a><a href="#agenda">Agenda e protocolos</a><a href="#campo">Portal Campo</a><a href="#app">App Android do caseiro</a><a href="#equipe">Equipe e sessões</a><a href="#parametros">Parametrizações</a><a href="#auditoria">Auditoria</a><a href="#admin">Administração da plataforma</a><a href="#atualizacao">Atualização e backup</a>
   </nav>
   <article>
     <section id="acesso"><h2>Primeiro acesso e verificação em duas etapas</h2>
@@ -324,7 +327,19 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
     <section id="campo"><h2>Portal Campo do caseiro</h2><span class="perfil">Caseiro</span>
       <p>Feito para o celular: tarefas do dia, fichas dos animais, registro com fotos e ocorrências. Ao tocar em Registrar em uma tarefa, o formulário já vem preenchido.</p>
       <figure><img src="/ajuda/img/campo.png" alt="Portal Campo no celular" loading="lazy" style="max-width:420px"><figcaption>Portal Campo na largura de um celular.</figcaption></figure>
-      <p>Para trabalhar sem internet no campo, o caseiro usará o aplicativo Android, previsto para a versão 1.1.</p>
+      <p>Para trabalhar sem internet no campo, use o app Android: toque em <b>Instalar o app Android</b>, no fim da tela Hoje.</p>
+    </section>
+    <section id="app"><h2>App Android do caseiro</h2><span class="perfil">Caseiro</span><span class="perfil">Gestor</span>
+      <p>O app funciona sem internet: o caseiro registra no pasto e o celular envia sozinho quando chega ao Wi-Fi da sede. Dados móveis (3G/4G) não são usados. Android 8 ou superior.</p>
+      <ol><li><b>Instalar:</b> no celular do caseiro, entre no Portal Campo e toque em Instalar o app Android. Se o Android pedir, permita instalar apps desta origem.</li><li><b>Vincular:</b> o gestor abre Equipe e toca em Vincular celular na linha do caseiro. No app, toque em Ler QR Code. O código vale 10 minutos e uma única vez. Sem câmera, digite o servidor e o código mostrados abaixo do QR Code.</li><li><b>Trabalhar:</b> a tela Hoje mostra as tarefas atrasadas, de hoje e da semana. Toque em Registrar numa tarefa e o formulário já vem preenchido. Até 4 fotos por registro, comprimidas no celular.</li><li><b>Enviar:</b> a cada hora, e sempre que o app abre no Wi-Fi, os registros e as fotos vão para o servidor. Na aba Envio estão a fila, a hora da última sincronização e o botão Sincronizar agora.</li></ol>
+      <figure><img src="/ajuda/img/vincular.png" alt="QR Code para vincular o celular do caseiro" loading="lazy"><figcaption>Equipe › Vincular celular: o QR Code que o app lê.</figcaption></figure>
+      <div class="fotos-app">
+        <figure><img src="/ajuda/img/app-hoje.png" alt="Tela Hoje do app" loading="lazy"><figcaption>Tarefas do dia, mesmo sem internet.</figcaption></figure>
+        <figure><img src="/ajuda/img/app-registro.png" alt="Registro de ocorrência no app" loading="lazy"><figcaption>Registro gravado no celular.</figcaption></figure>
+        <figure><img src="/ajuda/img/app-envio-pendente.png" alt="Aba Envio com um registro aguardando o Wi-Fi" loading="lazy"><figcaption>Aguardando o Wi-Fi para enviar.</figcaption></figure>
+      </div>
+      <p>O registro feito no app aparece no prontuário com a origem "App". O gestor pode encerrar o celular em Equipe › Sessões e aparelhos ativos; os registros que ainda estiverem no celular continuam guardados até um novo vínculo. Se o servidor recusar um registro (por exemplo, animal excluído), ele fica em Envio › Recusados pelo servidor, com Tentar de novo.</p>
+      <p>Quando o servidor recebe uma versão nova, o app avisa na aba Envio e oferece o download. A atualização instala por cima, sem perder dados.</p>
     </section>
     <section id="equipe"><h2>Equipe e sessões</h2><span class="perfil">Gestor</span>
       <p>Adicione gestores e caseiros com senha inicial. Para cada pessoa você pode redefinir a senha, redefinir o 2FA de outro gestor e desativar o acesso. Em Sessões e aparelhos ativos aparecem os navegadores e celulares conectados; encerre os que não reconhecer.</p>
