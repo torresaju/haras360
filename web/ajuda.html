@@ -30,7 +30,7 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
 <header class="acab"><div class="acab-in"><div class="row" style="gap:10px;margin-bottom:12px"><span id="marca-ajuda" class="row" style="gap:10px"><svg class="logo-sim" viewBox="0 0 120 120" aria-hidden="true"><path d="M18 94 A50 50 0 0 1 94 20" fill="none" stroke="#D5A064" stroke-width="6" stroke-linecap="round"/><path d="M34 106 C31 84 34 64 43 49 C48 39 53 31 58 26 L60 16 L65 23 L69 15 L71 25 C78 30 84 38 89 48 C93 56 98 63 100 69 C101 74 97 78 92 77 C87 76 83 73 79 71 C74 69 70 70 68 74 C66 82 67 94 71 106" fill="none" stroke="#F3F1E9" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M57 32 C50 44 46 58 46 76" fill="none" stroke="#F3F1E9" stroke-width="3.2" stroke-linecap="round"/><circle cx="76" cy="41" r="2.8" fill="#F3F1E9"/></svg><span class="marca-txt"><b>Haras<i>360</i></b><small>Gestão de haras</small></span></span></div><div class="eyebrow" style="color:var(--forest-muted)">Ajuda</div><h1>Manual do Haras360</h1><p>Como usar o portal do gestor, o Portal Campo e a administração da plataforma. As telas mostram o Haras Demonstração, com dados fictícios.</p></div></header>
 <div class="corpo">
   <nav class="sumario" aria-label="Sumário">
-    <a href="#acesso">Primeiro acesso e 2FA</a><a href="#painel">Painel</a><a href="#importar">Importar ABCCMM</a><a href="#animais">Animais e prontuário</a><a href="#agenda">Agenda e protocolos</a><a href="#campo">Portal Campo</a><a href="#app">App Android do caseiro</a><a href="#equipe">Equipe e sessões</a><a href="#parametros">Parametrizações</a><a href="#auditoria">Auditoria</a><a href="#admin">Administração da plataforma</a><a href="#atualizacao">Atualização e backup</a>
+    <a href="#acesso">Primeiro acesso e 2FA</a><a href="#painel">Dashboard e menus</a><a href="#importar">Importar ABCCMM</a><a href="#animais">Animais e prontuário</a><a href="#agenda">Agenda e protocolos</a><a href="#campo">Portal Campo</a><a href="#app">App Android do caseiro</a><a href="#equipe">Equipe e sessões</a><a href="#parametros">Parametrizações</a><a href="#imagens">Imagens do haras</a><a href="#auditoria">Auditoria</a><a href="#admin">Administração da plataforma</a><a href="#marca">Marca e imagens da plataforma</a><a href="#atualizacao">Atualização e backup</a>
   </nav>
   <article>
     <section id="acesso"><h2>Primeiro acesso e verificação em duas etapas</h2>
@@ -39,10 +39,14 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       <figure><img src="/ajuda/img/2fa.png" alt="Tela de ativação do 2FA com QR Code" loading="lazy"><figcaption>Ativação do 2FA no primeiro acesso do gestor.</figcaption></figure>
       <p>Perdeu o celular? Na tela do código, use "Perdi o celular: usar código de recuperação". Depois, gere novos códigos no menu com o seu nome. Se não tiver mais códigos, outro gestor ou o administrador redefine o seu 2FA.</p>
     </section>
-    <section id="painel"><h2>Painel</h2><span class="perfil">Gestor</span>
-      <p>Mostra o que precisa de atenção: procedimentos atrasados, os previstos para os próximos 7 dias, pendências da ABCCMM, gestações em andamento e os últimos registros feitos pelo caseiro.</p>
-      <figure><img src="/ajuda/img/painel.png" alt="Painel do gestor" loading="lazy"><figcaption>Painel do gestor com a barra de menus no topo.</figcaption></figure>
-      <p>Os menus ficam agrupados: Plantel (Animais, Importar ABCCMM), Manejo (Agenda, Protocolos), Equipe, Assistente, Administração e Ajuda. O sino mostra os avisos não lidos.</p>
+    <section id="painel"><h2>Dashboard e menus</h2><span class="perfil">Gestor</span>
+      <p>O Dashboard mostra o que precisa de atenção: cinco indicadores (animais, vacinas vencidas, vacinas dos próximos 7 dias, gestações ativas e partos previstos para 30 dias), os próximos eventos, a composição do rebanho, a situação reprodutiva, a lista Atenção agora e os últimos registros feitos pelo caseiro.</p>
+      <figure><img src="/ajuda/img/painel.png" alt="Dashboard do gestor" loading="lazy"><figcaption>Dashboard do gestor com o menu lateral.</figcaption></figure>
+      <p>O menu fica na lateral, agrupado por módulo: Dashboard; Animais (Plantel, Importar ABCCMM); Sanidade (Vacinas e manejos, Protocolos); Reprodução; Agenda; Relatórios (em breve); Administração (Equipe, Parametrizações, Auditoria, Assistente, Plano) e Ajuda. Toque no nome do grupo para abrir ou fechar. No celular, o menu abre pelo botão ☰. No cabeçalho ficam o logotipo e o nome do haras, o sino com os avisos não lidos e o menu com o seu nome.</p>
+      <div class="fotos-app">
+        <figure><img src="/ajuda/img/sanidade.png" alt="Vacinas e manejos" loading="lazy"><figcaption>Sanidade › Vacinas e manejos.</figcaption></figure>
+        <figure><img src="/ajuda/img/reproducao.png" alt="Reprodução" loading="lazy"><figcaption>Reprodução: coberturas, diagnósticos e partos previstos.</figcaption></figure>
+      </div>
     </section>
     <section id="importar"><h2>Importar o Relatório de Plantel ABCCMM</h2><span class="perfil">Gestor</span>
       <ol><li>No Sistema de Gestão ABCCMM, gere o Relatório de Plantel em PDF.</li><li>Em Plantel › Importar ABCCMM, envie o PDF. A leitura acontece no seu navegador.</li><li>Confira a lista: o sistema compara com o total informado no relatório e marca animais novos, a atualizar e já cadastrados.</li><li>Clique em Importar. A agenda sanitária é calculada na hora.</li></ol>
@@ -59,24 +63,27 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       <p>Em Manejo › Protocolos você ajusta idades, séries, intervalos e ativa ou desativa cada item. Os padrões seguem a VetJr. UFMG para vacinas e práticas de mercado para os demais manejos; valide com o veterinário do plantel.</p>
     </section>
     <section id="campo"><h2>Portal Campo do caseiro</h2><span class="perfil">Caseiro</span>
-      <p>Feito para o celular: tarefas do dia, fichas dos animais, registro com fotos e ocorrências. Ao tocar em Registrar em uma tarefa, o formulário já vem preenchido.</p>
+      <p>Feito para o celular: tarefas do dia, fichas dos animais, registro com fotos e ocorrências. Ao tocar em Registrar em uma tarefa, o formulário já vem preenchido. O botão <b>Registrar ocorrência</b> fica no topo da tela Hoje. A barra de baixo tem Hoje, Animais, Agenda (próximos 30 dias) e Mais (avisos, assistente, instalar o app, senha, manual e sair).</p>
       <figure><img src="/ajuda/img/campo.png" alt="Portal Campo no celular" loading="lazy" style="max-width:420px"><figcaption>Portal Campo na largura de um celular.</figcaption></figure>
       <p>Para trabalhar sem internet no campo, use o app Android: toque em <b>Instalar o app Android</b>, no topo da tela Hoje.</p>
     </section>
     <section id="app"><h2>App Android do caseiro</h2><span class="perfil">Caseiro</span><span class="perfil">Gestor</span>
       <p>O app funciona sem internet: o caseiro registra no pasto e o celular envia sozinho quando chega ao Wi-Fi da sede. Dados móveis (3G/4G) não são usados. Android 8 ou superior.</p>
-      <ol><li><b>Instalar:</b> no celular do caseiro, entre no Portal Campo e toque em Instalar o app Android, no topo da tela Hoje. O gestor também encontra o link e um QR Code de download na janela Vincular celular. Se o Android pedir, permita instalar apps desta origem.</li><li><b>Vincular:</b> o gestor abre Equipe e toca em Vincular celular na linha do caseiro. No app, toque em Ler QR Code. O código vale 10 minutos e uma única vez. Sem câmera, digite o servidor e o código mostrados abaixo do QR Code.</li><li><b>Trabalhar:</b> a tela Hoje mostra as tarefas atrasadas, de hoje e da semana. Toque em Registrar numa tarefa e o formulário já vem preenchido. Até 4 fotos por registro, comprimidas no celular, e um áudio de até 2 minutos: toque em Gravar áudio, fale e toque em Parar. Dá para ouvir e apagar antes de salvar.</li><li><b>Enviar:</b> a cada hora, e sempre que o app abre no Wi-Fi, os registros e as fotos vão para o servidor. Na aba Envio estão a fila, a hora da última sincronização e o botão Sincronizar agora.</li></ol>
+      <ol><li><b>Instalar:</b> no celular do caseiro, entre no Portal Campo e toque em Instalar o app Android, no topo da tela Hoje. O gestor também encontra o link e um QR Code de download na janela Vincular celular. Se o Android pedir, permita instalar apps desta origem.</li><li><b>Vincular:</b> o gestor abre Equipe e toca em Vincular celular na linha do caseiro. No app, toque em Ler QR Code. O código vale 10 minutos e uma única vez. Sem câmera, digite o servidor e o código mostrados abaixo do QR Code.</li><li><b>Trabalhar:</b> a tela Hoje mostra as tarefas atrasadas, de hoje e da semana. Toque em Registrar numa tarefa e o formulário já vem preenchido. Até 4 fotos por registro, comprimidas no celular, e um áudio de até 2 minutos: toque em Gravar áudio, fale e toque em Parar. Dá para ouvir e apagar antes de salvar.</li><li><b>Enviar:</b> a cada hora, e sempre que o app abre no Wi-Fi, os registros e as fotos vão para o servidor. Em Mais › Envio estão a fila, a hora da última sincronização e o botão Sincronizar agora.</li></ol>
+      <p>A barra de baixo do app tem Hoje, Animais, Agenda (próximos 30 dias) e Mais (Avisos, Envio, versão do app e vincular de novo). O fundo e o logotipo do haras são baixados no Wi-Fi e ficam guardados no celular.</p>
       <figure><img src="/ajuda/img/vincular.png" alt="QR Code para vincular o celular do caseiro" loading="lazy"><figcaption>Equipe › Vincular celular: o QR Code que o app lê.</figcaption></figure>
       <div class="fotos-app">
         <figure><img src="/ajuda/img/app-hoje.png" alt="Tela Hoje do app" loading="lazy"><figcaption>Tarefas do dia, mesmo sem internet.</figcaption></figure>
         <figure><img src="/ajuda/img/app-registro.png" alt="Registro de ocorrência no app, com áudio" loading="lazy"><figcaption>Registro com áudio, gravado no celular.</figcaption></figure>
-        <figure><img src="/ajuda/img/app-envio-pendente.png" alt="Aba Envio com um registro aguardando o Wi-Fi" loading="lazy"><figcaption>Aguardando o Wi-Fi para enviar.</figcaption></figure>
+        <figure><img src="/ajuda/img/app-agenda.png" alt="Agenda do app" loading="lazy"><figcaption>Agenda dos próximos 30 dias.</figcaption></figure>
+        <figure><img src="/ajuda/img/app-mais.png" alt="Tela Mais do app" loading="lazy"><figcaption>Mais: avisos, envio e versão.</figcaption></figure>
+        <figure><img src="/ajuda/img/app-envio-pendente.png" alt="Envio com um registro aguardando o Wi-Fi" loading="lazy"><figcaption>Aguardando o Wi-Fi para enviar.</figcaption></figure>
       </div>
       <p>O registro feito no app aparece no prontuário com a origem "App". Quando tem áudio, o gestor ouve pelo player no próprio registro, no prontuário e nos últimos registros do campo do Painel. O áudio vai para o servidor só no Wi-Fi, como as fotos, e sai junto se o registro for excluído.</p>
       <figure><img src="/ajuda/img/audio-painel.png" alt="Player de áudio nos últimos registros do campo" loading="lazy" style="max-width:460px"><figcaption>Áudio do caseiro no Painel do gestor.</figcaption></figure>
       <p>O administrador liga ou desliga o áudio por plano (grade de planos e módulos) e define a duração máxima em Parametrizações › App do caseiro.</p>
       <p> O gestor pode encerrar o celular em Equipe › Sessões e aparelhos ativos; os registros que ainda estiverem no celular continuam guardados até um novo vínculo. Se o servidor recusar um registro (por exemplo, animal excluído), ele fica em Envio › Recusados pelo servidor, com Tentar de novo.</p>
-      <p>Quando o servidor recebe uma versão nova, o app avisa na aba Envio e oferece o download. A atualização instala por cima, sem perder dados.</p>
+      <p>Quando o servidor recebe uma versão nova, o app avisa em Mais › Envio e oferece o download. A atualização instala por cima, sem perder dados.</p>
     </section>
     <section id="equipe"><h2>Equipe e sessões</h2><span class="perfil">Gestor</span>
       <p>Adicione gestores e caseiros com senha inicial. Para cada pessoa você pode redefinir a senha, redefinir o 2FA de outro gestor e desativar o acesso. Em Sessões e aparelhos ativos aparecem os navegadores e celulares conectados; encerre os que não reconhecer.</p>
@@ -85,6 +92,12 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
     <section id="parametros"><h2>Parametrizações do haras</h2><span class="perfil">Gestor</span>
       <p>Logotipo do haras, dados do haras, reforço da raiva anual ou semestral, dias de gestação usados na previsão de parto e tolerância para reiniciar a primovacinação.</p><p>O logotipo aparece na barra superior do Portal do Gestor e do Portal Campo. Envie PNG, JPG ou WebP com fundo branco ou transparente: o sistema recorta as margens vazias e reduz a imagem. O administrador também pode enviar ou trocar o logotipo ao cadastrar o haras.</p>
       <figure><img src="/ajuda/img/parametros.png" alt="Parametrizações do haras" loading="lazy"><figcaption>Parametrizações do haras.</figcaption></figure>
+    </section>
+    <section id="imagens"><h2>Imagens do haras</h2><span class="perfil">Gestor</span>
+      <p>Em Administração › Parametrizações › Imagens do haras, o gestor personaliza o portal e o app com imagens próprias:</p>
+      <ul><li><b>Imagem do cabeçalho:</b> faixa no topo do Portal do Gestor e do Portal Campo.</li><li><b>Banner do Dashboard:</b> imagem larga no Dashboard.</li><li><b>Fundo do app:</b> fundo da tela de abertura e do topo da tela Hoje no app Android.</li></ul>
+      <p>Envie PNG, JPG ou WebP de até 3 MB. O navegador reduz a imagem antes do envio. Escolha o foco (centro, topo ou base) para indicar que parte aparece quando a imagem é recortada. <b>Usar a padrão</b> volta para a imagem da plataforma. Cada troca fica na auditoria. O app baixa a imagem nova na próxima sincronização pelo Wi-Fi.</p>
+      <figure><img src="/ajuda/img/imagens.png" alt="Imagens do haras" loading="lazy"><figcaption>Imagens do haras com um banner próprio.</figcaption></figure>
     </section>
     <section id="auditoria"><h2>Auditoria</h2><span class="perfil">Gestor</span><span class="perfil">Administrador</span>
       <p>Registra logins (inclusive recusados), 2FA, importações, exclusões com o conteúdo excluído, mudanças de protocolo e de parametrização, usuários, atualizações e backups. Filtre por ação, texto e período.</p>
@@ -96,6 +109,14 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       <figure><img src="/ajuda/img/admin-parametros.png" alt="Planos e módulos" loading="lazy"><figcaption>Grade de planos e módulos. Por padrão tudo vem liberado.</figcaption></figure>
       <p>Em Administração › Administradores, crie outros administradores, redefina a senha ou o 2FA de outro administrador e desative quem não deve mais entrar. Cada ação pede a sua senha e fica na auditoria. Ninguém desativa a própria conta, e a plataforma nunca fica sem administrador ativo. Para a sua conta, use o menu com o seu nome.</p>
       <figure><img src="/ajuda/img/admin-administradores.png" alt="Lista de administradores" loading="lazy"><figcaption>Administradores da plataforma.</figcaption></figure>
+    </section>
+    <section id="marca"><h2>Marca e imagens da plataforma</h2><span class="perfil">Administrador</span>
+      <p>Em Marca e imagens, o administrador troca o logotipo da plataforma e as imagens padrão: imagem da tela de entrada, cabeçalho, banner do Dashboard e fundo do app. As imagens padrão valem para todos os haras que não enviaram a sua. Sem nenhuma imagem enviada, o Haras360 usa a sua ilustração própria.</p>
+      <div class="fotos-app">
+        <figure><img src="/ajuda/img/admin-marca.png" alt="Marca e imagens" loading="lazy"><figcaption>Logotipo e imagens padrão da plataforma.</figcaption></figure>
+        <figure><img src="/ajuda/img/entrar.png" alt="Tela de entrada" loading="lazy"><figcaption>Tela de entrada com a imagem da plataforma.</figcaption></figure>
+      </div>
+      <p>As imagens ficam em <code>/opt/haras360/compartilhado/imagens</code> e entram no backup diário.</p>
     </section>
     <section id="atualizacao"><h2>Atualização e backup</h2><span class="perfil">Administrador</span>
       <ol><li>Na Release da versão no GitHub, baixe <span class="mono">haras360-X.Y.Z.tar.gz</span> e anote o SHA-256.</li><li>No Windows, rode <kbd>python assinar-pacote.py haras360-X.Y.Z.tar.gz</kbd> e digite a senha da chave (a mesma do Journey). Sai o arquivo <span class="mono">.sig</span>.</li><li>Em Administração › Atualização e backup, envie o pacote e a assinatura.</li></ol>

@@ -89,7 +89,7 @@ Os usuários entram com as mesmas senhas e o mesmo 2FA.
 |---|---|
 | `/opt/haras360/releases/X.Y.Z` | cada versão instalada, com o seu ambiente Python |
 | `/opt/haras360/atual` | atalho para a versão em uso |
-| `/opt/haras360/compartilhado` | fotos, logotipos, fila de tarefas e backups |
+| `/opt/haras360/compartilhado` | fotos, áudios, logotipos, imagens de personalização (`imagens/`, desde a v1.3.0), fila de tarefas e backups |
 | `/etc/haras360/haras360.env` | configuração e segredos (permissão 640) |
 | `/etc/haras360/chave-publica.pem` | chave que confere os pacotes |
 | `/etc/caddy/Caddyfile` | porta pública 8090 |

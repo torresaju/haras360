@@ -107,6 +107,11 @@ void main() {
     await t.tap(find.text('Salvar registro'));
     await esperar(t, find.textContaining('Vai para o servidor quando houver Wi-Fi'));
     await esperar(t, find.textContaining('aguardando o Wi-Fi'));
+    // tira o aviso "Registro salvo" da frente das próximas capturas do manual
+    for (final m in t.stateList<ScaffoldMessengerState>(find.byType(ScaffoldMessenger))) {
+      m.clearSnackBars();
+    }
+    await t.pump(const Duration(milliseconds: 400));
 
     await aba(t, 'Agenda');
     await esperar(t, find.text('Próximos 30 dias'));
