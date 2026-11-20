@@ -41,7 +41,7 @@ jobs:
           sudo H360_ADMIN_NOME="Admin CI" H360_ADMIN_EMAIL=admin@teste.local H360_ADMIN_SENHA=senha-de-teste-123 \
                H360_SEM_SWAP=1 H360_SEM_FIREWALL=1 bash haras360-*/deploy/instalar-servidor.sh
           # o pacote traz a chave pública de produção (a do Journey); só depois o teste troca pela chave de teste
-          IMP="$(sudo python3 deploy/sbin/haras360-verificar --impressao /etc/haras360/chave-publica.pem)"
+          IMP="$(sudo python3 "$GITHUB_WORKSPACE/deploy/sbin/haras360-verificar" --impressao /etc/haras360/chave-publica.pem)"
           echo "Chave instalada pelo pacote: $IMP"
           [ "$IMP" = "ba29:5bc9:c550:322d:2b24:bdb1:14fe:ba98" ]
           sudo haras360-chave "$RUNNER_TEMP/chave-publica.pem"
