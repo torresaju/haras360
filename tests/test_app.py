@@ -138,6 +138,10 @@ def test_apk_servido_pelo_servidor(base):
         assert v["disponivel"] and v["versao"] == "1.1.0" and v["codigo"] == 10100 and v["url"] == "/app/haras360.apk"
         r = c.get("/app/haras360.apk")
         assert r.status_code == 200 and r.headers["content-type"] == "application/vnd.android.package-archive"
+        k = entrar("caseiro@teste.com", "campo1234", {"X-Haras360": "1", "X-Portal": "campo"})
+        i = k.get("/api/app/instalar").json()
+        assert i["link"].endswith("/app/haras360.apk") and "<svg" in i["qr"]
+        assert c.get("/api/app/instalar").status_code == 401
     finally:
         (APP_DIR / "haras360.apk").unlink(missing_ok=True)
         (APP_DIR / "versao.json").unlink(missing_ok=True)

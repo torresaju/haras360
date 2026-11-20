@@ -262,6 +262,11 @@ main.wrapm{padding-inline:clamp(16px,3vw,32px);padding-block:24px 72px;max-width
 .logo-prev.vazio{color:var(--muted);font-size:.84rem;text-align:center;background:var(--surface-2)}
 @media (max-width:980px){.brand .nome-h{max-width:150px}}
 
+/* QR Codes (vínculo do app e instalação) */
+.qr-box{display:flex;justify-content:center;padding:12px;background:#fff;border:1px solid var(--line);border-radius:10px}
+.qr-box svg{width:min(240px,70vw);height:auto;display:block}
+ol.passos{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px 20px}
 .facts div{display:flex;flex-direction:column;gap:2px;min-width:0}
 .facts dt{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
@@ -448,6 +453,7 @@ const H = (function () {
     protocolos_alterados: 'Protocolos alterados', protocolos_restaurados: 'Protocolos restaurados', parametro_alterado: 'Parametrização alterada',
     haras_criado: 'Haras criado', logo_alterado: 'Logotipo alterado', haras_alterado: 'Haras alterado', atualizacao_solicitada: 'Atualização solicitada', atualizacao_concluida: 'Atualização concluída',
     atualizacao_falhou: 'Atualização falhou', rollback_solicitado: 'Volta de versão solicitada', rollback_concluido: 'Volta de versão concluída',
+    app_vinculo_gerado: 'QR Code do app gerado', app_vinculado: 'Celular vinculado', app_vinculo_falha: 'Vínculo do app recusado',
     backup_solicitado: 'Backup solicitado', backup_concluido: 'Backup concluído', backup_falhou: 'Backup falhou'
   };
   const GLOSSARIO = [
@@ -1210,7 +1216,7 @@ const UI = (function () {
     const caseiroOff = !modOn('caseiro');
     return '<div class="sec"><div class="card flush"><div class="card-h" style="padding:16px 18px 0"><h2>Usuários</h2><button class="btn pri" data-act="convidar">' + IC.plus + 'Adicionar usuário</button></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>2FA</th><th>Situação</th><th></th></tr></thead><tbody>' +
       (S.usuarios || []).map(u => '<tr><td><b>' + esc(u.nome) + '</b></td><td class="small">' + esc(u.email) + '</td><td><span class="chip nodot ' + (u.perfil === 'gestor' ? 'c-accent' : 'c-info') + '">' + PERFIS[u.perfil] + '</span></td><td>' + (u.perfil === 'gestor' ? (u.doisFatores ? '<span class="chip c-ok">Ativo</span>' : '<span class="chip c-soon">Pendente</span>') : '<span class="small muted">Não usa</span>') + '</td><td>' + (u.ativo ? '<span class="chip c-ok">Ativo</span>' : '<span class="chip c-muted">Desativado</span>') + '</td><td class="num" style="white-space:nowrap">' +
-        (u.id === S.usuario.id ? '<span class="small muted">Você</span>' : '<button class="btn ghost sm" data-act="senha-user" data-id="' + u.id + '">Redefinir senha</button>' + (u.perfil === 'gestor' && u.doisFatores ? '<button class="btn ghost sm" data-act="dois-fatores-user" data-id="' + u.id + '">Redefinir 2FA</button>' : '') + '<button class="btn ghost sm" data-act="toggle-user" data-id="' + u.id + '">' + (u.ativo ? 'Desativar' : 'Reativar') + '</button>') + '</td></tr>').join('') +
+        (u.id === S.usuario.id ? '<span class="small muted">Você</span>' : '<button class="btn ghost sm" data-act="senha-user" data-id="' + u.id + '">Redefinir senha</button>' + (u.perfil === 'gestor' && u.doisFatores ? '<button class="btn ghost sm" data-act="dois-fatores-user" data-id="' + u.id + '">Redefinir 2FA</button>' : '') + (u.perfil === 'operador' && u.ativo && !caseiroOff ? '<button class="btn ghost sm" data-act="vincular-celular" data-id="' + u.id + '">Vincular celular</button>' : '') + '<button class="btn ghost sm" data-act="toggle-user" data-id="' + u.id + '">' + (u.ativo ? 'Desativar' : 'Reativar') + '</button>') + '</td></tr>').join('') +
       '</tbody></table></div>' + (caseiroOff ? '<p class="note" style="margin:0 18px 16px">O usuário caseiro não está incluído no plano deste haras.</p>' : '') + '</div>' +
       '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><div><h2>Sessões e aparelhos ativos</h2><p class="small muted">Navegadores e celulares conectados agora. Encerre os que não reconhecer.</p></div><button class="btn ghost sm" data-act="recarregar-sessoes">Atualizar</button></div><div class="tbl-wrap" id="sessoes"><div class="empty">Carregando...</div></div></div>' +
       '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><h2>Permissões por perfil</h2></div><div class="tbl-wrap"><table class="tbl matrix"><thead><tr><th>Permissão</th><th>Proprietário / gestor</th><th>Caseiro / operador</th></tr></thead><tbody>' +
@@ -1449,6 +1455,16 @@ const UI = (function () {
     sug: el => perguntar(el.dataset.q),
     'fora-plano': el => UI.toast(el.dataset.m + ' não está incluído no plano deste haras.'),
     'recarregar-sessoes': () => carregarSessoes(),
+    'vincular-celular': async el => {
+      const u = (S.usuarios || []).find(x => String(x.id) === el.dataset.id);
+      let r; try { el.disabled = true; r = await API.post('/api/usuarios/' + u.id + '/vinculo'); } catch (e) { UI.toast(e.message); return; } finally { el.disabled = false; }
+      UI.abrir({ titulo: 'Vincular o celular de ' + esc(u.nome), corpo: '<div class="stack"><ol class="passos"><li>No celular do caseiro, instale o app: no Portal Campo, toque em <b>Instalar o app Android</b>.</li><li>Abra o app e toque em <b>Ler QR Code</b>.</li><li>Aponte a câmera para o código abaixo.</li></ol>' +
+        '<div class="qr-box">' + r.qr + '</div><p class="small muted">Vale por ' + r.minutos + ' minutos e uma única vez. Gerar outro invalida este.</p>' +
+        '<details><summary class="small">Sem câmera? Digite no app</summary><p class="small">Servidor: <span class="mono">' + esc(r.servidor) + '</span><br>Código: <span class="mono">' + esc(r.codigo) + '</span></p></details>' +
+        '<p class="note">O celular aparece em Sessões e aparelhos ativos, onde você pode encerrá-lo a qualquer momento.</p></div>',
+        rodape: '<button class="btn pri" data-act="fechar">Concluir</button>' });
+      UI.onClose = () => carregarSessoes();
+    },
     'encerrar-sessao': el => confirmar(el, 'Confirmar', async () => { try { const r = await API.del('/api/sessoes/' + el.dataset.id); UI.toast(r.resumo); carregarSessoes(); } catch (e) { UI.toast(e.message); } }),
     'dois-fatores-user': el => { const u = (S.usuarios || []).find(x => String(x.id) === el.dataset.id); confirmar(el, 'Confirmar redefinição', async () => { if (await executar(el, () => API.post('/api/usuarios/' + u.id + '/2fa/redefinir'))) render(); }); },
     'novos-codigos': () => UI.abrir({ titulo: 'Novos códigos de recuperação', corpo: '<form class="stack" novalidate><p>Os códigos atuais deixam de valer. Confirme sua senha.</p><div class="field"><label for="nc-senha">Senha</label><input id="nc-senha" type="password" class="inp" autocomplete="current-password"></div></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="gerar-codigos">Gerar</button>' }),

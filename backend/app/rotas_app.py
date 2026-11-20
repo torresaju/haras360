@@ -168,6 +168,15 @@ def versao_app():
     return dict(i, disponivel=True)
 
 
+@r.get("/api/app/instalar")
+def instalar_app(request: Request, u: Usuario = Depends(do_haras)):
+    i = info_apk()
+    if not i:
+        return {"disponivel": False}
+    url = _base_url(request) + i["url"]
+    return dict(i, disponivel=True, link=url, qr=qr_svg(url))
+
+
 @r.get("/app/haras360.apk")
 def baixar_apk():
     # Público: o APK não contém dados nem segredos, e o Android só aceita atualizações assinadas pela mesma chave.

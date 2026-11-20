@@ -109,6 +109,7 @@ const H = (function () {
     protocolos_alterados: 'Protocolos alterados', protocolos_restaurados: 'Protocolos restaurados', parametro_alterado: 'Parametrização alterada',
     haras_criado: 'Haras criado', logo_alterado: 'Logotipo alterado', haras_alterado: 'Haras alterado', atualizacao_solicitada: 'Atualização solicitada', atualizacao_concluida: 'Atualização concluída',
     atualizacao_falhou: 'Atualização falhou', rollback_solicitado: 'Volta de versão solicitada', rollback_concluido: 'Volta de versão concluída',
+    app_vinculo_gerado: 'QR Code do app gerado', app_vinculado: 'Celular vinculado', app_vinculo_falha: 'Vínculo do app recusado',
     backup_solicitado: 'Backup solicitado', backup_concluido: 'Backup concluído', backup_falhou: 'Backup falhou'
   };
   const GLOSSARIO = [

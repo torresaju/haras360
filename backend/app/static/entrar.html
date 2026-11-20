@@ -262,6 +262,11 @@ main.wrapm{padding-inline:clamp(16px,3vw,32px);padding-block:24px 72px;max-width
 .logo-prev.vazio{color:var(--muted);font-size:.84rem;text-align:center;background:var(--surface-2)}
 @media (max-width:980px){.brand .nome-h{max-width:150px}}
 
+/* QR Codes (vínculo do app e instalação) */
+.qr-box{display:flex;justify-content:center;padding:12px;background:#fff;border:1px solid var(--line);border-radius:10px}
+.qr-box svg{width:min(240px,70vw);height:auto;display:block}
+ol.passos{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+
 body{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .lado{background:var(--forest);color:var(--forest-ink);padding:48px clamp(24px,5vw,72px);display:flex;flex-direction:column;justify-content:space-between;gap:40px}
 .lado svg{width:46px;height:46px;color:var(--forest-accent)}
