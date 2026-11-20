@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.env
+*.db
+dados/
+backups/
+node_modules/
+*.tar.gz
+*.sig
+# chaves de assinatura nunca entram no repositório
+*.key
+*.pem
+mobile/build/
+mobile/.dart_tool/
