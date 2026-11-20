@@ -11,7 +11,7 @@ O que muda:
   Sem elas, o build usa a chave de depuração e o APK não deve ser publicado.
 * Permissões: internet, câmera e estado da rede. HTTP liberado porque o servidor ainda é
   acessado por IP sem HTTPS (risco registrado na especificação).
-* Ícone do app.
+* Leitor de QR Code pelo Google Play Services (APK menor) e ícone do app.
 """
 import re
 import shutil
@@ -106,6 +106,15 @@ def manifesto():
     p.write_text(s, encoding="utf-8")
 
 
+def propriedades():
+    # Leitor de QR Code pelo ML Kit do Google Play Services (não embutido): o APK fica bem menor.
+    # Sem o Play Services, o caseiro digita o código mostrado abaixo do QR Code.
+    p = ANDROID / "gradle.properties"
+    s = p.read_text(encoding="utf-8")
+    if "mobile_scanner.useUnbundled" not in s:
+        p.write_text(s.rstrip() + "\ndev.steenbakker.mobile_scanner.useUnbundled=true\n", encoding="utf-8")
+
+
 def icone():
     origem = RAIZ / "recursos" / "icone"
     for pasta in origem.iterdir():
@@ -117,5 +126,6 @@ def icone():
 if __name__ == "__main__":
     gradle()
     manifesto()
+    propriedades()
     icone()
     print("android/ preparado: br.com.haras360.campo, API 26+, assinatura por variáveis de ambiente, permissões e ícone.")
