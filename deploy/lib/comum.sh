@@ -100,7 +100,8 @@ configurar_caddy() {  # configurar_caddy <pasta-da-versão> <porta-pública> <po
   install -d -m 755 /etc/caddy
   install -d -m 755 -o caddy -g caddy /var/log/caddy 2>/dev/null || install -d -m 755 /var/log/caddy
   sed -e "s/__PORTA__/$porta/" -e "s/__PORTA_APP__/$porta_app/" "$dest/deploy/caddy/haras360.caddy.modelo" > /etc/caddy/haras360.caddy
-  if [ ! -s "$cf" ] || grep -q "Haras360 · gerado pelo instalador" "$cf"; then
+  # Caddyfile vazio, do Haras360 ou o exemplo que vem com o pacote do Caddy (site em /usr/share/caddy): pode substituir.
+  if [ ! -s "$cf" ] || grep -q "Haras360 · gerado pelo instalador" "$cf" || { grep -q "root \* /usr/share/caddy" "$cf" && [ "$(grep -cvE '^\s*(#|$)' "$cf")" -le 6 ]; }; then
     cp "$dest/deploy/caddy/Caddyfile.modelo" "$cf"
   elif ! grep -qE '^\s*import\s+/etc/caddy/haras360\.caddy' "$cf"; then
     copia="$cf.antes-haras360-$(date +%Y%m%d-%H%M%S)"
@@ -113,4 +114,6 @@ configurar_caddy() {  # configurar_caddy <pasta-da-versão> <porta-pública> <po
     caddy validate --config "$cf" --adapter caddyfile || true
     falha "A configuração do Caddy ficou inválida e foi desfeita. Veja a mensagem acima."
   fi
+  # A validação roda como root e pode criar o arquivo de log; o Caddy grava como usuário caddy.
+  chown -R caddy:caddy /var/log/caddy 2>/dev/null || true
 }
