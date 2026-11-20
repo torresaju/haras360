@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Gera haras360-X.Y.Z.tar.gz a partir de um commit do repositório.
 # Uso: deploy/gerar-pacote.sh [commit] [pasta-de-saída]
+# Com APK_DIR apontando para a pasta do build Android (haras360.apk e versao.json), o APK
+# entra no pacote e passa a ser servido pelo servidor em /app/haras360.apk.
 # A versão vem do arquivo VERSION do commit. O pacote leva um manifesto SHA256SUMS.
 set -euo pipefail
 cd "$(dirname "$(readlink -f "$0")")/.."
@@ -24,6 +26,13 @@ rm -f deploy/assinar-pacote.py.bak
 # Conferência mínima: páginas montadas presentes e chave pública, se houver, em formato PEM.
 for p in entrar gestor campo admin ajuda; do [ -s "backend/app/static/$p.html" ] || { echo "Falta backend/app/static/$p.html (rode python web/build.py)" >&2; exit 1; }; done
 if [ -f deploy/chave-publica.pem ]; then grep -q "BEGIN PUBLIC KEY" deploy/chave-publica.pem || { echo "deploy/chave-publica.pem inválida" >&2; exit 1; }; fi
+
+if [ -n "${APK_DIR:-}" ]; then
+  [ -s "$APK_DIR/haras360.apk" ] && [ -s "$APK_DIR/versao.json" ] || { echo "APK_DIR sem haras360.apk e versao.json" >&2; exit 1; }
+  mkdir -p backend/app/static/app
+  cp "$APK_DIR/haras360.apk" "$APK_DIR/versao.json" backend/app/static/app/
+  echo "APK incluído: $(cat backend/app/static/app/versao.json)"
+fi
 
 echo "$(git -C "$REPO" rev-parse "$COMMIT" 2>/dev/null || echo "$COMMIT")" > COMMIT
 find . -type f ! -name SHA256SUMS | sed 's#^\./##' | LC_ALL=C sort | while read -r f; do sha256sum "$f"; done > SHA256SUMS

@@ -32,16 +32,16 @@ DateTime? data(String? iso) {
   return DateTime(y, m, d);
 }
 
-String _2(int n) => n.toString().padLeft(2, '0');
-String iso(DateTime d) => '${d.year}-${_2(d.month)}-${_2(d.day)}';
+String _dd(int n) => n.toString().padLeft(2, '0');
+String iso(DateTime d) => '${d.year}-${_dd(d.month)}-${_dd(d.day)}';
 String br(String? s) {
   final d = data(s);
-  return d == null ? '-' : '${_2(d.day)}/${_2(d.month)}/${d.year}';
+  return d == null ? '-' : '${_dd(d.day)}/${_dd(d.month)}/${d.year}';
 }
 
 String brCurta(String? s) {
   final d = data(s);
-  return d == null ? '-' : '${_2(d.day)} ${mesesCurtos[d.month - 1]}';
+  return d == null ? '-' : '${_dd(d.day)} ${mesesCurtos[d.month - 1]}';
 }
 
 int dias(DateTime a, DateTime b) => DateTime.utc(b.year, b.month, b.day).difference(DateTime.utc(a.year, a.month, a.day)).inDays;
