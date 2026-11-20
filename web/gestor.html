@@ -1,0 +1,575 @@
+<title>Haras360 Gestor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Zilla+Slab:wght@500;600;700&display=swap">
+<style>
+/*SHARED_CSS*/
+:root{--forest-accent:#e3ab6c}
+.app{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh}
+.side{background:var(--forest);color:var(--forest-ink);padding:22px 14px;position:sticky;top:0;height:100vh;height:100dvh;display:flex;flex-direction:column;gap:20px;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:0 6px}
+.brand svg{width:34px;height:34px;flex:none;color:var(--forest-accent)}
+.brand b{font-family:var(--f-display);font-size:1.4rem;font-weight:700;display:block;line-height:1}
+.brand small{display:block;font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--forest-muted);margin-top:3px}
+.haras{padding:10px 12px;border-radius:8px;background:var(--forest-2);font-size:.84rem;line-height:1.35}
+.haras b{display:block;color:var(--forest-ink);font-weight:600}
+.haras span{color:var(--forest-muted)}
+.side nav{display:flex;flex-direction:column;gap:2px}
+.side nav button{display:flex;align-items:center;gap:11px;border:0;background:none;color:var(--forest-muted);padding:9px 10px;border-radius:7px;cursor:pointer;font-weight:500;text-align:left;font-size:.93rem;white-space:nowrap}
+.side nav button svg{width:18px;height:18px;flex:none}
+.side nav button:hover{color:var(--forest-ink);background:var(--forest-2)}
+.side nav button[aria-current="page"]{color:var(--forest-ink);background:var(--forest-2);box-shadow:inset 3px 0 0 var(--forest-accent)}
+.badge{margin-left:auto;background:var(--late);color:#fff;font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:99px;font-variant-numeric:tabular-nums}
+.foot{margin-top:auto;display:flex;flex-direction:column;gap:10px;font-size:.82rem;color:var(--forest-muted)}
+.foot .who{display:flex;gap:10px;align-items:center}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--forest-accent);color:var(--forest);display:grid;place-items:center;font-weight:700;font-size:.8rem;flex:none}
+.foot button{border:1px solid var(--forest-2);background:none;color:var(--forest-muted);border-radius:7px;padding:6px 10px;cursor:pointer;font-size:.78rem;text-align:left}
+.foot button:hover{color:var(--forest-ink)}
+main{padding-inline:clamp(16px,3vw,40px);padding-block:24px 72px;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.top .acts{display:flex;gap:8px;align-items:center}
+.bellbtn{position:relative}
+.bellbtn .badge{position:absolute;top:-6px;right:-6px;margin:0}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px 20px}
+.facts div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.facts dt{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.facts dd{margin:0;font-weight:500;overflow-wrap:anywhere}
+.steps{display:flex;gap:6px;flex-wrap:wrap;font-size:.84rem}
+.steps span{padding:4px 10px;border-radius:99px;background:var(--surface-2);color:var(--muted);font-weight:600}
+.steps span.on{background:var(--accent-soft);color:var(--accent)}
+.notif{display:grid;grid-template-columns:4px minmax(0,1fr) auto;gap:14px;padding:13px 16px 13px 0;border-top:1px solid var(--line-2);align-items:start}
+.notif:first-child{border-top:0}
+.notif .bar{align-self:stretch;border-radius:0 3px 3px 0;background:var(--info)}
+.notif.critico .bar{background:var(--late)} .notif.alerta .bar{background:var(--soon)}
+.notif.lida{opacity:.62}
+.notif .ch{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.meter{height:10px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line-2);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent)}
+.matrix td:not(:first-child),.matrix th:not(:first-child){text-align:center}
+.yes{color:var(--ok);font-weight:700} .no{color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.tbl input.inp{padding:6px 8px;font-size:.88rem}
+.w-num{width:84px}
+@media (max-width:880px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:sticky;top:env(safe-area-inset-top,0px);height:auto;flex-direction:row;align-items:center;gap:12px;padding:10px 16px;z-index:30;overflow-x:auto}
+  .brand small,.haras,.foot{display:none}
+  .brand b{font-size:1.15rem}
+  .side nav{flex-direction:row}
+  .side nav button .lbl{display:none}
+  .side nav button{padding:9px}
+  .side nav button .badge{margin-left:4px}
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+
+<div class="app">
+  <aside class="side" aria-label="Navegação">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M11 34V20a9 9 0 0 1 18 0v14"/><path d="M7 34h8M25 34h8"/><circle cx="14" cy="22" r="1.2" fill="currentColor"/><circle cx="26" cy="22" r="1.2" fill="currentColor"/><circle cx="16" cy="14.5" r="1.2" fill="currentColor"/><circle cx="24" cy="14.5" r="1.2" fill="currentColor"/></svg>
+      <div><b>Haras360</b><small>Portal do Gestor</small></div>
+    </div>
+    <div class="haras" id="haras"></div>
+    <nav id="nav"></nav>
+    <div class="foot">
+      <div class="who"><span class="avatar" id="av"></span><div><b id="who-n" style="color:var(--forest-ink);font-weight:600"></b><br>Proprietário / gestor</div></div>
+      <button data-act="minha-senha">Alterar minha senha</button>
+      <button data-act="sair">Sair</button>
+      <span id="versao"></span>
+    </div>
+  </aside>
+  <main>
+    <div class="top">
+      <div><div class="eyebrow" id="v-eyebrow"></div><h1 id="v-title"></h1></div>
+      <div class="acts">
+        <button class="btn bellbtn" data-act="nav" data-v="notificacoes" aria-label="Notificações" id="bell"></button>
+        <button class="btn pri" data-act="registrar">+ Novo registro</button>
+      </div>
+    </div>
+    <div id="view" class="view-in"></div>
+  </main>
+</div>
+<div id="modal" class="modal" hidden></div>
+<div id="toast" role="status" hidden></div>
+
+<script>window.H360_PORTAL = 'gestor';</script>
+<script>
+/*API*/
+</script>
+<script>
+/*CORE*/
+</script>
+<script>
+/*UI*/
+</script>
+<script>
+(function () {
+  let S = null;
+  const $ = s => document.querySelector(s);
+  const esc = H.esc, br = H.br, IC = UI.ICON;
+  let view = 'painel', param = null, fichaTab = 'prontuario', filtroCat = 'todos', agendaFiltro = 'aberto', agendaCat = 'todos', notifFiltro = 'todas';
+  let importacao = null;
+  let chat = [{ de: 'bot', t: 'Olá. Sou o assistente ABCCMM do Haras360. Consulto o plantel, a agenda sanitária e o protocolo de vacinação. Nesta versão, as respostas sobre normas da associação usam uma base reduzida.', f: 'Haras360' }];
+
+  async function recarregar() { S = await API.get('/api/estado'); H.LIMITE_ANIMAIS = S.limiteAnimais; }
+  /* executa uma alteração na API, recarrega o estado e redesenha */
+  async function executar(el, fn, ok) {
+    if (el && el.disabled) return null;
+    const txt = el ? el.innerHTML : '';
+    if (el) { el.disabled = true; el.innerHTML = 'Salvando...'; }
+    try {
+      const r = await fn();
+      await recarregar();
+      if (ok !== false) UI.toast(typeof ok === 'string' ? ok : (r && r.resumo) || 'Alteração salva.');
+      return r || true;
+    } catch (e) { UI.toast(e.message); return null; }
+    finally { if (el && el.isConnected) { el.disabled = false; el.innerHTML = txt; } }
+  }
+  function confirmar(el, txt, fn) {
+    if (el.dataset.armed) { fn(); return; }
+    el.dataset.armed = '1'; const old = el.innerHTML; el.innerHTML = txt; el.classList.add('danger');
+    setTimeout(() => { if (el.isConnected && el.dataset.armed) { delete el.dataset.armed; el.innerHTML = old; el.classList.remove('danger'); } }, 3500);
+  }
+  const naoLidas = () => H.notificacoes(S).filter(n => !S.lidas.includes(n.id));
+  const primeiroNome = () => (S.usuario.nome || '').split(' ')[0];
+
+  const NAV = [
+    ['painel', 'Painel', IC.home], ['animais', 'Animais', IC.horse], ['importar', 'Importar ABCCMM', IC.upload], ['agenda', 'Agenda', IC.cal],
+    ['protocolos', 'Protocolos', IC.rules], ['notificacoes', 'Notificações', IC.bell], ['equipe', 'Equipe', IC.team], ['assistente', 'Assistente ABCCMM', IC.chat], ['plano', 'Plano', IC.card]
+  ];
+  const TITULOS = {
+    painel: ['Visão geral', ''], animais: ['Plantel', 'Animais'], ficha: ['Ficha do animal', ''], importar: ['Onboarding', 'Importar Relatório de Plantel'],
+    agenda: ['Motor de regras', 'Agenda sanitária'], protocolos: ['Motor de regras', 'Protocolos e intervalos'], notificacoes: ['Alertas', 'Notificações'],
+    equipe: ['Usuários e perfis', 'Equipe do haras'], assistente: ['Inteligência artificial', 'Assistente ABCCMM'], plano: ['Assinatura', 'Plano e cobrança']
+  };
+
+  function go(v, p) { view = v; param = p || null; if (v === 'ficha' && !p) view = 'animais'; render(); window.scrollTo(0, 0); }
+
+  function render() {
+    const nl = naoLidas().length;
+    $('#nav').innerHTML = NAV.map(([id, lab, ic]) => '<button data-act="nav" data-v="' + id + '" aria-label="' + lab + '"' + ((view === id || (view === 'ficha' && id === 'animais')) ? ' aria-current="page"' : '') + '>' + ic + '<span class="lbl">' + lab + '</span>' + (id === 'notificacoes' && nl ? '<span class="badge">' + nl + '</span>' : '') + '</button>').join('');
+    $('#haras').innerHTML = '<b>' + esc(S.haras.nome) + '</b><span>' + S.animais.filter(a => a.vivo).length + ' animais ativos · limite ' + H.LIMITE_ANIMAIS + '</span>';
+    $('#bell').innerHTML = IC.bell + (nl ? '<span class="badge">' + nl + '</span>' : '');
+    const [eb, ti0] = TITULOS[view] || ['', ''];
+    const ti = view === 'painel' ? S.haras.nome : ti0;
+    $('#who-n').textContent = S.usuario.nome; $('#av').textContent = S.usuario.nome.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase(); $('#versao').textContent = 'Haras360 v' + S.versao;
+    $('#v-eyebrow').textContent = eb;
+    $('#v-title').textContent = view === 'ficha' ? ((H.animal(S, param) || {}).nome || 'Animal') : ti;
+    const v = $('#view');
+    v.classList.remove('view-in'); void v.offsetWidth; v.classList.add('view-in');
+    v.innerHTML = VIEWS[view](param);
+    if (AFTER[view]) AFTER[view](param);
+  }
+
+  /* ================= PAINEL ================= */
+  function vPainel() {
+    const ts = H.tarefas(S);
+    const atras = ts.filter(t => t.status === 'atrasado'), semana = ts.filter(t => t.status === 'hoje' || t.status === 'semana'), pend = ts.filter(t => t.doc);
+    const ativos = S.animais.filter(a => a.vivo);
+    const h = new Date().getHours(); const sauda = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+    const foco = atras.concat(semana, pend).slice(0, 10);
+    const gest = ativos.map(a => [a, H.gestacao(S, a)]).filter(x => x[1]);
+    const campo = S.registros.filter(r => r.origem !== 'Portal Gestor').sort((a, b) => a.data < b.data ? 1 : -1).slice(0, 4);
+    const fem = ativos.filter(a => a.sexo === 'F').length, potros = ativos.filter(a => a.nascimento && H.idadeMeses(a.nascimento) < 12).length;
+    const n = ativos.length;
+    return '<div class="sec">' +
+      '<p class="muted">' + sauda + ', ' + esc(primeiroNome()) + '. Hoje é ' + new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }) + '.</p>' +
+      '<div class="kpis">' +
+      '<button class="kpi" data-act="nav" data-v="animais"><span>Animais ativos</span><b>' + n + '</b><span>de ' + H.LIMITE_ANIMAIS + ' no plano</span></button>' +
+      '<button class="kpi late" data-act="agenda-ir" data-f="aberto"><span>Atrasados</span><b>' + atras.length + '</b><span>procedimentos vencidos</span></button>' +
+      '<button class="kpi soon" data-act="agenda-ir" data-f="aberto"><span>Próximos 7 dias</span><b>' + semana.length + '</b><span>procedimentos previstos</span></button>' +
+      '<button class="kpi info" data-act="agenda-ir" data-f="aberto"><span>Pendências ABCCMM</span><b>' + pend.length + '</b><span>registro, DNA ou bloqueio</span></button>' +
+      '</div>' +
+      '<div class="grid2">' +
+      '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><h2>Atenção agora</h2><button class="btn ghost sm" data-act="nav" data-v="agenda">Agenda completa</button></div>' +
+      '<div class="tasks" style="padding:4px 18px 8px 0">' + (foco.length ? foco.map(t => UI.linhaTarefa(t)).join('') : '<div class="empty">Nenhum procedimento atrasado ou previsto para os próximos 7 dias.</div>') + '</div></div>' +
+      '<div class="stack" style="gap:20px">' +
+      '<div class="card"><div class="card-h"><h3>Gestações</h3><span class="small muted">' + gest.length + ' em andamento</span></div>' +
+      (gest.length ? gest.map(([a, g]) => gestBloco(a, g)).join('<hr style="border:0;border-top:1px solid var(--line-2);margin:14px 0">') : '<p class="muted small">Nenhuma égua com diagnóstico positivo registrado.</p>') + '</div>' +
+      '<div class="card"><div class="card-h"><h3>Plantel e plano</h3><button class="btn ghost sm" data-act="nav" data-v="plano">Ver plano</button></div>' +
+      '<dl class="facts" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div><dt>Fêmeas</dt><dd>' + fem + '</dd></div><div><dt>Machos</dt><dd>' + (n - fem) + '</dd></div><div><dt>Potros</dt><dd>' + potros + '</dd></div></dl>' +
+      '<div style="margin-top:14px" class="stack"><div class="meter" role="img" aria-label="' + n + ' de 30 animais"><i style="width:' + (n / H.LIMITE_ANIMAIS * 100) + '%"></i></div><p class="small muted">' + n + ' de ' + H.LIMITE_ANIMAIS + ' animais · mensalidade simulada <b style="color:var(--ink)">' + H.moeda(H.mensalidade(n)) + '</b></p></div></div>' +
+      '<div class="card"><div class="card-h"><h3>Últimos registros do campo</h3><span class="small muted">Caseiro / operador</span></div>' + UI.linhaTempo(S, campo, { comAnimal: true }) + '</div>' +
+      '</div></div></div>';
+  }
+  function gestBloco(a, g) {
+    return '<div class="gest"><div class="spread"><a href="#" data-act="ver-animal" data-id="' + a.id + '"><b>' + esc(a.nome) + '</b></a><span class="chip c-accent">' + g.mes + 'º mês · ' + g.dias + ' dias</span></div>' +
+      '<div class="gbar" role="img" aria-label="' + g.pct + '% da gestação"><i style="width:' + g.pct + '%"></i></div>' +
+      '<div class="gmarks"><span>Cobertura ' + H.brCurta(g.cobertura) + '</span><span>Rino 5º · 7º · 9º</span><span>Parto ' + H.brCurta(g.parto) + '</span></div>' +
+      '<p class="small muted">Parto previsto ' + H.relativo(g.parto) + (g.garanhao ? ' · garanhão ' + esc(g.garanhao) : '') + '</p></div>';
+  }
+
+  /* ================= ANIMAIS ================= */
+  let busca = '', sexoF = '';
+  function vAnimais() {
+    return '<div class="sec"><div class="spread"><div class="row"><input id="busca" class="inp" style="width:min(320px,100%)" placeholder="Buscar por nome, registro ou chip" value="' + esc(busca) + '">' +
+      '<select id="sexoF" class="inp" style="width:auto"><option value="">Todos os sexos</option><option value="F"' + (sexoF === 'F' ? ' selected' : '') + '>Fêmeas</option><option value="M"' + (sexoF === 'M' ? ' selected' : '') + '>Machos</option></select></div>' +
+      '<div class="row"><button class="btn" data-act="nav" data-v="importar">' + IC.upload + 'Importar PDF ABCCMM</button><button class="btn pri" data-act="novo-animal">' + IC.plus + 'Novo animal</button></div></div>' +
+      '<div class="card flush"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Animal</th><th>Sexo</th><th>Idade</th><th>Livro</th><th>DNA</th><th>Situação</th><th>Próxima etapa</th></tr></thead><tbody id="tb-animais"></tbody></table></div></div></div>';
+  }
+  function linhasAnimais() {
+    const q = H.norm(busca);
+    const ts = H.tarefas(S);
+    const lst = S.animais.filter(a => (!sexoF || a.sexo === sexoF) && (!q || H.norm(a.nome + ' ' + a.registro + ' ' + a.chip).includes(q)));
+    if (!lst.length) return '<tr><td colspan="7"><div class="empty">Nenhum animal encontrado.</div></td></tr>';
+    return lst.map(a => {
+      const t = ts.filter(x => x.animalId === a.id);
+      const at = t.filter(x => x.status === 'atrasado').length, pd = t.filter(x => x.doc).length;
+      const prox = t.find(x => !x.doc && x.status !== 'atrasado');
+      const g = H.gestacao(S, a);
+      const sit = [!a.vivo ? '<span class="chip c-muted">Inativo</span>' : '', at ? '<span class="chip c-late">' + at + ' atrasado' + (at > 1 ? 's' : '') + '</span>' : '', pd ? '<span class="chip c-info">' + pd + ' pendência' + (pd > 1 ? 's' : '') + '</span>' : '', g ? '<span class="chip c-accent">Gestante ' + g.mes + 'º mês</span>' : '', (a.vivo && !at && !pd) ? '<span class="chip c-ok">Em dia</span>' : ''].join(' ');
+      return '<tr class="click" data-act="ver-animal" data-id="' + a.id + '"><td><b>' + esc(a.nome) + '</b><br><span class="mono muted">' + (a.registro ? 'Reg. ' + esc(a.registro) : 'Sem registro') + '</span></td><td>' + (a.sexo === 'F' ? 'Fêmea' : 'Macho') + '</td><td style="white-space:nowrap">' + H.idadeTxt(a.nascimento) + '</td><td class="small">' + esc(a.livro || '-') + '</td><td><span class="chip ' + (/sem/i.test(a.dna) ? 'c-late' : 'c-ok') + '">' + esc(a.dna || '-') + '</span></td><td><div class="row" style="gap:4px">' + sit + '</div></td><td class="small">' + (prox ? esc(prox.titulo) + '<br><span class="muted">' + H.br(prox.due) + '</span>' : '-') + '</td></tr>';
+    }).join('');
+  }
+
+  /* ================= FICHA ================= */
+  function vFicha(id) {
+    const a = H.animal(S, id); if (!a) return '<div class="empty">Animal não encontrado.</div>';
+    const g = H.gestacao(S, a);
+    const tabs = [['prontuario', 'Prontuário'], ['agenda', 'Agenda'], ['dados', 'Dados e genealogia']];
+    let corpo = '';
+    if (fichaTab === 'prontuario') {
+      const regs = S.registros.filter(r => r.animalId === a.id && (filtroCat === 'todos' || r.tipo === filtroCat)).sort((x, y) => x.data < y.data ? 1 : -1);
+      corpo = '<div class="spread" style="margin-bottom:6px"><select id="filtroCat" class="inp" style="width:auto"><option value="todos">Todas as categorias</option>' + Object.keys(H.CATS).filter(k => k !== 'documental').map(k => '<option value="' + k + '"' + (filtroCat === k ? ' selected' : '') + '>' + H.CATS[k].nome + '</option>').join('') + '</select><button class="btn pri" data-act="registrar" data-id="' + a.id + '">' + IC.plus + 'Novo registro</button></div>' + UI.linhaTempo(S, regs, { excluir: true });
+    } else if (fichaTab === 'agenda') {
+      const ts = H.tarefas(S, { animalId: a.id });
+      const ab = ts.filter(t => t.status !== 'futuro'), fu = ts.filter(t => t.status === 'futuro');
+      corpo = '<h3 style="margin:4px 0 6px">Em aberto e próximos 30 dias</h3><div class="tasks">' + (ab.length ? ab.map(t => UI.linhaTarefa(t, { semAnimal: true })).join('') : '<div class="empty">Nada em aberto.</div>') + '</div>' +
+        '<h3 style="margin:22px 0 6px">Programados</h3><div class="tasks">' + (fu.length ? fu.map(t => UI.linhaTarefa(t, { semAnimal: true })).join('') : '<div class="empty">Sem etapas futuras.</div>') + '</div>';
+    } else {
+      const ge = a.genealogia || {};
+      const f = (id, lab, val, extra) => '<div class="field' + (extra || '') + '"><label for="d-' + id + '">' + lab + '</label><input id="d-' + id + '" class="inp" value="' + esc(val || '') + '"></div>';
+      corpo = '<form id="fd" class="stack" novalidate><h3>Dados cadastrais</h3><div class="fgrid">' +
+        f('nome', 'Nome', a.nome) + f('pelagem', 'Pelagem', a.pelagem) +
+        f('registro', 'Registro ABCCMM', a.registro) + f('livro', 'Livro', a.livro) +
+        '<div class="field"><label for="d-sexo">Sexo</label><select id="d-sexo" class="inp"><option value="F"' + (a.sexo === 'F' ? ' selected' : '') + '>Fêmea</option><option value="M"' + (a.sexo === 'M' ? ' selected' : '') + '>Macho</option></select></div>' +
+        '<div class="field"><label for="d-nasc">Nascimento</label><input id="d-nasc" type="date" class="inp" value="' + esc(a.nascimento) + '"></div>' +
+        f('chip', 'Microchip', a.chip) +
+        '<div class="field"><label for="d-dna">DNA</label><select id="d-dna" class="inp">' + ['DNA - VP', 'Sem exame'].concat(['DNA - VP', 'Sem exame'].includes(a.dna) ? [] : [a.dna]).map(o => '<option' + (o === a.dna ? ' selected' : '') + '>' + esc(o) + '</option>').join('') + '</select></div>' +
+        '<div class="field"><label for="d-vivo">Situação</label><select id="d-vivo" class="inp"><option value="1"' + (a.vivo ? ' selected' : '') + '>Vivo, ativo no plantel</option><option value="0"' + (!a.vivo ? ' selected' : '') + '>Morto ou baixado</option></select></div>' +
+        '<div class="field"><label for="d-bloq">Bloqueio ABCCMM</label><select id="d-bloq" class="inp"><option value="0"' + (!a.bloqueado ? ' selected' : '') + '>Não bloqueado</option><option value="1"' + (a.bloqueado ? ' selected' : '') + '>Bloqueado</option></select></div>' +
+        '</div><div class="spread" style="margin-top:8px"><h3>Genealogia</h3><div class="row"><label class="btn sm" for="cert">' + IC.file + 'Importar certificado (PDF)</label><input id="cert" type="file" accept="application/pdf,.pdf" hidden></div></div>' +
+        '<p class="small muted">O Relatório de Plantel não traz genealogia. Preencha à mão ou importe o certificado de registro, se houver. Os campos encontrados no PDF aparecem destacados para conferência.</p><p id="cert-st" class="note" hidden></p>' +
+        '<div class="fgrid">' + f('pai', 'Pai', ge.pai) + f('mae', 'Mãe', ge.mae) + f('avoPaterno', 'Avô paterno', ge.avoPaterno) + f('avoPaterna', 'Avó paterna', ge.avoPaterna) + f('avoMaterno', 'Avô materno', ge.avoMaterno) + f('avoMaterna', 'Avó materna', ge.avoMaterna) + '</div>' +
+        '<div class="row" style="justify-content:flex-end"><button type="button" class="btn pri" data-act="salvar-dados" data-id="' + a.id + '">' + IC.check + 'Salvar dados</button></div></form>';
+    }
+    const chips = [(a.sexo === 'F' ? 'Fêmea' : 'Macho'), H.idadeTxt(a.nascimento)].map(x => '<span class="chip nodot c-muted">' + x + '</span>').join(' ') +
+      (g ? ' <span class="chip c-accent">Gestante · ' + g.mes + 'º mês</span>' : '') + (!a.registro ? ' <span class="chip c-late">Sem registro</span>' : '') + (/sem/i.test(a.dna) ? ' <span class="chip c-late">DNA pendente</span>' : '') + (!a.vivo ? ' <span class="chip c-muted">Inativo</span>' : '');
+    return '<div class="sec"><div class="spread"><button class="btn ghost" data-act="nav" data-v="animais">' + IC.back + 'Voltar ao plantel</button><div class="row">' + chips + '</div></div>' +
+      '<div class="card"><dl class="facts"><div><dt>Registro</dt><dd class="mono">' + esc(a.registro || '-') + '</dd></div><div><dt>Livro</dt><dd>' + esc(a.livro || '-') + '</dd></div><div><dt>Nascimento</dt><dd>' + br(a.nascimento) + '</dd></div><div><dt>Microchip</dt><dd class="mono">' + esc(a.chip || '-') + '</dd></div><div><dt>DNA</dt><dd>' + esc(a.dna || '-') + '</dd></div><div><dt>Origem do cadastro</dt><dd>' + esc(a.origem || 'Manual') + (a.importadoEm ? ' · ' + br(a.importadoEm) : '') + '</dd></div></dl>' +
+      (g ? '<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line-2)">' + gestBloco(a, g) + '</div>' : '') + '</div>' +
+      '<div class="card"><div class="tabs" role="tablist">' + tabs.map(([k, l]) => '<button role="tab" aria-selected="' + (fichaTab === k) + '" data-act="tab" data-t="' + k + '">' + l + '</button>').join('') + '</div><div style="padding-top:14px">' + corpo + '</div></div></div>';
+  }
+
+  /* ================= IMPORTAR ================= */
+  function vImportar() {
+    if (!importacao) {
+      return '<div class="sec"><div class="steps"><span class="on">1. Enviar PDF</span><span>2. Conferir</span><span>3. Importar</span></div>' +
+        '<div class="grid2"><div class="card stack"><h2>Relatório de Plantel da ABCCMM</h2><p class="muted">Envie o PDF gerado no Sistema de Gestão ABCCMM. O Haras360 lê nome, livro, registro, sexo, bloqueio, situação, DNA, nascimento e microchip de cada animal e confere com o resumo do relatório antes de gravar.</p>' +
+        '<label class="drop" id="drop" for="pdf">' + IC.upload + '<b>Arraste o PDF aqui ou clique para escolher</b><span class="small muted">Arquivo .pdf · o conteúdo é lido no seu navegador</span></label><input id="pdf" type="file" accept="application/pdf,.pdf" hidden>' +
+        '<p id="imp-st" class="note" hidden></p></div>' +
+        '<div class="card stack"><h3>Como funciona</h3><ol class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px"><li>Animais já cadastrados são reconhecidos pelo registro, chip ou nome, e não são duplicados.</li><li>Animais sem registro ou sem exame de DNA geram pendências documentais.</li><li>A data de nascimento alimenta o motor de regras, que calcula a agenda de vacinas e manejos.</li><li>A genealogia é completada depois, na ficha, à mão ou pelo certificado.</li></ol>' +
+        '<p class="note">O PDF é lido no seu navegador; só os dados dos animais selecionados são enviados ao servidor. O CPF do associado não é gravado.</p></div></div></div>';
+    }
+    const { res, comp } = importacao;
+    const sel = importacao.sel;
+    const novos = comp.filter((c, i) => sel.has(i) && c.situacao === 'novo').length;
+    const atual = comp.filter((c, i) => sel.has(i) && c.situacao === 'atualizar').length;
+    const ativos = S.animais.filter(a => a.vivo).length;
+    const depois = ativos + comp.filter((c, i) => sel.has(i) && c.situacao === 'novo' && c.novo.vivo).length;
+    const confere = res.totalInformado === null ? '<p class="note warn">O resumo do relatório não foi encontrado. Confira a lista manualmente.</p>' : res.totalInformado === res.animais.length ? '<p class="note good">Conferência ok: ' + res.animais.length + ' animais lidos, igual ao total informado no relatório (' + res.machos + ' machos e ' + res.femeas + ' fêmeas).</p>' : '<p class="note bad">Atenção: ' + res.animais.length + ' animais lidos, mas o relatório informa ' + res.totalInformado + '. Confira as linhas não reconhecidas abaixo.</p>';
+    const lim = depois > H.LIMITE_ANIMAIS ? '<p class="note bad">O plano atende até ' + H.LIMITE_ANIMAIS + ' animais por haras. Desmarque ' + (depois - H.LIMITE_ANIMAIS) + ' animal(is) para continuar.</p>' : (depois > 3 && H.mensalidade(depois) !== H.mensalidade(ativos)) ? '<p class="note">Com ' + depois + ' animais ativos, a mensalidade simulada passa de ' + H.moeda(H.mensalidade(ativos)) + ' para ' + H.moeda(H.mensalidade(depois)) + '.</p>' : '';
+    const sit = { novo: '<span class="chip c-ok">Novo</span>', atualizar: '<span class="chip c-soon">Atualizar</span>', igual: '<span class="chip c-muted">Já cadastrado</span>' };
+    const rot = { nome: 'nome', livro: 'livro', registro: 'registro', sexo: 'sexo', bloqueado: 'bloqueio', vivo: 'situação', dna: 'DNA', nascimento: 'nascimento', chip: 'chip' };
+    return '<div class="sec"><div class="steps"><span>1. Enviar PDF</span><span class="on">2. Conferir</span><span>3. Importar</span></div>' +
+      '<div class="card"><dl class="facts"><div><dt>Arquivo</dt><dd>' + esc(importacao.arquivo) + '</dd></div><div><dt>Associado(a)</dt><dd>' + esc(res.associado || 'Não identificado') + '</dd></div><div><dt>CPF</dt><dd class="mono">' + esc(H.mascaraCPF(res.cpf)) + '</dd></div><div><dt>Impresso em</dt><dd>' + (res.impresso ? br(res.impresso) : '-') + '</dd></div></dl></div>' +
+      confere + lim +
+      '<div class="card flush"><div class="tbl-wrap"><table class="tbl"><thead><tr><th><span class="sr">Incluir</span></th><th>Situação</th><th>Animal</th><th>Livro</th><th>Registro</th><th>Sexo</th><th>Nascimento</th><th>DNA</th><th>Chip</th><th>Alertas</th></tr></thead><tbody>' +
+      comp.map((c, i) => {
+        const n = c.novo;
+        const al = [!n.registro ? 'Sem registro' : '', /sem/i.test(n.dna) ? 'Sem DNA' : '', n.bloqueado ? 'Bloqueado' : '', !n.vivo ? 'Morto' : ''].filter(Boolean).map(x => '<span class="chip c-late">' + x + '</span>').join(' ');
+        const dif = c.situacao === 'atualizar' ? '<br><span class="small muted">Muda: ' + c.diffs.map(d => rot[d]).join(', ') + '</span>' : '';
+        return '<tr><td><input type="checkbox" data-chg="imp-sel" data-i="' + i + '"' + (sel.has(i) ? ' checked' : '') + (c.situacao === 'igual' ? ' disabled' : '') + ' aria-label="Incluir ' + esc(n.nome) + '"></td><td>' + sit[c.situacao] + '</td><td><b>' + esc(n.nome) + '</b>' + dif + '</td><td class="small">' + esc(n.livro || '-') + '</td><td class="mono">' + esc(n.registro || '-') + '</td><td>' + n.sexo + '</td><td class="mono">' + br(n.nascimento) + '</td><td class="small">' + esc(n.dna) + '</td><td class="mono small">' + esc(n.chip || '-') + '</td><td><div class="row" style="gap:4px">' + (al || '<span class="muted small">-</span>') + '</div></td></tr>';
+      }).join('') + '</tbody></table></div></div>' +
+      (res.ignoradas.length ? '<div class="note warn"><b>Linhas não reconhecidas:</b><br>' + res.ignoradas.map(esc).join('<br>') + '</div>' : '') +
+      '<div class="row" style="justify-content:flex-end"><button class="btn" data-act="imp-cancelar">Cancelar</button><button class="btn pri" data-act="imp-confirmar"' + ((novos + atual === 0 || depois > H.LIMITE_ANIMAIS) ? ' disabled' : '') + '>' + IC.check + 'Importar ' + novos + ' novo(s) e atualizar ' + atual + '</button></div></div>';
+  }
+  async function lerPDF(file) {
+    const st = $('#imp-st');
+    const msg = (t, c) => { st.textContent = t; st.className = 'note ' + (c || ''); st.hidden = false; };
+    if (!file) return;
+    if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)) return msg('Envie um arquivo em PDF.', 'bad');
+    msg('Lendo o PDF...');
+    try {
+      const linhas = await H.linhasPDF(file);
+      const res = H.lerPlantel(linhas);
+      if (!linhas.length) return msg('Não encontramos texto neste PDF. Ele pode ser uma imagem digitalizada; gere o relatório novamente no Sistema de Gestão ABCCMM.', 'bad');
+      if (!res.animais.length) return msg(res.valido ? 'O PDF é da ABCCMM, mas não encontramos linhas de animais. Confira se é o Relatório de Plantel.' : 'Este PDF não parece ser um Relatório de Plantel da ABCCMM.', 'bad');
+      const comp = H.compararImportacao(S, res.animais);
+      importacao = { arquivo: file.name, res, comp, sel: new Set(comp.map((c, i) => c.situacao !== 'igual' ? i : -1).filter(i => i >= 0)) };
+      render();
+    } catch (e) { msg('Não foi possível ler o PDF: ' + e.message, 'bad'); }
+  }
+  async function confirmarImportacao(el) {
+    const { res, comp, sel } = importacao;
+    const animais = comp.filter((c, i) => sel.has(i) && c.situacao !== 'igual').map(c => c.novo);
+    const r = await executar(el, () => API.post('/api/importacao', { arquivo: importacao.arquivo, associado: res.associado, impresso: res.impresso, animais }));
+    if (r) { importacao = null; go('animais'); }
+  }
+
+  /* ================= AGENDA ================= */
+  function vAgenda() {
+    let ts = H.tarefas(S);
+    if (agendaCat !== 'todos') ts = ts.filter(t => t.cat === agendaCat);
+    const lim90 = H.iso(H.addDias(H.hoje(), 90));
+    if (agendaFiltro === 'aberto') ts = ts.filter(t => t.status !== 'futuro');
+    if (agendaFiltro === '90') ts = ts.filter(t => t.doc || t.due <= lim90);
+    const grupos = [['atrasado', 'Atrasados'], ['pendente', 'Pendências documentais'], ['hoje', 'Hoje'], ['semana', 'Próximos 7 dias'], ['mes', 'Próximos 30 dias'], ['futuro', 'Programados']];
+    const seg = [['aberto', 'Em aberto'], ['90', 'Próximos 90 dias'], ['tudo', 'Tudo']];
+    const cats = [...new Set(H.tarefas(S).map(t => t.cat))];
+    return '<div class="sec"><div class="spread"><div class="seg" role="group" aria-label="Período">' + seg.map(([k, l]) => '<button data-act="agenda-f" data-f="' + k + '" aria-pressed="' + (agendaFiltro === k) + '">' + l + '</button>').join('') + '</div>' +
+      '<select id="agendaCat" class="inp" style="width:auto"><option value="todos">Todas as categorias</option>' + cats.map(c => '<option value="' + c + '"' + (agendaCat === c ? ' selected' : '') + '>' + H.CATS[c].nome + '</option>').join('') + '</select></div>' +
+      (ts.length ? grupos.map(([k, l]) => { const g = ts.filter(t => t.status === k); return g.length ? '<div class="card flush"><div class="card-h" style="padding:14px 18px 0"><h3>' + l + '</h3><span class="small muted">' + g.length + '</span></div><div class="tasks" style="padding:2px 18px 6px 0">' + g.map(t => UI.linhaTarefa(t)).join('') + '</div></div>' : ''; }).join('') : '<div class="card empty">Nada para mostrar com esses filtros.</div>') +
+      '<p class="small muted">Datas calculadas pelo motor de regras a partir do nascimento, do último registro e dos protocolos configurados. Ajuste intervalos em Protocolos.</p></div>';
+  }
+
+  /* ================= PROTOCOLOS ================= */
+  function vProtocolos() {
+    const vac = S.protocolos.filter(p => p.cat === 'vacina'), outros = S.protocolos.filter(p => p.cat !== 'vacina');
+    const inp = (p, k, val, extra) => '<input class="inp w-num mono" id="p-' + p.id + '-' + k + '" value="' + esc(val) + '" inputmode="numeric"' + (extra || '') + '>';
+    return '<div class="sec"><p class="note">Vacinas seguem o protocolo publicado pela VetJr. UFMG; os demais manejos usam padrões de mercado. Os intervalos são editáveis e devem ser validados pelo médico veterinário responsável pelo plantel.</p>' +
+      '<div class="card spread"><div><h3>Reforço da vacina de raiva</h3><p class="small muted">Em estados endêmicos para raiva o reforço passa a ser semestral.</p></div><div class="seg" role="group" aria-label="Reforço da raiva"><button data-act="raiva" data-v="0" aria-pressed="' + !S.haras.raivaSemestral + '">Anual</button><button data-act="raiva" data-v="1" aria-pressed="' + !!S.haras.raivaSemestral + '">Semestral</button></div></div>' +
+      '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><h2>Vacinas</h2><span class="chip nodot c-info">Fonte: VetJr. UFMG</span></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ativa</th><th>Vacina</th><th>1ª dose (meses)</th><th>Série inicial (dias entre doses)</th><th>Reforço (dias)</th><th>Via</th></tr></thead><tbody>' +
+      vac.map(p => '<tr><td><input type="checkbox" id="p-' + p.id + '-ativo"' + (p.ativo ? ' checked' : '') + ' aria-label="Ativar ' + esc(p.nome) + '"></td><td><b>' + esc(p.nome) + '</b> <span class="chip nodot ' + (/^Obrigat/.test(p.obrig) ? 'c-late' : 'c-muted') + '">' + esc(p.obrig) + '</span>' + (p.nota ? '<br><span class="small muted">' + esc(p.nota) + '</span>' : '') + '</td><td>' + inp(p, 'idade', p.idadeMeses) + '</td><td>' + inp(p, 'serie', (p.serie || []).join(', '), ' placeholder="dose única" style="width:130px"') + '</td><td>' + (p.id === 'raiva' ? '<span class="mono">' + (S.haras.raivaSemestral ? 180 : 365) + '</span><br><span class="small muted">pela configuração acima</span>' : inp(p, 'ref', p.reforcoDias)) + '</td><td class="small">' + esc(p.via || '') + '</td></tr>').join('') +
+      '</tbody></table></div></div>' +
+      '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><h2>Manejos e exames</h2><span class="chip nodot c-muted">Padrão de mercado</span></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ativo</th><th>Procedimento</th><th>Início</th><th>Intervalo (dias)</th></tr></thead><tbody>' +
+      outros.map(p => '<tr><td><input type="checkbox" id="p-' + p.id + '-ativo"' + (p.ativo ? ' checked' : '') + ' aria-label="Ativar ' + esc(p.nome) + '"></td><td><b>' + esc(p.nome) + '</b> ' + UI.chipCat(p.cat) + (p.nota ? '<br><span class="small muted">' + esc(p.nota) + '</span>' : '') + '</td><td>' + (p.gatilho === 'idade' ? '<div class="row" style="gap:6px">' + inp(p, 'idade', p.idadeMeses) + '<span class="small muted">meses de idade</span></div>' : '<span class="small muted">A partir do 1º registro</span>') + '</td><td>' + inp(p, 'ref', p.reforcoDias) + '</td></tr>').join('') +
+      '</tbody></table></div></div>' +
+      '<div class="card"><h3 style="margin-bottom:10px">Regras automáticas</h3><ul class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px">' +
+      '<li>Reforço vencido há mais de 15 dias: a vacina volta para a primovacinação, a partir da 1ª dose.</li>' +
+      '<li>Potros que concluíram a série inicial recebem o primeiro reforço aos 12 meses de idade.</li>' +
+      '<li>Diagnóstico de gestação positivo agenda rinopneumonite no 5º, 7º e 9º mês e a previsão de parto em ' + H.GESTACAO_DIAS + ' dias após a cobertura.</li>' +
+      '<li>Vacinas multivalentes atualizam todas as doenças marcadas no mesmo registro.</li>' +
+      '<li>Animais sem registro, sem exame de DNA ou bloqueados geram pendência documental.</li></ul></div>' +
+      '<div class="row" style="justify-content:flex-end"><button class="btn" data-act="restaurar-prot">Restaurar padrões</button><button class="btn pri" data-act="salvar-prot">' + IC.check + 'Salvar protocolos</button></div></div>';
+  }
+  function salvarProtocolos(el) {
+    const lista = [];
+    for (const p of S.protocolos) {
+      const g = k => document.getElementById('p-' + p.id + '-' + k);
+      const item = { id: p.id };
+      const at = g('ativo'); if (at) item.ativo = at.checked;
+      const id = g('idade'); if (id) { const v = parseInt(id.value, 10); if (isNaN(v) || v < 0 || v > 120) { UI.toast('Idade inválida em ' + p.nome + '. Use meses entre 0 e 120.'); id.focus(); return; } item.idadeMeses = v; }
+      const se = g('serie'); if (se) { const arr = se.value.split(/[,;\s]+/).filter(Boolean).map(Number); if (arr.some(x => isNaN(x) || x < 1 || x > 400)) { UI.toast('Série inválida em ' + p.nome + '. Informe dias separados por vírgula, ex.: 30, 30.'); se.focus(); return; } item.serie = arr; }
+      const rf = g('ref'); if (rf) { const v = parseInt(rf.value, 10); if (isNaN(v) || v < 1 || v > 1500) { UI.toast('Intervalo inválido em ' + p.nome + '.'); rf.focus(); return; } item.reforcoDias = v; }
+      lista.push(item);
+    }
+    executar(el, () => API.put('/api/protocolos', lista)).then(r => { if (r) render(); });
+  }
+
+  /* ================= NOTIFICAÇÕES ================= */
+  function vNotificacoes() {
+    let ns = H.notificacoes(S);
+    if (notifFiltro === 'naolidas') ns = ns.filter(n => !S.lidas.includes(n.id));
+    const pref = S.notifPrefs;
+    const CH = [['push', 'Push no app'], ['email', 'E-mail'], ['web', 'Web']];
+    return '<div class="grid2"><div class="card flush"><div class="card-h" style="padding:16px 18px 0"><div class="seg" role="group" aria-label="Filtro"><button data-act="notif-f" data-f="todas" aria-pressed="' + (notifFiltro === 'todas') + '">Todas</button><button data-act="notif-f" data-f="naolidas" aria-pressed="' + (notifFiltro === 'naolidas') + '">Não lidas</button></div><button class="btn ghost sm" data-act="ler-todas">Marcar todas como lidas</button></div>' +
+      '<div style="padding:6px 18px 8px 0">' + (ns.length ? ns.map(n => {
+        const lida = S.lidas.includes(n.id);
+        const canais = CH.filter(([k]) => (pref[n.tipo] || {})[k]).map(([, l]) => '<span class="chip nodot c-muted">' + l + '</span>').join('');
+        return '<div class="notif ' + n.sev + (lida ? ' lida' : '') + '"><span class="bar"></span><div><b>' + esc(n.titulo) + '</b><p class="small muted">' + esc(n.texto) + '</p><div class="ch"><span class="chip nodot ' + (n.sev === 'critico' ? 'c-late' : n.sev === 'alerta' ? 'c-soon' : 'c-info') + '">' + esc(H.TIPOS_NOTIF[n.tipo]) + '</span>' + canais + '</div></div><div class="row" style="gap:4px;flex-direction:column;align-items:flex-end"><button class="btn sm" data-act="ver-animal" data-id="' + n.animalId + '">Abrir ficha</button>' + (lida ? '' : '<button class="btn ghost sm" data-act="ler" data-id="' + esc(n.id) + '">Marcar como lida</button>') + '</div></div>';
+      }).join('') : '<div class="empty">Nenhuma notificação.</div>') + '</div></div>' +
+      '<div class="card stack"><h3>Canais por tipo de alerta</h3><div class="tbl-wrap"><table class="tbl matrix"><thead><tr><th>Alerta</th>' + CH.map(([, l]) => '<th>' + l + '</th>').join('') + '</tr></thead><tbody>' +
+      Object.keys(H.TIPOS_NOTIF).map(t => '<tr><td class="small">' + H.TIPOS_NOTIF[t] + '</td>' + CH.map(([k, l]) => '<td><input type="checkbox" data-chg="pref" data-t="' + t + '" data-k="' + k + '"' + (pref[t][k] ? ' checked' : '') + ' aria-label="' + l + ' para ' + H.TIPOS_NOTIF[t] + '"></td>').join('') + '</tr>').join('') +
+      '</tbody></table></div><p class="note">Nesta versão, os alertas aparecem nos portais. O push chega com o app, e o e-mail será ativado quando o servidor de e-mail (SMTP) for configurado.</p></div></div>';
+  }
+
+  /* ================= EQUIPE ================= */
+  const PERFIS = { gestor: 'Proprietário / gestor', operador: 'Caseiro / operador de campo' };
+  function vEquipe() {
+    const P = [['Ver painel, indicadores e alertas', 1, 0], ['Cadastrar e editar animais', 1, 0], ['Importar Relatório de Plantel ABCCMM', 1, 0], ['Registrar atividades no prontuário', 1, 1], ['Anexar fotos aos registros', 1, 1], ['Ver tarefas do dia e agenda', 1, 1], ['Registrar ocorrências do dia a dia', 1, 1], ['Configurar protocolos sanitários', 1, 0], ['Gerenciar usuários e perfis', 1, 0], ['Gerenciar plano e cobrança', 1, 0], ['Usar o assistente ABCCMM', 1, 1], ['Excluir registros do prontuário', 1, 0]];
+    return '<div class="sec"><div class="card flush"><div class="card-h" style="padding:16px 18px 0"><h2>Usuários</h2><button class="btn pri" data-act="convidar">' + IC.plus + 'Convidar usuário</button></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Situação</th><th></th></tr></thead><tbody>' +
+      (S.usuarios || []).map(u => '<tr><td><b>' + esc(u.nome) + '</b></td><td class="small">' + esc(u.email) + '</td><td><span class="chip nodot ' + (u.perfil === 'gestor' ? 'c-accent' : 'c-info') + '">' + PERFIS[u.perfil] + '</span></td><td>' + (u.ativo ? '<span class="chip c-ok">Ativo</span>' : '<span class="chip c-muted">Desativado</span>') + '</td><td class="num">' + (u.id === S.usuario.id ? '<span class="small muted">Você</span>' : '<button class="btn ghost sm" data-act="senha-user" data-id="' + u.id + '">Redefinir senha</button><button class="btn ghost sm" data-act="toggle-user" data-id="' + u.id + '">' + (u.ativo ? 'Desativar' : 'Reativar') + '</button>') + '</td></tr>').join('') +
+      '</tbody></table></div></div>' +
+      '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><h2>Permissões por perfil</h2></div><div class="tbl-wrap"><table class="tbl matrix"><thead><tr><th>Permissão</th><th>Proprietário / gestor</th><th>Caseiro / operador</th></tr></thead><tbody>' +
+      P.map(([l, g, o]) => '<tr><td>' + l + '</td><td>' + (g ? '<span class="yes">Sim</span>' : '<span class="no">Não</span>') + '</td><td>' + (o ? '<span class="yes">Sim</span>' : '<span class="no">Não</span>') + '</td></tr>').join('') +
+      '</tbody></table></div></div></div>';
+  }
+
+  /* ================= ASSISTENTE ================= */
+  function vAssistente() { return UI.chatHTML(chat, 'Pergunte ao assistente', 'Respostas com base no plantel, na agenda e no protocolo de vacinação. A próxima versão será treinada com as normas e regulamentos da ABCCMM.'); }
+  function perguntar(q) {
+    q = (q || '').trim(); if (!q) return;
+    chat.push({ de: 'me', t: q });
+    const r = H.responder(S, q);
+    chat.push({ de: 'bot', t: r.t, f: r.f });
+    render();
+  }
+
+  /* ================= PLANO ================= */
+  let simN = null;
+  function vPlano() {
+    const n = S.animais.filter(a => a.vivo).length;
+    if (simN === null) simN = Math.max(n, 4);
+    return '<div class="sec"><div class="grid2"><div class="card stack"><div class="eyebrow">Plano atual</div><div class="spread"><h2>' + (n <= 3 ? 'Gratuito' : 'Por animal') + '</h2><b style="font-family:var(--f-display);font-size:1.8rem">' + H.moeda(H.mensalidade(n)) + '<span class="small muted" style="font-family:var(--f-body)"> /mês</span></b></div>' +
+      '<div class="meter" role="img" aria-label="' + n + ' de 30 animais"><i style="width:' + (n / H.LIMITE_ANIMAIS * 100) + '%"></i></div><p class="small muted">' + n + ' de ' + H.LIMITE_ANIMAIS + ' animais ativos. Os 3 primeiros não são cobrados; animais mortos ou baixados deixam de contar.</p>' +
+      '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Faixa</th><th>Animais</th><th class="num">Por animal / mês</th></tr></thead><tbody>' +
+      H.FAIXAS.map(f => '<tr><td>' + f.nome + '</td><td>' + f.de + ' a ' + f.ate + '</td><td class="num mono">' + (f.valor ? H.moeda(f.valor) : 'Grátis') + '</td></tr>').join('') +
+      '</tbody></table></div><p class="note">Valores ilustrativos para validação do modelo. A cobrança é progressiva: cada animal paga o valor da faixa em que entra.</p></div>' +
+      '<div class="card stack"><h3>Simular mensalidade</h3><label for="sim" class="lbl">Quantidade de animais: <b id="sim-n" style="color:var(--ink)">' + simN + '</b></label><input id="sim" type="range" min="1" max="30" value="' + simN + '"><div id="sim-out"></div>' +
+      '<p class="small muted">Forma de cobrança a definir na versão final, por exemplo cartão recorrente ou Pix Automático.</p></div></div></div>';
+  }
+  function simOut() {
+    const n = simN; const parts = [];
+    for (const f of H.FAIXAS) { const q = Math.max(0, Math.min(n, f.ate) - f.de + 1); if (q) parts.push(q + ' × ' + (f.valor ? H.moeda(f.valor) : 'grátis')); }
+    $('#sim-n').textContent = n;
+    $('#sim-out').innerHTML = '<b style="font-family:var(--f-display);font-size:2rem">' + H.moeda(H.mensalidade(n)) + '</b><span class="muted"> por mês</span><p class="small muted mono">' + parts.join(' + ') + '</p>';
+  }
+
+  const VIEWS = { painel: vPainel, animais: vAnimais, ficha: vFicha, importar: vImportar, agenda: vAgenda, protocolos: vProtocolos, notificacoes: vNotificacoes, equipe: vEquipe, assistente: vAssistente, plano: vPlano };
+  const AFTER = {
+    animais() {
+      $('#tb-animais').innerHTML = linhasAnimais();
+      $('#busca').addEventListener('input', e => { busca = e.target.value; $('#tb-animais').innerHTML = linhasAnimais(); });
+      $('#sexoF').addEventListener('change', e => { sexoF = e.target.value; $('#tb-animais').innerHTML = linhasAnimais(); });
+    },
+    ficha(id) {
+      const fc = $('#filtroCat'); if (fc) fc.addEventListener('change', e => { filtroCat = e.target.value; render(); });
+      const ce = $('#cert'); if (ce) ce.addEventListener('change', async e => {
+        const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+        const st = $('#cert-st'); st.hidden = false; st.className = 'note'; st.textContent = 'Lendo o certificado...';
+        try {
+          const g = H.lerGenealogia(await H.linhasPDF(f));
+          const ks = Object.keys(g);
+          if (!ks.length) { st.className = 'note warn'; st.textContent = 'Não encontramos campos de genealogia (Pai, Mãe, Avós) neste PDF. Preencha manualmente.'; return; }
+          ks.forEach(k => { const el = document.getElementById('d-' + k); if (el) { el.value = g[k]; el.style.borderColor = 'var(--accent)'; el.style.background = 'var(--accent-soft)'; } });
+          st.className = 'note good'; st.textContent = ks.length + ' campo(s) preenchido(s) a partir do PDF. Confira e clique em Salvar dados.';
+        } catch (err) { st.className = 'note bad'; st.textContent = 'Não foi possível ler o PDF: ' + err.message; }
+      });
+    },
+    importar() {
+      const inp = $('#pdf'), dr = $('#drop'); if (!inp) return;
+      inp.addEventListener('change', e => lerPDF(e.target.files[0]));
+      ['dragenter', 'dragover'].forEach(ev => dr.addEventListener(ev, e => { e.preventDefault(); dr.classList.add('over'); }));
+      ['dragleave', 'drop'].forEach(ev => dr.addEventListener(ev, e => { e.preventDefault(); dr.classList.remove('over'); }));
+      dr.addEventListener('drop', e => lerPDF(e.dataTransfer.files[0]));
+    },
+    agenda() { $('#agendaCat').addEventListener('change', e => { agendaCat = e.target.value; render(); }); },
+    assistente() {
+      const m = $('#msgs'); m.scrollTop = m.scrollHeight;
+      $('#chat-f').addEventListener('submit', e => { e.preventDefault(); perguntar($('#chat-q').value); setTimeout(() => { const q = $('#chat-q'); if (q) q.focus(); }, 0); });
+    },
+    plano() { simOut(); $('#sim').addEventListener('input', e => { simN = Number(e.target.value); simOut(); }); }
+  };
+
+  /* ================= AÇÕES ================= */
+  const senhaForm = (id, rot) => '<div class="field"><label for="' + id + '">' + rot + '</label><input id="' + id + '" type="password" class="inp" autocomplete="new-password" minlength="8"></div>';
+  const ACT = {
+    nav: el => go(el.dataset.v),
+    'agenda-ir': el => { agendaFiltro = el.dataset.f; go('agenda'); },
+    'ver-animal': el => { fichaTab = 'prontuario'; filtroCat = 'todos'; UI.fechar(); go('ficha', el.dataset.id); },
+    tab: el => { fichaTab = el.dataset.t; render(); },
+    registrar: el => UI.formRegistro(S, { animalId: el.dataset.id || (view === 'ficha' ? param : undefined) }),
+    'registrar-tarefa': el => { const t = H.tarefas(S).find(x => x.id === el.dataset.id); if (t) UI.formRegistro(S, UI.preDeTarefa(t)); },
+    fechar: () => UI.fechar(),
+    'rem-foto': el => UI.remFoto(Number(el.dataset.i)),
+    'ver-foto': el => UI.verFoto(S, el.dataset.r, Number(el.dataset.i)),
+    'salvar-registro': async el => {
+      const r = UI.lerRegistro(S); if (!r) return;
+      if (await executar(el, () => API.post('/api/registros', r))) { UI.fechar(); render(); }
+    },
+    'excluir-reg': el => confirmar(el, 'Confirmar exclusão', async () => { if (await executar(el, () => API.del('/api/registros/' + el.dataset.id))) render(); }),
+    'novo-animal': () => {
+      if (S.animais.filter(a => a.vivo).length >= S.limiteAnimais) { UI.toast('Limite de ' + S.limiteAnimais + ' animais ativos atingido.'); return; }
+      UI.abrir({
+        titulo: 'Novo animal', corpo: '<form id="fa" class="fgrid" novalidate>' +
+          '<div class="field full"><label for="n-nome">Nome</label><input id="n-nome" class="inp"></div>' +
+          '<div class="field"><label for="n-sexo">Sexo</label><select id="n-sexo" class="inp"><option value="F">Fêmea</option><option value="M">Macho</option></select></div>' +
+          '<div class="field"><label for="n-nasc">Nascimento</label><input id="n-nasc" type="date" class="inp" max="' + H.iso(H.hoje()) + '"></div>' +
+          '<div class="field"><label for="n-reg">Registro ABCCMM</label><input id="n-reg" class="inp" placeholder="Deixe vazio se ainda não registrado"></div>' +
+          '<div class="field"><label for="n-chip">Microchip</label><input id="n-chip" class="inp" inputmode="numeric"></div>' +
+          '<div class="field"><label for="n-livro">Livro</label><input id="n-livro" class="inp" placeholder="Ex.: MM6 - DEFINITIVO FECHADO FÊMEA"></div>' +
+          '<div class="field"><label for="n-dna">DNA</label><select id="n-dna" class="inp"><option>Sem exame</option><option>DNA - VP</option></select></div>' +
+          '<p class="note full" id="n-erro" hidden></p></form>',
+        rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-novo-animal">' + IC.check + 'Cadastrar</button>'
+      });
+    },
+    'salvar-novo-animal': async el => {
+      const v = id => document.getElementById(id).value.trim();
+      const err = m => { const e = $('#n-erro'); e.textContent = m; e.className = 'note bad full'; e.hidden = false; };
+      if (!v('n-nome')) return err('Informe o nome do animal.');
+      if (!v('n-nasc')) return err('Informe a data de nascimento. Ela é a base da agenda sanitária.');
+      const r = await executar(el, () => API.post('/api/animais', { nome: v('n-nome'), sexo: v('n-sexo'), nascimento: v('n-nasc'), registro: v('n-reg'), chip: v('n-chip'), livro: v('n-livro'), dna: v('n-dna'), vivo: true, bloqueado: false }));
+      if (r) { UI.fechar(); fichaTab = 'agenda'; go('ficha', r.id); }
+    },
+    'salvar-dados': async el => {
+      const a = H.animal(S, el.dataset.id); if (!a) return;
+      const v = id => document.getElementById('d-' + id).value.trim();
+      if (!v('nome')) { UI.toast('O nome não pode ficar vazio.'); return; }
+      if (!v('nasc')) { UI.toast('Informe a data de nascimento.'); return; }
+      const genealogia = {}; ['pai', 'mae', 'avoPaterno', 'avoPaterna', 'avoMaterno', 'avoMaterna'].forEach(k => { genealogia[k] = v(k); });
+      if (await executar(el, () => API.put('/api/animais/' + a.id, { nome: v('nome'), pelagem: v('pelagem'), registro: v('registro'), livro: v('livro'), sexo: v('sexo'), nascimento: v('nasc'), chip: v('chip'), dna: v('dna'), vivo: v('vivo') === '1', bloqueado: v('bloq') === '1', genealogia }))) render();
+    },
+    'imp-cancelar': () => { importacao = null; render(); },
+    'imp-confirmar': el => confirmarImportacao(el),
+    'agenda-f': el => { agendaFiltro = el.dataset.f; render(); },
+    raiva: async el => { const sem = el.dataset.v === '1'; if (await executar(el, () => API.put('/api/haras', { raivaSemestral: sem }), 'Reforço da raiva: ' + (sem ? 'semestral' : 'anual') + '. Agenda recalculada.')) render(); },
+    'salvar-prot': el => salvarProtocolos(el),
+    'restaurar-prot': el => confirmar(el, 'Confirmar restauração', async () => { if (await executar(el, () => API.post('/api/protocolos/restaurar'))) render(); }),
+    'notif-f': el => { notifFiltro = el.dataset.f; render(); },
+    ler: async el => { if (await executar(el, () => API.post('/api/notificacoes/lidas', { ids: [el.dataset.id] }), false)) render(); },
+    'ler-todas': async el => { const ids = H.notificacoes(S).map(n => n.id).filter(id => !S.lidas.includes(id)); if (!ids.length) return; if (await executar(el, () => API.post('/api/notificacoes/lidas', { ids }), 'Notificações marcadas como lidas.')) render(); },
+    convidar: () => UI.abrir({
+      titulo: 'Adicionar usuário', corpo: '<form class="fgrid" novalidate><div class="field full"><label for="u-nome">Nome</label><input id="u-nome" class="inp"></div><div class="field full"><label for="u-email">E-mail (login)</label><input id="u-email" type="email" class="inp"></div><div class="field"><label for="u-perfil">Perfil</label><select id="u-perfil" class="inp"><option value="operador">Caseiro / operador de campo</option><option value="gestor">Proprietário / gestor</option></select></div>' + senhaForm('u-senha', 'Senha inicial (mín. 8)') + '<p class="note full" id="u-erro" hidden></p></form><p class="small muted">Passe o endereço do portal, o e-mail e a senha inicial para a pessoa. Ela pode trocar a senha depois.</p>',
+      rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-usuario">Adicionar</button>'
+    }),
+    'salvar-usuario': async el => {
+      const v = id => document.getElementById(id).value.trim();
+      const err = m => { const e = $('#u-erro'); e.textContent = m; e.className = 'note bad full'; e.hidden = false; };
+      if (!v('u-nome')) return err('Informe o nome.');
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v('u-email'))) return err('Informe um e-mail válido.');
+      if (document.getElementById('u-senha').value.length < 8) return err('A senha inicial precisa ter pelo menos 8 caracteres.');
+      if (await executar(el, () => API.post('/api/usuarios', { nome: v('u-nome'), email: v('u-email'), perfil: v('u-perfil'), senha: document.getElementById('u-senha').value }))) { UI.fechar(); render(); }
+    },
+    'toggle-user': async el => { const u = (S.usuarios || []).find(x => String(x.id) === el.dataset.id); if (!u) return; if (await executar(el, () => API.patch('/api/usuarios/' + u.id, { ativo: !u.ativo }), u.nome + (u.ativo ? ' desativado.' : ' reativado.'))) render(); },
+    'senha-user': el => {
+      const u = (S.usuarios || []).find(x => String(x.id) === el.dataset.id); if (!u) return;
+      UI.abrir({ titulo: 'Redefinir senha de ' + esc(u.nome), corpo: '<form class="stack" novalidate>' + senhaForm('r-senha', 'Nova senha (mín. 8)') + '<input type="hidden" id="r-uid" value="' + u.id + '"></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-senha-user">Redefinir</button>' });
+    },
+    'salvar-senha-user': async el => {
+      const s = document.getElementById('r-senha').value; if (s.length < 8) { UI.toast('A senha precisa ter pelo menos 8 caracteres.'); return; }
+      if (await executar(el, () => API.post('/api/usuarios/' + document.getElementById('r-uid').value + '/senha', { senha: s }))) UI.fechar();
+    },
+    'minha-senha': () => UI.abrir({ titulo: 'Alterar minha senha', corpo: '<form class="stack" novalidate><div class="field"><label for="m-atual">Senha atual</label><input id="m-atual" type="password" class="inp" autocomplete="current-password"></div>' + senhaForm('m-nova', 'Nova senha (mín. 8)') + '</form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-minha-senha">Alterar</button>' }),
+    'salvar-minha-senha': async el => {
+      const n = document.getElementById('m-nova').value; if (n.length < 8) { UI.toast('A nova senha precisa ter pelo menos 8 caracteres.'); return; }
+      if (await executar(el, () => API.post('/api/me/senha', { atual: document.getElementById('m-atual').value, nova: n }), 'Senha alterada.')) UI.fechar();
+    },
+    sair: async () => { try { await API.post('/api/logout'); } catch (e) { } location.href = '/entrar'; },
+    sug: el => perguntar(el.dataset.q)
+  };
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-act]'); if (!el) return;
+    const f = ACT[el.dataset.act]; if (!f) return;
+    if (el.tagName === 'A' || el.tagName === 'TR' || el.closest('form')) e.preventDefault();
+    f(el, e);
+  });
+  document.addEventListener('change', async e => {
+    const el = e.target.closest('[data-chg]'); if (!el) return;
+    if (el.dataset.chg === 'imp-sel') { const i = Number(el.dataset.i); el.checked ? importacao.sel.add(i) : importacao.sel.delete(i); render(); }
+    if (el.dataset.chg === 'pref') {
+      const p = JSON.parse(JSON.stringify(S.notifPrefs)); p[el.dataset.t][el.dataset.k] = el.checked;
+      if (await executar(null, () => API.put('/api/notif-prefs', p), 'Preferência salva.')) render();
+    }
+  });
+  (async () => {
+    $('#view').innerHTML = '<div class="empty">Carregando o haras...</div>';
+    try {
+      await recarregar();
+      if (S.usuario.perfil !== 'gestor') { location.href = '/campo'; return; }
+      render();
+    } catch (e) { $('#view').innerHTML = '<div class="note bad">' + esc(e.message) + '</div>'; }
+  })();
+})();
+</script>

@@ -1,0 +1,202 @@
+<title>Haras360 Campo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Zilla+Slab:wght@500;600;700&display=swap">
+<style>
+/*SHARED_CSS*/
+:root{--forest-accent:#e3ab6c}
+.hdr{background:var(--forest);color:var(--forest-ink);padding-inline:16px;padding-block:14px 0}
+.hdr-in{max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{width:30px;height:30px;color:var(--forest-accent);flex:none}
+.brand b{font-family:var(--f-display);font-size:1.3rem;font-weight:700;line-height:1;display:block}
+.brand small{display:block;font-size:.72rem;color:var(--forest-muted);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+.me{display:flex;align-items:center;gap:10px;font-size:.84rem;color:var(--forest-muted);text-align:right;line-height:1.3}
+.me b{color:var(--forest-ink);font-weight:600}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--forest-accent);color:var(--forest);display:grid;place-items:center;font-weight:700;font-size:.8rem;flex:none}
+.tnav{max-width:900px;margin:12px auto 0;display:flex;gap:2px}
+.tnav button{display:flex;align-items:center;gap:8px;border:0;background:none;color:var(--forest-muted);padding:10px 14px;border-radius:8px 8px 0 0;cursor:pointer;font-weight:600;font-size:.92rem;position:relative}
+.tnav button svg{width:18px;height:18px}
+.tnav button:hover{color:var(--forest-ink)}
+.tnav button[aria-current="page"]{background:var(--bg);color:var(--ink)}
+.tnav .badge{background:var(--late);color:#fff;font-size:.68rem;font-weight:700;padding:1px 6px;border-radius:99px}
+.wrap{max-width:900px;margin:0 auto;padding-inline:16px;padding-block:22px 110px}
+.daybar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.cnt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.cnt div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.cnt b{display:block;font-family:var(--f-display);font-size:1.9rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.cnt span{font-size:.82rem;color:var(--muted)}
+.cnt .late b{color:var(--late)} .cnt .soon b{color:var(--soon)}
+.quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.quick button{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;text-align:left}
+.quick button svg{width:22px;height:22px;color:var(--accent);flex:none}
+.quick button:hover{border-color:var(--accent)}
+.quick small{display:block;font-weight:400;color:var(--muted);font-size:.8rem}
+.acards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.acard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+.acard:hover{border-color:var(--muted)}
+.acard b{font-family:var(--f-display);font-size:1.12rem;font-weight:600}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px 18px;margin:0}
+.facts div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.facts dt{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.facts dd{margin:0;font-weight:500;overflow-wrap:anywhere}
+.notif{display:grid;grid-template-columns:4px minmax(0,1fr);gap:14px;padding:13px 16px 13px 0;border-top:1px solid var(--line-2)}
+.notif:first-child{border-top:0}
+.notif .bar{align-self:stretch;border-radius:0 3px 3px 0;background:var(--info)}
+.notif.critico .bar{background:var(--late)} .notif.alerta .bar{background:var(--soon)}
+.notif.lida{opacity:.6}
+@media (max-width:640px){
+  .me #me-n,.me br{display:none}
+  .hdr{padding-block:12px}
+  .tnav{position:fixed;left:0;right:0;bottom:0;margin:0;background:var(--surface);border-top:1px solid var(--line);justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));z-index:30}
+  .tnav button{flex-direction:column;gap:2px;font-size:.7rem;color:var(--muted);padding:6px 8px;border-radius:8px}
+  .tnav button[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+  .tnav .badge{position:absolute;top:0;right:4px}
+  .cnt b{font-size:1.6rem}
+  .quick{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M11 34V20a9 9 0 0 1 18 0v14"/><path d="M7 34h8M25 34h8"/><circle cx="14" cy="22" r="1.2" fill="currentColor"/><circle cx="26" cy="22" r="1.2" fill="currentColor"/><circle cx="16" cy="14.5" r="1.2" fill="currentColor"/><circle cx="24" cy="14.5" r="1.2" fill="currentColor"/></svg>
+      <div><b>Haras360</b><small id="haras-n">Campo</small></div>
+    </div>
+    <div class="me"><div><b id="me-n"></b><br><a href="#" data-act="minha-senha" style="color:var(--forest-muted)">Senha</a> · <a href="#" data-act="sair" style="color:var(--forest-muted)">Sair</a></div><span class="avatar" id="av"></span></div>
+  </div>
+  <nav class="tnav" id="tnav" aria-label="Navegação"></nav>
+</header>
+<main class="wrap"><div id="view" class="view-in"></div></main>
+<div id="modal" class="modal" hidden></div>
+<div id="toast" role="status" hidden></div>
+
+<script>window.H360_PORTAL = 'campo';</script>
+<script>
+/*API*/
+</script>
+<script>
+/*CORE*/
+</script>
+<script>
+/*UI*/
+</script>
+<script>
+(function () {
+  let S = null;
+  const $ = s => document.querySelector(s);
+  const esc = H.esc, br = H.br, IC = UI.ICON;
+  let view = 'hoje', param = null, notifFiltro = 'todas';
+  let chat = [{ de: 'bot', t: 'Olá. Posso dizer o que está pendente no plantel, explicar a vacinação e tirar dúvidas do dia a dia.', f: 'Haras360' }];
+  async function recarregar() { S = await API.get('/api/estado'); }
+  async function executar(el, fn, ok) {
+    if (el && el.disabled) return null;
+    const txt = el ? el.innerHTML : '';
+    if (el) { el.disabled = true; el.innerHTML = 'Enviando...'; }
+    try { const r = await fn(); await recarregar(); if (ok !== false) UI.toast(typeof ok === 'string' ? ok : (r && r.resumo) || 'Salvo.'); return r || true; }
+    catch (e) { UI.toast(e.message); return null; }
+    finally { if (el && el.isConnected) { el.disabled = false; el.innerHTML = txt; } }
+  }
+  const avisos = () => H.notificacoes(S).filter(n => n.tipo !== 'campo' && n.tipo !== 'documental');
+  const naoLidos = () => avisos().filter(n => !S.lidas.includes(n.id)).length;
+
+  const NAV = [['hoje', 'Hoje', IC.home], ['animais', 'Animais', IC.horse], ['registrar', 'Registrar', IC.plus], ['avisos', 'Avisos', IC.bell], ['assistente', 'Assistente', IC.chat]];
+  function go(v, p) { view = v; param = p || null; render(); window.scrollTo(0, 0); }
+  function render() {
+    const nl = naoLidos();
+    $('#haras-n').textContent = 'Campo · ' + S.haras.nome; $('#me-n').textContent = S.usuario.nome;
+    $('#av').textContent = S.usuario.nome.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
+    $('#tnav').innerHTML = NAV.map(([id, l, ic]) => '<button data-act="' + (id === 'registrar' ? 'registrar' : 'nav') + '" data-v="' + id + '"' + ((view === id || (view === 'ficha' && id === 'animais')) ? ' aria-current="page"' : '') + '>' + ic + '<span>' + l + '</span>' + (id === 'avisos' && nl ? '<span class="badge">' + nl + '</span>' : '') + '</button>').join('');
+    const v = $('#view'); v.classList.remove('view-in'); void v.offsetWidth; v.classList.add('view-in');
+    v.innerHTML = VIEWS[view](param);
+    if (AFTER[view]) AFTER[view](param);
+  }
+
+  function vHoje() {
+    const ts = H.tarefas(S).filter(t => !t.doc);
+    const at = ts.filter(t => t.status === 'atrasado'), hj = ts.filter(t => t.status === 'hoje'), sm = ts.filter(t => t.status === 'semana');
+    const d = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const bloco = (tit, arr, vazio) => '<div class="card flush"><div class="card-h" style="padding:14px 16px 0"><h3>' + tit + '</h3><span class="small muted">' + arr.length + '</span></div><div class="tasks" style="padding:2px 16px 6px 0">' + (arr.length ? arr.map(t => UI.linhaTarefa(t)).join('') : '<div class="empty">' + vazio + '</div>') + '</div></div>';
+    return '<div class="sec"><div class="daybar"><div><div class="eyebrow">Tarefas do dia</div><h1 style="text-transform:capitalize">' + d + '</h1></div></div>' +
+      '<div class="cnt"><div class="late"><b>' + at.length + '</b><span>Atrasadas</span></div><div class="soon"><b>' + hj.length + '</b><span>Para hoje</span></div><div><b>' + sm.length + '</b><span>Próximos 7 dias</span></div></div>' +
+      '<div class="quick"><button data-act="registrar">' + IC.check + '<span>Novo registro<small>Vacina, vermífugo, casco, exame</small></span></button><button data-act="ocorrencia">' + IC.alert + '<span>Registrar ocorrência<small>Algo diferente com um animal</small></span></button></div>' +
+      bloco('Atrasadas', at, 'Nada atrasado. Bom trabalho.') + bloco('Para hoje', hj, 'Nada marcado para hoje.') + bloco('Próximos 7 dias', sm, 'Nada previsto para a semana.') + '</div>';
+  }
+
+  function vAnimais() {
+    const ts = H.tarefas(S);
+    return '<div class="sec"><div><div class="eyebrow">Plantel</div><h1>Animais</h1></div><div class="acards">' + S.animais.filter(a => a.vivo).map(a => {
+      const t = ts.filter(x => x.animalId === a.id && !x.doc);
+      const at = t.filter(x => x.status === 'atrasado').length, sm = t.filter(x => ['hoje', 'semana'].includes(x.status)).length;
+      const g = H.gestacao(S, a);
+      return '<button class="acard" data-act="ver-animal" data-id="' + a.id + '"><b>' + esc(a.nome) + '</b><span class="small muted">' + (a.sexo === 'F' ? 'Fêmea' : 'Macho') + ' · ' + H.idadeTxt(a.nascimento) + '</span><div class="row" style="gap:4px">' + (at ? '<span class="chip c-late">' + at + ' atrasada' + (at > 1 ? 's' : '') + '</span>' : '') + (sm ? '<span class="chip c-soon">' + sm + ' na semana</span>' : '') + (g ? '<span class="chip c-accent">Gestante ' + g.mes + 'º mês</span>' : '') + (!at && !sm ? '<span class="chip c-ok">Em dia</span>' : '') + '</div></button>';
+    }).join('') + '</div></div>';
+  }
+
+  function vFicha(id) {
+    const a = H.animal(S, id); if (!a) return '<div class="empty">Animal não encontrado.</div>';
+    const g = H.gestacao(S, a);
+    const ts = H.tarefas(S, { animalId: a.id }).filter(t => !t.doc && t.status !== 'futuro');
+    const regs = S.registros.filter(r => r.animalId === a.id).sort((x, y) => x.data < y.data ? 1 : -1);
+    return '<div class="sec"><div class="spread"><button class="btn ghost" data-act="nav" data-v="animais">' + IC.back + 'Animais</button><button class="btn pri" data-act="registrar" data-id="' + a.id + '">' + IC.plus + 'Registrar</button></div>' +
+      '<div><div class="eyebrow">' + (a.sexo === 'F' ? 'Fêmea' : 'Macho') + ' · ' + H.idadeTxt(a.nascimento) + '</div><h1>' + esc(a.nome) + '</h1></div>' +
+      '<div class="card"><dl class="facts"><div><dt>Registro</dt><dd class="mono">' + esc(a.registro || 'Sem registro') + '</dd></div><div><dt>Microchip</dt><dd class="mono">' + esc(a.chip || '-') + '</dd></div><div><dt>Nascimento</dt><dd>' + br(a.nascimento) + '</dd></div></dl>' +
+      (g ? '<div class="gest" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line-2)"><div class="spread"><b>Gestação</b><span class="chip c-accent">' + g.mes + 'º mês · ' + g.dias + ' dias</span></div><div class="gbar"><i style="width:' + g.pct + '%"></i></div><p class="small muted">Parto previsto para ' + br(g.parto) + ', ' + H.relativo(g.parto) + '.</p></div>' : '') + '</div>' +
+      '<div class="card flush"><div class="card-h" style="padding:14px 16px 0"><h3>A fazer</h3></div><div class="tasks" style="padding:2px 16px 6px 0">' + (ts.length ? ts.map(t => UI.linhaTarefa(t, { semAnimal: true })).join('') : '<div class="empty">Nada pendente nos próximos 30 dias.</div>') + '</div></div>' +
+      '<div class="card"><h3 style="margin-bottom:4px">Histórico</h3>' + UI.linhaTempo(S, regs) + '</div></div>';
+  }
+
+  function vAvisos() {
+    let ns = avisos(); if (notifFiltro === 'naolidas') ns = ns.filter(n => !S.lidas.includes(n.id));
+    return '<div class="sec"><div class="spread"><div><div class="eyebrow">Notificações</div><h1>Avisos</h1></div><button class="btn ghost sm" data-act="ler-todas">Marcar todos como lidos</button></div>' +
+      '<div class="seg" role="group" aria-label="Filtro"><button data-act="notif-f" data-f="todas" aria-pressed="' + (notifFiltro === 'todas') + '">Todos</button><button data-act="notif-f" data-f="naolidas" aria-pressed="' + (notifFiltro === 'naolidas') + '">Não lidos</button></div>' +
+      '<div class="card flush"><div style="padding:4px 16px 6px 0">' + (ns.length ? ns.map(n => { const lida = S.lidas.includes(n.id); return '<div class="notif ' + n.sev + (lida ? ' lida' : '') + '"><span class="bar"></span><div class="stack" style="gap:6px"><div><b>' + esc(n.titulo) + '</b><p class="small muted">' + esc(n.texto) + '</p></div><div class="row" style="gap:6px">' + (n.tarefa ? '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(n.tarefa.id) + '">' + IC.check + 'Registrar</button>' : '<button class="btn sm" data-act="ver-animal" data-id="' + n.animalId + '">Ver animal</button>') + (lida ? '' : '<button class="btn ghost sm" data-act="ler" data-id="' + esc(n.id) + '">Marcar como lido</button>') + '</div></div></div>'; }).join('') : '<div class="empty">Nenhum aviso.</div>') + '</div></div>' +
+      '<p class="small muted">Com o aplicativo, estes avisos também chegarão como notificação no celular.</p></div>';
+  }
+
+  function vAssistente() { return UI.chatHTML(chat, 'Assistente', 'Pergunte sobre o que precisa ser feito, vacinação e cuidados com éguas gestantes.'); }
+  function perguntar(q) { q = (q || '').trim(); if (!q) return; chat.push({ de: 'me', t: q }); const r = H.responder(S, q); chat.push({ de: 'bot', t: r.t, f: r.f }); render(); }
+
+  const VIEWS = { hoje: vHoje, animais: vAnimais, ficha: vFicha, avisos: vAvisos, assistente: vAssistente };
+  const AFTER = {
+    assistente() {
+      const m = $('#msgs'); m.scrollTop = m.scrollHeight;
+      $('#chat-f').addEventListener('submit', e => { e.preventDefault(); perguntar($('#chat-q').value); setTimeout(() => { const q = $('#chat-q'); if (q) q.focus(); }, 0); });
+    }
+  };
+  const ACT = {
+    nav: el => go(el.dataset.v),
+    'ver-animal': el => { UI.fechar(); go('ficha', el.dataset.id); },
+    registrar: el => UI.formRegistro(S, { animalId: el.dataset.id || (view === 'ficha' ? param : undefined) }),
+    ocorrencia: () => UI.formRegistro(S, { tipo: 'ocorrencia', tituloModal: 'Registrar ocorrência' }),
+    'registrar-tarefa': el => { const t = H.tarefas(S).find(x => x.id === el.dataset.id); if (t) UI.formRegistro(S, UI.preDeTarefa(t)); },
+    fechar: () => UI.fechar(),
+    'rem-foto': el => UI.remFoto(Number(el.dataset.i)),
+    'ver-foto': el => UI.verFoto(S, el.dataset.r, Number(el.dataset.i)),
+    'salvar-registro': async el => {
+      const r = UI.lerRegistro(S); if (!r) return;
+      if (await executar(el, () => API.post('/api/registros', r))) { UI.fechar(); render(); }
+    },
+    'notif-f': el => { notifFiltro = el.dataset.f; render(); },
+    ler: async el => { if (await executar(el, () => API.post('/api/notificacoes/lidas', { ids: [el.dataset.id] }), false)) render(); },
+    'ler-todas': async el => { const ids = avisos().map(n => n.id).filter(id => !S.lidas.includes(id)); if (!ids.length) return; if (await executar(el, () => API.post('/api/notificacoes/lidas', { ids }), 'Avisos marcados como lidos.')) render(); },
+    'minha-senha': () => UI.abrir({ titulo: 'Alterar minha senha', corpo: '<form class="stack" novalidate><div class="field"><label for="m-atual">Senha atual</label><input id="m-atual" type="password" class="inp" autocomplete="current-password"></div><div class="field"><label for="m-nova">Nova senha (mín. 8)</label><input id="m-nova" type="password" class="inp" autocomplete="new-password"></div></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-minha-senha">Alterar</button>' }),
+    'salvar-minha-senha': async el => {
+      const n = document.getElementById('m-nova').value; if (n.length < 8) { UI.toast('A nova senha precisa ter pelo menos 8 caracteres.'); return; }
+      if (await executar(el, () => API.post('/api/me/senha', { atual: document.getElementById('m-atual').value, nova: n }), 'Senha alterada.')) UI.fechar();
+    },
+    sair: async () => { try { await API.post('/api/logout'); } catch (e) { } location.href = '/entrar'; },
+    sug: el => perguntar(el.dataset.q)
+  };
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-act]'); if (!el) return;
+    const f = ACT[el.dataset.act]; if (!f) return;
+    if (el.tagName === 'A' || el.closest('form')) e.preventDefault();
+    f(el, e);
+  });
+  (async () => {
+    $('#view').innerHTML = '<div class="empty">Carregando...</div>';
+    try { await recarregar(); render(); } catch (e) { $('#view').innerHTML = '<div class="note bad">' + esc(e.message) + '</div>'; }
+  })();
+})();
+</script>
