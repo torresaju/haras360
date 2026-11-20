@@ -1,0 +1,6 @@
+dados
+backups
+.env
+web
+*.tar.gz
+**/__pycache__

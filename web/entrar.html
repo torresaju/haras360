@@ -1,0 +1,60 @@
+<title>Haras360 Entrar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Zilla+Slab:wght@500;600;700&display=swap">
+<style>
+/*SHARED_CSS*/
+:root{--forest-accent:#e3ab6c}
+body{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.lado{background:var(--forest);color:var(--forest-ink);padding:48px clamp(24px,5vw,72px);display:flex;flex-direction:column;justify-content:space-between;gap:40px}
+.lado svg{width:46px;height:46px;color:var(--forest-accent)}
+.lado h1{font-size:clamp(2rem,1.4rem + 2vw,3rem);max-width:14ch;margin-top:28px}
+.lado p{color:var(--forest-muted);max-width:42ch;margin-top:14px}
+.lado ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;color:var(--forest-muted);font-size:.92rem}
+.lado li::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--forest-accent);margin-right:10px;vertical-align:middle}
+.form{display:flex;align-items:center;justify-content:center;padding:48px 16px}
+.form form{width:min(380px,100%);display:flex;flex-direction:column;gap:16px}
+.form h2{font-size:1.6rem}
+@media (max-width:800px){body{grid-template-columns:minmax(0,1fr)}.lado{padding:28px 20px;gap:12px}.lado h1{font-size:1.6rem;margin-top:14px}.lado ul{display:none}}
+</style>
+<section class="lado">
+  <div>
+    <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M11 34V20a9 9 0 0 1 18 0v14"/><path d="M7 34h8M25 34h8"/><circle cx="14" cy="22" r="1.2" fill="currentColor"/><circle cx="26" cy="22" r="1.2" fill="currentColor"/><circle cx="16" cy="14.5" r="1.2" fill="currentColor"/><circle cx="24" cy="14.5" r="1.2" fill="currentColor"/></svg>
+    <h1>Haras360</h1>
+    <p>Prontuário, agenda sanitária e plantel do seu haras em um só lugar, do escritório ao piquete.</p>
+  </div>
+  <ul><li>Importação do Relatório de Plantel ABCCMM</li><li>Vacinas, vermífugos e cascos agendados automaticamente</li><li>Gestor e caseiro trabalhando no mesmo histórico</li></ul>
+</section>
+<main class="form">
+  <form id="f" novalidate>
+    <div><div class="eyebrow">Acesso</div><h2>Entrar</h2></div>
+    <div class="field"><label for="email">E-mail</label><input id="email" type="email" class="inp" autocomplete="username" required></div>
+    <div class="field"><label for="senha">Senha</label><input id="senha" type="password" class="inp" autocomplete="current-password" required></div>
+    <p id="erro" class="note bad" hidden></p>
+    <button class="btn pri" id="ok" style="justify-content:center;padding-block:11px">Entrar</button>
+    <p class="small muted">Esqueceu a senha? Peça ao gestor do haras para redefinir.</p>
+  </form>
+</main>
+<script>
+(function () {
+  const f = document.getElementById('f'), erro = document.getElementById('erro'), ok = document.getElementById('ok');
+  const volta = new URLSearchParams(location.search).get('volta') || '';
+  const destino = perfil => perfil === 'gestor' ? (volta === '/campo' ? '/campo' : '/gestor') : '/campo';
+  fetch('/api/me', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(u => { if (u) location.href = destino(u.perfil); }).catch(() => { });
+  f.addEventListener('submit', async e => {
+    e.preventDefault(); erro.hidden = true;
+    const email = document.getElementById('email').value.trim(), senha = document.getElementById('senha').value;
+    if (!email || !senha) { erro.textContent = 'Informe e-mail e senha.'; erro.hidden = false; return; }
+    ok.disabled = true; ok.textContent = 'Entrando...';
+    try {
+      const r = await fetch('/api/login', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Haras360': '1' }, body: JSON.stringify({ email, senha }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(typeof d.detail === 'string' ? d.detail : 'Não foi possível entrar.');
+      location.href = destino(d.perfil);
+    } catch (err) {
+      erro.textContent = err.message === 'Failed to fetch' ? 'Sem conexão com o servidor.' : err.message; erro.hidden = false;
+      ok.disabled = false; ok.textContent = 'Entrar';
+    }
+  });
+})();
+</script>

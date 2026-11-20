@@ -1,0 +1,1246 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Haras360 Gestor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Zilla+Slab:wght@500;600;700&display=swap">
+<style>
+[hidden]{display:none!important}
+body{margin:0}
+img{max-width:100%}
+:root{
+  /* Layout: barra lateral verde-floresta fixa + área de trabalho em grade; no celular a barra vira faixa superior rolável */
+  --bg:#eceee8; --surface:#fafbf7; --surface-2:#f1f3ed; --ink:#1b231e; --muted:#58645c; --line:#d4d9cf; --line-2:#e3e7df;
+  --forest:#1e3a2b; --forest-2:#27493a; --forest-ink:#e8f0e9; --forest-muted:#a3baa9;
+  --accent:#96541d; --accent-soft:#f2e4d4; --accent-ink:#ffffff;
+  --late:#ad3327; --late-soft:#f6e0db; --soon:#9b640c; --soon-soft:#f5e9cf; --ok:#2a6f46; --ok-soft:#dbeee1; --info:#2c5b84; --info-soft:#dee8f2;
+  --shadow:0 1px 2px rgba(20,32,24,.06),0 8px 24px rgba(20,32,24,.07);
+  --f-display:"Zilla Slab",Rockwell,"Roboto Slab",Georgia,serif;
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101511; --surface:#171f19; --surface-2:#1d261f; --ink:#e3eae3; --muted:#97a59b; --line:#2b362e; --line-2:#232d26;
+  --forest:#0b150f; --forest-2:#16251b; --forest-ink:#dde8df; --forest-muted:#85a08d;
+  --accent:#d38b4c; --accent-soft:#38261a; --accent-ink:#1b120a;
+  --late:#ec7c6a; --late-soft:#3a1d18; --soon:#e1aa52; --soon-soft:#352810; --ok:#6cbf88; --ok-soft:#163022; --info:#7eaedb; --info-soft:#172838;
+  --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#101511; --surface:#171f19; --surface-2:#1d261f; --ink:#e3eae3; --muted:#97a59b; --line:#2b362e; --line-2:#232d26;
+  --forest:#0b150f; --forest-2:#16251b; --forest-ink:#dde8df; --forest-muted:#85a08d;
+  --accent:#d38b4c; --accent-soft:#38261a; --accent-ink:#1b120a;
+  --late:#ec7c6a; --late-soft:#3a1d18; --soon:#e1aa52; --soon-soft:#352810; --ok:#6cbf88; --ok-soft:#163022; --info:#7eaedb; --info-soft:#172838;
+  --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.005em}
+h1{font-size:clamp(1.6rem,1.2rem + 1.4vw,2.2rem)}
+h2{font-size:1.3rem}
+h3{font-size:1.06rem}
+p{margin:0}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-size:.86em;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+.eyebrow{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spread{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1000px){.grid2{grid-template-columns:minmax(0,1fr)}}
+
+/* botões */
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem;line-height:1.2;text-decoration:none;color:var(--ink);white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--accent);padding-inline:8px}
+.btn.ghost:hover{background:var(--accent-soft)}
+.btn.sm{padding:5px 10px;font-size:.82rem}
+.btn.danger{color:var(--late)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn svg{width:16px;height:16px;flex:none}
+
+/* superfícies */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.card.flush{padding:0;overflow:hidden}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.sec{display:flex;flex-direction:column;gap:18px}
+
+/* chips de estado */
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.76rem;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap;border:1px solid transparent}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.85}
+.chip.nodot::before{display:none}
+.c-late{background:var(--late-soft);color:var(--late)}
+.c-soon{background:var(--soon-soft);color:var(--soon)}
+.c-ok{background:var(--ok-soft);color:var(--ok)}
+.c-info{background:var(--info-soft);color:var(--info)}
+.c-accent{background:var(--accent-soft);color:var(--accent)}
+.c-muted{background:var(--surface-2);color:var(--muted)}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:2px;text-align:left;cursor:pointer}
+.kpi:hover{border-color:var(--muted)}
+.kpi b{font-family:var(--f-display);font-size:2rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.84rem;color:var(--muted)}
+.kpi.late b{color:var(--late)} .kpi.soon b{color:var(--soon)} .kpi.info b{color:var(--info)}
+
+/* tarefas */
+.tasks{display:flex;flex-direction:column}
+.task{display:grid;grid-template-columns:4px 64px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 16px 11px 0;border-top:1px solid var(--line-2)}
+.task:first-child{border-top:0}
+.task .bar{align-self:stretch;border-radius:0 3px 3px 0;background:var(--line)}
+.task.atrasado .bar{background:var(--late)} .task.hoje .bar,.task.semana .bar{background:var(--soon)} .task.pendente .bar{background:var(--info)} .task.mes .bar{background:var(--ok)}
+.task .when{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);line-height:1.25}
+.task .when b{display:block;font-size:.95rem;color:var(--ink);font-weight:500}
+.task .what{min-width:0}
+.task .what strong{font-weight:600}
+.task .what .sub{font-size:.84rem;color:var(--muted)}
+@media (max-width:560px){.task{grid-template-columns:4px 54px minmax(0,1fr)}.task .act{grid-column:3}}
+
+/* tabelas */
+.tbl-wrap{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse;font-size:.9rem}
+.tbl th{text-align:left;font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:11px 12px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tbody tr.click{cursor:pointer}
+.tbl tbody tr.click:hover td{background:var(--surface-2)}
+.tbl .num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* formulários */
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field>label,.lbl{font-size:.8rem;font-weight:600;color:var(--muted)}
+.inp{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 11px;min-width:0}
+.inp:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+textarea.inp{min-height:84px;resize:vertical}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.fgrid .full{grid-column:1/-1}
+@media (max-width:560px){.fgrid{grid-template-columns:minmax(0,1fr)}}
+.checks{display:flex;flex-wrap:wrap;gap:8px}
+.check{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:.88rem;background:var(--surface)}
+.check:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.check input{accent-color:var(--accent)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:7px 14px;cursor:pointer;font-weight:600;font-size:.86rem}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.drop{border:1.5px dashed var(--line);border-radius:var(--r);padding:28px 18px;text-align:center;background:var(--surface-2);display:flex;flex-direction:column;gap:10px;align-items:center}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+
+/* abas */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;cursor:pointer;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+
+/* prontuário */
+.timeline{display:flex;flex-direction:column}
+.ev{display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;padding:14px 0;border-top:1px solid var(--line-2)}
+.ev:first-child{border-top:0}
+.ev .d{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);padding-top:2px}
+.ev .body{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ev .meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--muted)}
+.ev .obs{font-size:.92rem;overflow-wrap:anywhere}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.thumbs button{padding:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;cursor:zoom-in;width:72px;height:72px;background:var(--surface-2)}
+.thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+@media (max-width:560px){.ev{grid-template-columns:minmax(0,1fr);gap:4px}}
+
+/* gestação */
+.gest{display:flex;flex-direction:column;gap:8px}
+.gbar{height:8px;border-radius:99px;background:var(--surface-2);position:relative;overflow:hidden;border:1px solid var(--line-2)}
+.gbar i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:99px}
+.gmarks{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:.7rem;color:var(--muted)}
+
+/* modal e toast */
+.modal{position:fixed;inset:0;background:rgba(10,16,12,.5);display:flex;align-items:flex-start;justify-content:center;z-index:50;padding:max(24px,env(safe-area-inset-top,0px)) 16px 24px;overflow-y:auto}
+.sheet{background:var(--surface);color:var(--ink);border-radius:14px;width:min(640px,100%);box-shadow:0 20px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;max-height:none}
+.sheet header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line)}
+.sheet .sbody{padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.sheet footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--line);flex-wrap:wrap}
+.sheet.wide{width:min(900px,100%)}
+.x{border:0;background:none;cursor:pointer;font-size:1.4rem;line-height:1;color:var(--muted);padding:4px 8px;border-radius:6px}
+.x:hover{background:var(--surface-2)}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:10px;font-size:.9rem;max-width:min(560px,calc(100% - 32px));z-index:60;box-shadow:var(--shadow)}
+.note{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:10px 12px;font-size:.86rem;color:var(--muted)}
+.note.warn{background:var(--soon-soft);border-color:transparent;color:var(--soon)}
+.note.bad{background:var(--late-soft);border-color:transparent;color:var(--late)}
+.note.good{background:var(--ok-soft);border-color:transparent;color:var(--ok)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+
+/* chat */
+.chat{display:flex;flex-direction:column;height:min(68vh,640px)}
+.msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:18px}
+.msg{max-width:78%;padding:10px 14px;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.93rem}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:4px}
+.msg.bot{align-self:flex-start;background:var(--surface-2);border:1px solid var(--line-2);border-bottom-left-radius:4px}
+.msg .src{display:block;margin-top:6px;font-size:.74rem;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.chat form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+.sugs{display:flex;gap:6px;flex-wrap:wrap;padding:0 18px 12px}
+.sugs button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:5px 11px;font-size:.82rem;cursor:pointer}
+.sugs button:hover{border-color:var(--accent);color:var(--accent)}
+@media (max-width:560px){.msg{max-width:92%}}
+
+@media (prefers-reduced-motion:no-preference){
+  .view-in{animation:vin .22s ease-out}
+  @keyframes vin{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+:root{--forest-accent:#e3ab6c}
+.app{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh}
+.side{background:var(--forest);color:var(--forest-ink);padding:22px 14px;position:sticky;top:0;height:100vh;height:100dvh;display:flex;flex-direction:column;gap:20px;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:0 6px}
+.brand svg{width:34px;height:34px;flex:none;color:var(--forest-accent)}
+.brand b{font-family:var(--f-display);font-size:1.4rem;font-weight:700;display:block;line-height:1}
+.brand small{display:block;font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--forest-muted);margin-top:3px}
+.haras{padding:10px 12px;border-radius:8px;background:var(--forest-2);font-size:.84rem;line-height:1.35}
+.haras b{display:block;color:var(--forest-ink);font-weight:600}
+.haras span{color:var(--forest-muted)}
+.side nav{display:flex;flex-direction:column;gap:2px}
+.side nav button{display:flex;align-items:center;gap:11px;border:0;background:none;color:var(--forest-muted);padding:9px 10px;border-radius:7px;cursor:pointer;font-weight:500;text-align:left;font-size:.93rem;white-space:nowrap}
+.side nav button svg{width:18px;height:18px;flex:none}
+.side nav button:hover{color:var(--forest-ink);background:var(--forest-2)}
+.side nav button[aria-current="page"]{color:var(--forest-ink);background:var(--forest-2);box-shadow:inset 3px 0 0 var(--forest-accent)}
+.badge{margin-left:auto;background:var(--late);color:#fff;font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:99px;font-variant-numeric:tabular-nums}
+.foot{margin-top:auto;display:flex;flex-direction:column;gap:10px;font-size:.82rem;color:var(--forest-muted)}
+.foot .who{display:flex;gap:10px;align-items:center}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--forest-accent);color:var(--forest);display:grid;place-items:center;font-weight:700;font-size:.8rem;flex:none}
+.foot button{border:1px solid var(--forest-2);background:none;color:var(--forest-muted);border-radius:7px;padding:6px 10px;cursor:pointer;font-size:.78rem;text-align:left}
+.foot button:hover{color:var(--forest-ink)}
+main{padding-inline:clamp(16px,3vw,40px);padding-block:24px 72px;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.top .acts{display:flex;gap:8px;align-items:center}
+.bellbtn{position:relative}
+.bellbtn .badge{position:absolute;top:-6px;right:-6px;margin:0}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px 20px}
+.facts div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.facts dt{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.facts dd{margin:0;font-weight:500;overflow-wrap:anywhere}
+.steps{display:flex;gap:6px;flex-wrap:wrap;font-size:.84rem}
+.steps span{padding:4px 10px;border-radius:99px;background:var(--surface-2);color:var(--muted);font-weight:600}
+.steps span.on{background:var(--accent-soft);color:var(--accent)}
+.notif{display:grid;grid-template-columns:4px minmax(0,1fr) auto;gap:14px;padding:13px 16px 13px 0;border-top:1px solid var(--line-2);align-items:start}
+.notif:first-child{border-top:0}
+.notif .bar{align-self:stretch;border-radius:0 3px 3px 0;background:var(--info)}
+.notif.critico .bar{background:var(--late)} .notif.alerta .bar{background:var(--soon)}
+.notif.lida{opacity:.62}
+.notif .ch{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.meter{height:10px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line-2);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent)}
+.matrix td:not(:first-child),.matrix th:not(:first-child){text-align:center}
+.yes{color:var(--ok);font-weight:700} .no{color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.tbl input.inp{padding:6px 8px;font-size:.88rem}
+.w-num{width:84px}
+@media (max-width:880px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:sticky;top:env(safe-area-inset-top,0px);height:auto;flex-direction:row;align-items:center;gap:12px;padding:10px 16px;z-index:30;overflow-x:auto}
+  .brand small,.haras,.foot{display:none}
+  .brand b{font-size:1.15rem}
+  .side nav{flex-direction:row}
+  .side nav button .lbl{display:none}
+  .side nav button{padding:9px}
+  .side nav button .badge{margin-left:4px}
+}
+</style>
+</head>
+<body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+
+<div class="app">
+  <aside class="side" aria-label="Navegação">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M11 34V20a9 9 0 0 1 18 0v14"/><path d="M7 34h8M25 34h8"/><circle cx="14" cy="22" r="1.2" fill="currentColor"/><circle cx="26" cy="22" r="1.2" fill="currentColor"/><circle cx="16" cy="14.5" r="1.2" fill="currentColor"/><circle cx="24" cy="14.5" r="1.2" fill="currentColor"/></svg>
+      <div><b>Haras360</b><small>Portal do Gestor</small></div>
+    </div>
+    <div class="haras" id="haras"></div>
+    <nav id="nav"></nav>
+    <div class="foot">
+      <div class="who"><span class="avatar" id="av"></span><div><b id="who-n" style="color:var(--forest-ink);font-weight:600"></b><br>Proprietário / gestor</div></div>
+      <button data-act="minha-senha">Alterar minha senha</button>
+      <button data-act="sair">Sair</button>
+      <span id="versao"></span>
+    </div>
+  </aside>
+  <main>
+    <div class="top">
+      <div><div class="eyebrow" id="v-eyebrow"></div><h1 id="v-title"></h1></div>
+      <div class="acts">
+        <button class="btn bellbtn" data-act="nav" data-v="notificacoes" aria-label="Notificações" id="bell"></button>
+        <button class="btn pri" data-act="registrar">+ Novo registro</button>
+      </div>
+    </div>
+    <div id="view" class="view-in"></div>
+  </main>
+</div>
+<div id="modal" class="modal" hidden></div>
+<div id="toast" role="status" hidden></div>
+
+<script>window.H360_PORTAL = 'gestor';</script>
+<script>
+/* Haras360 · cliente da API */
+const API = (function () {
+  async function req(metodo, url, corpo) {
+    let r;
+    try {
+      r = await fetch(url, { method: metodo, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Haras360': '1', 'X-Portal': window.H360_PORTAL || '' }, body: corpo === undefined ? undefined : JSON.stringify(corpo) });
+    } catch (e) { throw new Error('Sem conexão com o servidor. Verifique a internet e tente de novo.'); }
+    let dados = null;
+    try { dados = await r.json(); } catch (e) { }
+    if (r.status === 401 && !/\/api\/(login|me\/senha)/.test(url)) {
+      location.href = '/entrar?volta=' + encodeURIComponent(location.pathname);
+      throw new Error('Sessão expirada. Faça login novamente.');
+    }
+    if (!r.ok) {
+      const d = dados && dados.detail;
+      throw new Error(typeof d === 'string' ? d : r.status === 413 ? 'Arquivo grande demais.' : 'Não foi possível concluir (erro ' + r.status + '). Confira os dados e tente de novo.');
+    }
+    return dados;
+  }
+  return { get: u => req('GET', u), post: (u, b) => req('POST', u, b || {}), put: (u, b) => req('PUT', u, b), patch: (u, b) => req('PATCH', u, b), del: u => req('DELETE', u) };
+})();
+
+</script>
+<script>
+/* Haras360 · núcleo do navegador: utilidades, catálogos, leitura de PDF ABCCMM e assistente. O motor de regras roda na API. */
+const H = (function () {
+  const DAY = 86400000;
+  const pad = n => String(n).padStart(2, '0');
+
+  /* ---------- datas ---------- */
+  function hoje() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+  function dt(s) {
+    if (s instanceof Date) { const x = new Date(s); x.setHours(0, 0, 0, 0); return x; }
+    const [y, m, d] = String(s).slice(0, 10).split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  function iso(d) { d = dt(d); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function addDias(d, n) { const x = dt(d); x.setDate(x.getDate() + n); return x; }
+  function addMeses(d, n) {
+    const x = dt(d); const day = x.getDate(); x.setDate(1); x.setMonth(x.getMonth() + n);
+    const last = new Date(x.getFullYear(), x.getMonth() + 1, 0).getDate(); x.setDate(Math.min(day, last)); return x;
+  }
+  function dias(a, b) { return Math.round((dt(b) - dt(a)) / DAY); }
+  function br(s) { if (!s) return '-'; const d = dt(s); return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear(); }
+  function brCurta(s) { const d = dt(s); const m = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']; return pad(d.getDate()) + ' ' + m[d.getMonth()]; }
+  function brParaIso(s) { const [d, m, y] = s.split('/'); return y + '-' + m + '-' + d; }
+  function idadeMeses(nasc) {
+    const n = dt(nasc), t = hoje();
+    let m = (t.getFullYear() - n.getFullYear()) * 12 + (t.getMonth() - n.getMonth());
+    if (t.getDate() < n.getDate()) m--; return Math.max(0, m);
+  }
+  function idadeTxt(nasc) {
+    if (!nasc) return '-';
+    const m = idadeMeses(nasc);
+    if (m < 24) return m + (m === 1 ? ' mês' : ' meses');
+    const a = Math.floor(m / 12), r = m % 12;
+    return a + ' anos' + (r ? ' e ' + r + (r === 1 ? ' mês' : ' meses') : '');
+  }
+  function relativo(due) {
+    const d = dias(hoje(), due);
+    if (d === 0) return 'hoje';
+    if (d === 1) return 'amanhã';
+    if (d === -1) return 'ontem';
+    if (d < 0) return 'há ' + (-d) + ' dias';
+    return 'em ' + d + ' dias';
+  }
+  function uid() { return Math.random().toString(36).slice(2, 10); }
+  function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+  function norm(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+  function moeda(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+  function mascaraCPF(c) { const d = String(c || '').replace(/\D/g, ''); if (d.length !== 11) return c || '-'; return d.slice(0, 3) + '.***.***-' + d.slice(9); }
+
+  /* ---------- catálogos ---------- */
+  const CATS = {
+    vacina: { nome: 'Vacinação', tom: 'info' },
+    vermifugacao: { nome: 'Vermifugação', tom: 'ok' },
+    odontologia: { nome: 'Odontologia', tom: 'accent' },
+    ferrageamento: { nome: 'Ferrageamento', tom: 'muted' },
+    exame: { nome: 'Exame clínico', tom: 'info' },
+    reprodutivo: { nome: 'Reprodução', tom: 'accent' },
+    ocorrencia: { nome: 'Ocorrência', tom: 'soon' },
+    documental: { nome: 'Documentação', tom: 'late' }
+  };
+  const EVENTOS_REPRO = ['Cobertura', 'Inseminação', 'Diagnóstico positivo', 'Diagnóstico negativo', 'Parto', 'Aborto'];
+  const GESTACAO_DIAS = 340;
+
+  const FAIXAS = [
+    { de: 1, ate: 3, valor: 0, nome: 'Gratuito' },
+    { de: 4, ate: 10, valor: 12.9, nome: 'Faixa 1' },
+    { de: 11, ate: 20, valor: 10.9, nome: 'Faixa 2' },
+    { de: 21, ate: 30, valor: 8.9, nome: 'Faixa 3' }
+  ];
+  let LIMITE_ANIMAIS = 30;
+  function mensalidade(n) {
+    let t = 0;
+    for (const f of FAIXAS) { const q = Math.max(0, Math.min(n, f.ate) - f.de + 1); t += q * f.valor; }
+    return Math.round(t * 100) / 100;
+  }
+
+  /* ---------- leitura do estado calculado pela API (motor de regras no servidor) ---------- */
+  function protocolo(st, id) { return st.protocolos.find(p => p.id === id); }
+  function animal(st, id) { return st.animais.find(a => a.id === id); }
+  function gestacao(st, a) { return a && st.gestacoes ? (st.gestacoes[a.id] || null) : null; }
+  function tarefas(st, opts) { opts = opts || {}; return (st.tarefas || []).filter(t => !opts.animalId || t.animalId === opts.animalId); }
+  function notificacoes(st) { return st.notificacoes || []; }
+  const STATUS_TXT = { atrasado: 'Atrasado', hoje: 'Hoje', semana: 'Próximos 7 dias', mes: 'Próximos 30 dias', futuro: 'Programado', pendente: 'Pendência' };
+  const TIPOS_NOTIF = {
+    atrasado: 'Procedimento atrasado',
+    semana: 'Procedimento nos próximos 7 dias',
+    parto: 'Previsão de parto',
+    documental: 'Pendência documental ABCCMM',
+    campo: 'Registro feito pelo operador de campo'
+  };
+
+  function tituloRegistro(st, r) {
+    if (r.tipo === 'vacina') return 'Vacina ' + (r.protocolos || []).map(id => (protocolo(st, id) || { nome: id }).nome).join(' + ');
+    if (r.tipo === 'reprodutivo') return r.evento || 'Evento reprodutivo';
+    if (r.tipo === 'ocorrencia') return r.titulo || 'Ocorrência';
+    if (r.tipo === 'exame') return 'Exame: ' + (r.exame || 'clínico');
+    if (r.tipo === 'odontologia') return r.procedimento || 'Odontologia';
+    if (r.tipo === 'ferrageamento') return 'Ferrageamento';
+    if (r.tipo === 'vermifugacao') return 'Vermifugação';
+    return CATS[r.tipo] ? CATS[r.tipo].nome : 'Registro';
+  }
+  function doseTxt(d) { if (d === 'reforco') return 'Reforço'; if (d === 'unica' || !d) return ''; return d + 'ª dose'; }
+
+  /* ---------- leitura de PDF (Relatório de Plantel ABCCMM) ---------- */
+  async function linhasPDF(file) {
+    if (!window.pdfjsLib) throw new Error('O leitor de PDF não carregou. Verifique a conexão e recarregue a página.');
+    try { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; } catch (e) { }
+    const data = new Uint8Array(await file.arrayBuffer());
+    const pdf = await pdfjsLib.getDocument({ data, isEvalSupported: false }).promise;
+    const linhas = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const pg = await pdf.getPage(i);
+      const tc = await pg.getTextContent();
+      const its = tc.items.filter(it => it.str && it.str.trim()).map(it => ({ s: it.str, x: it.transform[4], y: it.transform[5], w: it.width || 0, h: Math.abs(it.transform[3]) || 8 }));
+      its.sort((p, q) => q.y - p.y || p.x - q.x);
+      const rows = [];
+      for (const it of its) {
+        const row = rows.find(r => Math.abs(r.y - it.y) <= Math.max(2, it.h * 0.4));
+        if (row) row.items.push(it); else rows.push({ y: it.y, items: [it] });
+      }
+      rows.sort((p, q) => q.y - p.y);
+      for (const row of rows) {
+        row.items.sort((p, q) => p.x - q.x);
+        let s = '', fim = null;
+        for (const it of row.items) { if (fim !== null && it.x - fim > 0.8) s += ' '; s += it.s; fim = it.x + it.w; }
+        s = s.replace(/\s+/g, ' ').trim();
+        if (s) linhas.push(s);
+      }
+    }
+    return linhas;
+  }
+
+  const RE_ANIMAL = /^(.+?)\s+(?:(MM\s?\d+\s*-\s*.+?)\s+)?(?:(\d{4,8})\s+)?([MF])\s+(\S+)\s+(Viv[oa]|Mort[oa])\s+(.+?)\s+(\d{2}\/\d{2}\/\d{4})(?:\s+(\d{6,20}))?$/i;
+  function lerPlantel(linhas) {
+    const texto = linhas.join('\n');
+    const plano = linhas.join(' ');
+    const res = { valido: /RELAT[ÓO]RIO DE PLANTEL/i.test(texto) || /ABCCMM|Mangalarga/i.test(texto), associado: '', cpf: '', impresso: '', totalInformado: null, machos: null, femeas: null, animais: [], ignoradas: [] };
+    let m = plano.match(/Associado\(a\):\s*(.+?)\s*-\s*CPF:\s*([\d.\-]+)/i);
+    if (m) { res.associado = m[1].trim(); res.cpf = m[2].replace(/\D/g, ''); }
+    m = plano.match(/Impresso em\s*(\d{2}\/\d{2}\/\d{4})/i); if (m) res.impresso = brParaIso(m[1]);
+    m = plano.match(/Total de animais:\s*(\d+)/i); if (m) res.totalInformado = Number(m[1]);
+    for (const l of linhas) {
+      if (!/\d{2}\/\d{2}\/\d{4}/.test(l) || /Impresso em|Associado\(a\)/i.test(l)) continue;
+      const x = l.match(RE_ANIMAL);
+      if (!x) { res.ignoradas.push(l); continue; }
+      res.animais.push({
+        nome: x[1].trim().toUpperCase(),
+        livro: (x[2] || '').trim(),
+        registro: x[3] || '',
+        sexo: x[4].toUpperCase(),
+        bloqueado: !/^(-|n[aã]o|n)$/i.test(x[5]),
+        vivo: /viv/i.test(x[6]),
+        dna: x[7].trim(),
+        nascimento: brParaIso(x[8]),
+        chip: x[9] || ''
+      });
+    }
+    res.machos = res.animais.filter(a => a.sexo === 'M').length;
+    res.femeas = res.animais.filter(a => a.sexo === 'F').length;
+    return res;
+  }
+
+  function compararImportacao(st, lidos) {
+    return lidos.map(n => {
+      const ex = st.animais.find(a => (n.registro && a.registro === n.registro) || (n.chip && a.chip === n.chip) || norm(a.nome) === norm(n.nome));
+      if (!ex) return { novo: n, situacao: 'novo', diffs: [] };
+      const campos = ['nome', 'livro', 'registro', 'sexo', 'bloqueado', 'vivo', 'dna', 'nascimento', 'chip'];
+      const diffs = campos.filter(c => String(ex[c] ?? '') !== String(n[c] ?? ''));
+      return { novo: n, existente: ex, situacao: diffs.length ? 'atualizar' : 'igual', diffs };
+    });
+  }
+
+  /* certificado ou outro PDF com genealogia: busca rótulos usuais */
+  function lerGenealogia(linhas) {
+    const g = {};
+    const regras = [
+      ['avoPaterno', /av[ôo]\s*paterno\s*[:\-]?\s*(.+)/i],
+      ['avoPaterna', /av[óo]\s*paterna\s*[:\-]?\s*(.+)/i],
+      ['avoMaterno', /av[ôo]\s*materno\s*[:\-]?\s*(.+)/i],
+      ['avoMaterna', /av[óo]\s*materna\s*[:\-]?\s*(.+)/i],
+      ['pai', /^(?:.*\s)?pai\s*[:\-]\s*(.+)/i],
+      ['mae', /^(?:.*\s)?m[ãa]e\s*[:\-]\s*(.+)/i]
+    ];
+    for (const l of linhas) {
+      for (const [k, re] of regras) {
+        if (g[k]) continue;
+        const m = l.match(re);
+        if (m) { const v = m[1].replace(/\s+(registro|reg\.?|n[ºo])\s*.*$/i, '').trim(); if (v && v.length < 80) { g[k] = v.toUpperCase(); break; } }
+      }
+    }
+    return g;
+  }
+
+  /* ---------- assistente (base de demonstração) ---------- */
+  function responder(st, pergunta) {
+    const q = norm(pergunta);
+    const has = (...k) => k.some(w => q.includes(w));
+    const alvo = st.animais.find(a => q.includes(norm(a.nome).split(' ')[0]));
+    const ts = tarefas(st);
+    const vac = id => protocolo(st, id);
+    const lista = arr => arr.map(t => '• ' + t.animal + ': ' + t.titulo + ' (' + t.etapa + ', ' + br(t.due) + ')').join('\n');
+
+    if (alvo && has('parto', 'gestac', 'prenhe', 'parir')) {
+      const g = gestacao(st, alvo);
+      if (!g) return { t: alvo.nome + ' não tem gestação ativa registrada no prontuário.' };
+      return { t: alvo.nome + ' está com ' + g.dias + ' dias de gestação (' + g.mes + 'º mês). A cobertura foi em ' + br(g.cobertura) + (g.garanhao ? ' com ' + g.garanhao : '') + ', e o parto está previsto para ' + br(g.parto) + ', ' + relativo(g.parto) + '. A estimativa usa ' + GESTACAO_DIAS + ' dias; o veterinário deve confirmar por ultrassonografia.', f: 'Dados do prontuário' };
+    }
+    if (alvo && has('vacina', 'pendente', 'atras', 'proxim', 'agenda')) {
+      const t = ts.filter(x => x.animalId === alvo.id && x.status !== 'futuro');
+      if (!t.length) return { t: alvo.nome + ' não tem procedimentos atrasados nem previstos para os próximos 30 dias.', f: 'Motor de regras' };
+      return { t: 'Pendências e próximos 30 dias de ' + alvo.nome + ':\n' + lista(t), f: 'Motor de regras' };
+    }
+    if (has('atrasad', 'pendenc', 'vencid')) {
+      const t = ts.filter(x => x.status === 'atrasado');
+      if (!t.length) return { t: 'Nenhum procedimento atrasado no plantel.', f: 'Motor de regras' };
+      return { t: 'Há ' + t.length + ' procedimento(s) atrasado(s):\n' + lista(t), f: 'Motor de regras' };
+    }
+    if (has('raiva')) {
+      const r = vac('raiva');
+      return { t: 'Raiva é obrigatória. 1ª dose aos 4 meses, 2ª dose 30 dias depois e reforço anual. Em estados endêmicos o reforço passa a ser semestral. Neste haras o reforço está configurado como ' + (st.haras.raivaSemestral ? 'semestral' : 'anual') + '. Via ' + (r ? r.via : 'SC ou IM') + ', conforme a bula.', f: 'Protocolo VetJr. UFMG' };
+    }
+    if (has('gestante', 'prenha', 'gestacao', 'rinopneu', 'herpes')) return { t: 'Para rinopneumonite: 1ª dose na desmama, 2ª dose 3 a 4 semanas depois e 3ª dose 6 meses após a segunda. Éguas gestantes recebem doses no 5º, 7º e 9º mês de gestação. O Haras360 agenda essas doses automaticamente quando um diagnóstico positivo é registrado.', f: 'Protocolo VetJr. UFMG' };
+    if (has('reinici', 'perdeu', 'perdi', 'esqueci', 'nunca vacin')) return { t: 'Animais que nunca foram vacinados ou que perderam o prazo do reforço devem refazer a primovacinação daquela vacina, ou seja, reiniciar o esquema desde a 1ª dose. O sistema sinaliza "Reiniciar primovacinação" quando o reforço passa de 15 dias do vencimento.', f: 'Protocolo VetJr. UFMG' };
+    if (has('potro', 'potra', 'filhote', '12 meses')) return { t: 'Potros iniciam a vacinação entre 3 e 4 meses (tétano, encefalomielite e influenza a partir de 3; raiva e leptospirose a partir de 4; rinopneumonite na desmama). Concluído o esquema inicial, o primeiro reforço é feito a partir dos 12 meses de idade, e o sistema já programa nessa data.', f: 'Protocolo VetJr. UFMG' };
+    if (has('multival', 'trivalen', 'bivalen', 'combinad')) return { t: 'Vacinas multivalentes protegem contra mais de uma doença na mesma aplicação, geralmente com custo menor. No Haras360 basta marcar todas as doenças cobertas em um único registro, e cada protocolo é atualizado.', f: 'Protocolo VetJr. UFMG' };
+    if (has('transport', 'gta', 'viagem', 'evento', 'exposic', 'leilao')) return { t: 'Para transporte, a vacina de encefalomielite é obrigatória, e o trânsito de equídeos costuma exigir exames negativos de Anemia Infecciosa (AIE) e Mormo dentro da validade. O sistema usa 60 dias como validade padrão, editável em Protocolos. Confirme a exigência do órgão de defesa agropecuária do seu estado e do evento.', f: 'Protocolo VetJr. UFMG e padrão de mercado' };
+    if (has('obrigator')) return { t: 'Pelo protocolo de referência: raiva é obrigatória; encefalomielite é obrigatória para transporte e em alguns estabelecimentos; rinopneumonite é exigida por alguns estabelecimentos. Tétano, influenza e leptospirose são fortemente recomendadas, e garrotilho depende do risco do plantel.', f: 'Protocolo VetJr. UFMG' };
+    if (has('dna')) return { t: 'O Relatório de Plantel informa a situação do exame de DNA de cada animal. Quando aparece "Sem exame", o Haras360 abre uma pendência documental, porque o exame é necessário para o registro genealógico.', f: 'Relatório de Plantel ABCCMM' };
+    if (has('livro', 'mm5', 'mm6', 'definitivo', 'registro')) return { t: 'O campo "Livro" do relatório indica a categoria em que o animal está inscrito no registro genealógico, por exemplo "MM6 - Definitivo Fechado Fêmea". Animais sem livro e sem número de registro geram a pendência "Registro ABCCMM pendente". Na versão final, o assistente explicará cada categoria citando o artigo do Regulamento do Registro Genealógico.', f: 'Relatório de Plantel ABCCMM' };
+    if (has('plano', 'preco', 'mensal', 'cobran', 'pagar', 'gratis', 'gratuito')) { const n = st.animais.filter(a => a.vivo).length; return { t: 'O plano é gratuito até 3 animais. A partir do 4º, cobra-se por animal em faixas decrescentes. Com ' + n + ' animais ativos, a mensalidade simulada é ' + moeda(mensalidade(n)) + '. Os valores atuais são ilustrativos.', f: 'Plano Haras360' }; }
+    if (has('vermif', 'verme')) return { t: 'O padrão configurado é vermifugação a cada 90 dias a partir dos 2 meses de idade. Esse intervalo é um padrão de mercado e deve ser ajustado pelo veterinário, de preferência com base em exame de OPG (contagem de ovos nas fezes).', f: 'Padrão de mercado' };
+    if (has('dente', 'odonto', 'aparelho')) return { t: 'A avaliação odontológica está programada a cada 12 meses a partir dos 2 anos. Quando um aparelho dentário é registrado, o sistema agenda o retorno em 24 meses.', f: 'Padrão de mercado' };
+    if (has('ferra', 'casco')) return { t: 'O ferrageamento é agendado a cada 45 dias a partir do primeiro registro de ferrageamento do animal. Ajuste o intervalo em Protocolos conforme o ferrador.', f: 'Padrão de mercado' };
+    return { t: 'Ainda não tenho essa resposta na base atual. Na próxima versão, o assistente será treinado com o Estatuto e o Regulamento do Registro Genealógico da ABCCMM e responderá citando o artigo correspondente. Experimente perguntar sobre vacinas, gestação, transporte, DNA ou plano.', f: 'Demonstração' };
+  }
+
+  return {
+    hoje, dt, iso, addDias, addMeses, dias, br, brCurta, brParaIso, idadeMeses, idadeTxt, relativo, uid, esc, norm, moeda, mascaraCPF,
+    CATS, EVENTOS_REPRO, GESTACAO_DIAS, FAIXAS, LIMITE_ANIMAIS, STATUS_TXT, TIPOS_NOTIF,
+    mensalidade,
+    protocolo, animal, gestacao, tarefas, notificacoes, tituloRegistro, doseTxt,
+    linhasPDF, lerPlantel, compararImportacao, lerGenealogia, responder
+  };
+})();
+
+</script>
+<script>
+/* Haras360 · componentes de interface compartilhados pelos dois portais */
+const UI = (function () {
+  const { esc, br, brCurta, relativo } = H;
+  const $ = s => document.querySelector(s);
+
+  const I = (p, extra) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"' + (extra || '') + '>' + p + '</svg>';
+  const ICON = {
+    plus: I('<path d="M12 5v14M5 12h14"/>'),
+    home: I('<path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/>'),
+    horse: I('<path d="M5 20l2-6c-1-2-1-4 1-6l3-3 1 2 3-1c2 0 4 2 4 4l1 3-2 1-2-2-2 2v6"/><path d="M14 20v-4"/>'),
+    upload: I('<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>'),
+    cal: I('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),
+    rules: I('<path d="M4 6h10M4 12h16M4 18h7"/><circle cx="17" cy="6" r="2"/><circle cx="14" cy="18" r="2"/>'),
+    bell: I('<path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>'),
+    team: I('<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 15c3 0 5 2 5 4"/>'),
+    chat: I('<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>'),
+    card: I('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>'),
+    back: I('<path d="M15 5l-7 7 7 7"/>'),
+    cam: I('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>'),
+    check: I('<path d="M5 12l5 5 9-10"/>'),
+    file: I('<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>'),
+    send: I('<path d="M4 12l16-8-6 16-3-6z"/>'),
+    alert: I('<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/>')
+  };
+
+  /* ---------- toast e modal ---------- */
+  let tt;
+  function toast(msg) {
+    let t = $('#toast');
+    t.textContent = msg; t.hidden = false;
+    clearTimeout(tt); tt = setTimeout(() => { t.hidden = true; }, 4200);
+  }
+  let onClose = null;
+  function abrir({ titulo, corpo, rodape, largo }) {
+    const m = $('#modal');
+    m.innerHTML = '<div class="sheet' + (largo ? ' wide' : '') + '" role="dialog" aria-modal="true" aria-labelledby="mt"><header><h2 id="mt">' + titulo + '</h2><button class="x" data-act="fechar" aria-label="Fechar">×</button></header><div class="sbody">' + corpo + '</div>' + (rodape ? '<footer>' + rodape + '</footer>' : '') + '</div>';
+    m.hidden = false;
+    document.body.style.overflow = 'hidden';
+    const f = m.querySelector('input:not([type=hidden]):not([type=checkbox]),select,textarea');
+    if (f) setTimeout(() => f.focus(), 30);
+    return m;
+  }
+  function fechar() { const m = $('#modal'); m.hidden = true; m.innerHTML = ''; document.body.style.overflow = ''; if (onClose) { const f = onClose; onClose = null; f(); } }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#modal').hidden) fechar(); });
+  document.addEventListener('click', e => { if (e.target.id === 'modal') fechar(); });
+
+  /* ---------- tons ---------- */
+  const TOM = { atrasado: 'c-late', hoje: 'c-soon', semana: 'c-soon', mes: 'c-ok', futuro: 'c-muted', pendente: 'c-info' };
+  const TOMCAT = t => 'c-' + ((H.CATS[t] || {}).tom || 'muted');
+  function chipStatus(s) { return '<span class="chip ' + TOM[s] + '">' + H.STATUS_TXT[s] + '</span>'; }
+  function chipCat(c) { return '<span class="chip nodot ' + TOMCAT(c) + '">' + esc((H.CATS[c] || { nome: c }).nome) + '</span>'; }
+
+  /* ---------- linha de tarefa ---------- */
+  function linhaTarefa(t, o) {
+    o = o || {};
+    const quando = t.doc ? '<b>Pend.</b>doc.' : '<b>' + brCurta(t.due) + '</b>' + relativo(t.due);
+    const animal = o.semAnimal ? '' : '<a href="#" data-act="ver-animal" data-id="' + t.animalId + '">' + esc(t.animal) + '</a> · ';
+    const acao = t.doc ? '' : t.parto ? '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(t.id) + '">Registrar parto</button>' : '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(t.id) + '">' + ICON.check + 'Registrar</button>';
+    return '<div class="task ' + t.status + '"><span class="bar"></span><div class="when">' + quando + '</div><div class="what"><div class="row" style="gap:8px"><strong>' + esc(t.titulo) + '</strong><span class="chip nodot c-muted">' + esc(t.etapa) + '</span>' + (t.status === 'atrasado' ? '<span class="chip c-late">Atrasado</span>' : '') + '</div><div class="sub">' + animal + esc(t.nota || '') + '</div></div><div class="act">' + acao + '</div></div>';
+  }
+
+  /* ---------- prontuário ---------- */
+  function linhaTempo(st, regs, o) {
+    o = o || {};
+    if (!regs.length) return '<div class="empty">Nenhum registro nesta categoria.</div>';
+    return '<div class="timeline">' + regs.map(r => {
+      const meta = [];
+      const dose = H.doseTxt(r.dose); if (r.tipo === 'vacina' && dose) meta.push(dose);
+      if (r.produto) meta.push('Produto: ' + esc(r.produto));
+      if (r.lote) meta.push('Lote <span class="mono">' + esc(r.lote) + '</span>');
+      if (r.ferrador) meta.push('Ferrador: ' + esc(r.ferrador));
+      if (r.resultado) meta.push('Resultado: ' + esc(r.resultado));
+      if (r.garanhao) meta.push('Garanhão: ' + esc(r.garanhao));
+      if (r.dataCobertura && r.evento === 'Diagnóstico positivo') meta.push('Cobertura em ' + br(r.dataCobertura));
+      if (r.gravidade) meta.push('Gravidade: ' + esc(r.gravidade));
+      const fotos = (r.fotos || []).length ? '<div class="thumbs">' + r.fotos.map((f, i) => '<button data-act="ver-foto" data-r="' + r.id + '" data-i="' + i + '" aria-label="Ampliar foto ' + (i + 1) + '"><img src="' + f + '" alt=""></button>').join('') + '</div>' : '';
+      const nome = o.comAnimal ? (() => { const a = H.animal(st, r.animalId); return a ? '<a href="#" data-act="ver-animal" data-id="' + a.id + '">' + esc(a.nome) + '</a> · ' : ''; })() : '';
+      const del = o.excluir ? '<button class="btn ghost sm danger" data-act="excluir-reg" data-id="' + r.id + '">Excluir</button>' : '';
+      return '<div class="ev"><div class="d">' + br(r.data) + '</div><div class="body"><div class="spread"><div class="row" style="gap:8px">' + chipCat(r.tipo) + '<strong>' + esc(H.tituloRegistro(st, r)) + '</strong></div>' + del + '</div>' + (meta.length ? '<div class="meta">' + meta.map(m => '<span>' + m + '</span>').join('') + '</div>' : '') + (r.obs ? '<p class="obs">' + esc(r.obs) + '</p>' : '') + fotos + '<div class="meta">' + nome + '<span>' + esc(r.autor) + ' · ' + esc(r.origem) + '</span></div></div></div>';
+    }).join('') + '</div>';
+  }
+
+  function verFoto(st, rid, i) {
+    const r = st.registros.find(x => x.id === rid); if (!r) return;
+    abrir({ titulo: esc(H.tituloRegistro(st, r)), corpo: '<img src="' + r.fotos[i] + '" alt="Foto do registro" style="border-radius:8px;width:100%"><p class="muted small">' + br(r.data) + ' · ' + esc(r.autor) + '</p>', largo: true });
+  }
+
+  /* ---------- fotos ---------- */
+  function comprimir(file, max, q) {
+    max = max || 1600; q = q || 0.8;
+    return new Promise((res, rej) => {
+      const fr = new FileReader();
+      fr.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const k = Math.min(1, max / Math.max(img.width, img.height));
+          const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          res(c.toDataURL('image/jpeg', q));
+        };
+        img.onerror = () => rej(new Error('Arquivo de imagem inválido'));
+        img.src = fr.result;
+      };
+      fr.onerror = () => rej(new Error('Não foi possível ler o arquivo'));
+      fr.readAsDataURL(file);
+    });
+  }
+
+  /* ---------- formulário de registro ---------- */
+  let fotosPend = [];
+  const OPC = (arr, sel) => arr.map(v => { const [val, lab] = Array.isArray(v) ? v : [v, v]; return '<option value="' + esc(val) + '"' + (String(val) === String(sel) ? ' selected' : '') + '>' + esc(lab) + '</option>'; }).join('');
+
+  function extras(st, tipo, p) {
+    p = p || {};
+    if (tipo === 'vacina') {
+      const vs = st.protocolos.filter(x => x.cat === 'vacina');
+      return '<div class="field full"><span class="lbl">Doenças cobertas (marque todas em vacinas multivalentes)</span><div class="checks">' + vs.map(v => '<label class="check"><input type="checkbox" name="prot" value="' + v.id + '"' + ((p.protocolos || []).includes(v.id) ? ' checked' : '') + '>' + esc(v.nome) + '</label>').join('') + '</div></div>' +
+        '<div class="field"><label for="f-dose">Dose</label><select id="f-dose" class="inp">' + OPC([[1, '1ª dose'], [2, '2ª dose'], [3, '3ª dose'], ['reforco', 'Reforço']], p.dose || 'reforco') + '</select></div>' +
+        '<div class="field"><label for="f-lote">Lote</label><input id="f-lote" class="inp" value="' + esc(p.lote || '') + '" placeholder="Ex.: RB2291"></div>' +
+        '<div class="field full"><label for="f-produto">Produto / marca</label><input id="f-produto" class="inp" value="' + esc(p.produto || '') + '" placeholder="Ex.: Trivalente tétano + encefalomielite + influenza"></div>';
+    }
+    if (tipo === 'vermifugacao') return '<div class="field full"><label for="f-produto">Vermífugo (princípio ativo)</label><input id="f-produto" class="inp" value="' + esc(p.produto || '') + '" placeholder="Ex.: Ivermectina + praziquantel"></div>';
+    if (tipo === 'odontologia') return '<div class="field full"><label for="f-proc">Procedimento</label><select id="f-proc" class="inp">' + OPC(['Avaliação', 'Avaliação e correção', 'Aparelho dentário instalado', 'Retorno de aparelho', 'Extração', 'Outro'], p.procedimento || ((p.protocolos || []).includes('aparelho') ? 'Retorno de aparelho' : 'Avaliação')) + '</select></div>';
+    if (tipo === 'ferrageamento') return '<div class="field full"><label for="f-ferrador">Ferrador</label><input id="f-ferrador" class="inp" value="' + esc(p.ferrador || '') + '"></div>';
+    if (tipo === 'exame') {
+      const sel = (p.protocolos || []).includes('aie') ? 'Anemia Infecciosa (AIE)' : (p.protocolos || []).includes('mormo') ? 'Mormo' : (p.exame || 'Anemia Infecciosa (AIE)');
+      return '<div class="field"><label for="f-exame">Exame</label><select id="f-exame" class="inp">' + OPC(['Anemia Infecciosa (AIE)', 'Mormo', 'Hemograma', 'Ultrassonografia', 'Raio-X', 'Outro'], sel) + '</select></div><div class="field"><label for="f-res">Resultado</label><input id="f-res" class="inp" value="' + esc(p.resultado || '') + '" placeholder="Ex.: Negativo"></div>';
+    }
+    if (tipo === 'reprodutivo') {
+      const machos = st.animais.filter(a => a.sexo === 'M').map(a => '<option value="' + esc(a.nome) + '">');
+      return '<div class="field"><label for="f-evento">Evento</label><select id="f-evento" class="inp">' + OPC(H.EVENTOS_REPRO, p.evento || 'Cobertura') + '</select></div><div class="field"><label for="f-garanhao">Garanhão</label><input id="f-garanhao" class="inp" list="dl-machos" value="' + esc(p.garanhao || '') + '"><datalist id="dl-machos">' + machos.join('') + '</datalist></div><div class="field"><label for="f-cob">Data da cobertura (diagnóstico positivo)</label><input id="f-cob" type="date" class="inp" value="' + esc(p.dataCobertura || '') + '"></div>';
+    }
+    if (tipo === 'ocorrencia') return '<div class="field"><label for="f-titulo">O que aconteceu</label><input id="f-titulo" class="inp" value="' + esc(p.titulo || '') + '" placeholder="Ex.: Mancando da pata traseira"></div><div class="field"><label for="f-grav">Gravidade</label><select id="f-grav" class="inp">' + OPC(['Leve', 'Moderada', 'Grave'], p.gravidade || 'Leve') + '</select></div>';
+    return '';
+  }
+
+  function formRegistro(st, pre, ctx) {
+    pre = pre || {}; fotosPend = [];
+    const tipos = Object.keys(H.CATS).filter(k => k !== 'documental');
+    const animais = st.animais.filter(a => a.vivo);
+    const tipo = pre.tipo || 'vacina';
+    const corpo = '<form id="fr" class="stack" novalidate><div class="fgrid">' +
+      '<div class="field"><label for="f-animal">Animal</label><select id="f-animal" class="inp">' + OPC(animais.map(a => [a.id, a.nome]), pre.animalId) + '</select></div>' +
+      '<div class="field"><label for="f-data">Data</label><input id="f-data" type="date" class="inp" value="' + (pre.data || H.iso(H.hoje())) + '" max="' + H.iso(H.hoje()) + '"></div>' +
+      '<div class="field full"><label for="f-tipo">Tipo de registro</label><select id="f-tipo" class="inp">' + OPC(tipos.map(k => [k, H.CATS[k].nome]), tipo) + '</select></div>' +
+      '</div><div id="f-extra" class="fgrid">' + extras(st, tipo, pre) + '</div>' +
+      '<div class="field"><label for="f-obs">Observações</label><textarea id="f-obs" class="inp" placeholder="Descreva o que foi feito ou observado">' + esc(pre.obs || '') + '</textarea></div>' +
+      '<div class="field"><span class="lbl">Fotos (até 4)</span><div class="row"><label class="btn" for="f-fotos">' + ICON.cam + 'Adicionar fotos</label><input id="f-fotos" type="file" accept="image/*" multiple hidden><span class="small muted" id="f-fstat">Nenhuma foto</span></div><div class="thumbs" id="f-thumbs"></div></div>' +
+      '<p class="note" id="f-erro" hidden></p></form>';
+    abrir({ titulo: pre.tituloModal || 'Novo registro no prontuário', corpo, rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-registro">' + ICON.check + 'Salvar registro</button>' });
+    $('#f-tipo').addEventListener('change', e => { $('#f-extra').innerHTML = extras(st, e.target.value, {}); });
+    $('#f-fotos').addEventListener('change', async e => {
+      const files = [...e.target.files].slice(0, 4 - fotosPend.length);
+      for (const f of files) { try { fotosPend.push(await comprimir(f)); } catch (err) { toast(err.message); } }
+      e.target.value = '';
+      desenharFotos();
+    });
+    formRegistro.ctx = ctx;
+  }
+  function desenharFotos() {
+    $('#f-thumbs').innerHTML = fotosPend.map((f, i) => '<button type="button" data-act="rem-foto" data-i="' + i + '" title="Remover foto" style="cursor:pointer"><img src="' + f + '" alt="Foto ' + (i + 1) + '"></button>').join('');
+    $('#f-fstat').textContent = fotosPend.length ? fotosPend.length + ' de 4 · toque para remover' : 'Nenhuma foto';
+  }
+  function remFoto(i) { fotosPend.splice(i, 1); desenharFotos(); }
+
+  function lerRegistro(st) {
+    const v = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+    const tipo = v('f-tipo');
+    const r = { id: H.uid(), animalId: v('f-animal'), data: v('f-data'), tipo, protocolos: [], dose: 'unica', obs: v('f-obs'), fotos: fotosPend.slice() };
+    const erro = m => { const e = $('#f-erro'); e.textContent = m; e.className = 'note bad'; e.hidden = false; return null; };
+    if (!r.animalId) return erro('Escolha o animal.');
+    if (!r.data) return erro('Informe a data do registro.');
+    if (r.data > H.iso(H.hoje())) return erro('A data não pode ser futura. Para agendar, o sistema calcula a próxima etapa automaticamente.');
+    if (tipo === 'vacina') {
+      r.protocolos = [...document.querySelectorAll('input[name=prot]:checked')].map(i => i.value);
+      if (!r.protocolos.length) return erro('Marque ao menos uma doença coberta pela vacina.');
+      const d = v('f-dose'); r.dose = d === 'reforco' ? 'reforco' : Number(d);
+      r.produto = v('f-produto'); r.lote = v('f-lote');
+    } else if (tipo === 'vermifugacao') { r.protocolos = ['vermi']; r.produto = v('f-produto'); }
+    else if (tipo === 'odontologia') { r.procedimento = v('f-proc'); r.protocolos = /aparelho/i.test(r.procedimento) ? ['aparelho'] : ['odonto']; }
+    else if (tipo === 'ferrageamento') { r.protocolos = ['ferrag']; r.ferrador = v('f-ferrador'); }
+    else if (tipo === 'exame') { r.exame = v('f-exame'); r.resultado = v('f-res'); if (/AIE/.test(r.exame)) r.protocolos = ['aie']; if (/Mormo/.test(r.exame)) r.protocolos = ['mormo']; }
+    else if (tipo === 'reprodutivo') {
+      r.evento = v('f-evento'); r.garanhao = v('f-garanhao').toUpperCase(); r.dataCobertura = v('f-cob');
+      const a = H.animal(st, r.animalId);
+      if (a && a.sexo !== 'F' && r.evento !== 'Cobertura') return erro('Eventos de gestação só se aplicam a fêmeas.');
+      if (r.evento === 'Diagnóstico positivo' && !r.dataCobertura) return erro('Informe a data da cobertura para calcular a previsão de parto.');
+    } else if (tipo === 'ocorrencia') { r.titulo = v('f-titulo'); r.gravidade = v('f-grav'); if (!r.titulo) return erro('Descreva a ocorrência em poucas palavras.'); }
+    return r;
+  }
+
+  /* pré-preenche o formulário a partir de uma tarefa do motor de regras */
+  function preDeTarefa(t) {
+    if (t.parto) return { animalId: t.animalId, tipo: 'reprodutivo', evento: 'Parto', tituloModal: 'Registrar parto' };
+    return { animalId: t.animalId, tipo: t.cat, protocolos: t.protocoloId ? [t.protocoloId] : [], dose: t.dose, tituloModal: 'Registrar ' + t.titulo.toLowerCase() };
+  }
+
+  /* ---------- assistente ---------- */
+  const SUGS = ['Quais procedimentos estão atrasados?', 'Quando é o parto da Diva?', 'O que muda na vacina de raiva em região endêmica?', 'Quais exames preciso para transportar um cavalo?', 'Como vacinar uma égua gestante?', 'Perdi o prazo do reforço, o que fazer?'];
+  function chatHTML(hist, titulo, sub) {
+    return '<div class="card flush chat"><div style="padding:16px 18px;border-bottom:1px solid var(--line)"><h2>' + titulo + '</h2><p class="small muted">' + sub + '</p></div><div class="msgs" id="msgs">' +
+      hist.map(m => '<div class="msg ' + m.de + '">' + esc(m.t) + (m.f ? '<span class="src">Base: ' + esc(m.f) + '</span>' : '') + '</div>').join('') +
+      '</div>' + (hist.length <= 1 ? '<div class="sugs">' + SUGS.map(s => '<button type="button" data-act="sug" data-q="' + esc(s) + '">' + esc(s) + '</button>').join('') + '</div>' : '') +
+      '<form id="chat-f"><input id="chat-q" class="inp" placeholder="Pergunte sobre vacinas, normas, gestação ou o plantel" autocomplete="off"><button class="btn pri" aria-label="Enviar">' + ICON.send + '</button></form></div>';
+  }
+
+  return { ICON, toast, abrir, fechar, chipStatus, chipCat, linhaTarefa, linhaTempo, verFoto, formRegistro, lerRegistro, remFoto, preDeTarefa, chatHTML, comprimir, TOM, set onClose(f) { onClose = f; } };
+})();
+
+</script>
+<script>
+(function () {
+  let S = null;
+  const $ = s => document.querySelector(s);
+  const esc = H.esc, br = H.br, IC = UI.ICON;
+  let view = 'painel', param = null, fichaTab = 'prontuario', filtroCat = 'todos', agendaFiltro = 'aberto', agendaCat = 'todos', notifFiltro = 'todas';
+  let importacao = null;
+  let chat = [{ de: 'bot', t: 'Olá. Sou o assistente ABCCMM do Haras360. Consulto o plantel, a agenda sanitária e o protocolo de vacinação. Nesta versão, as respostas sobre normas da associação usam uma base reduzida.', f: 'Haras360' }];
+
+  async function recarregar() { S = await API.get('/api/estado'); H.LIMITE_ANIMAIS = S.limiteAnimais; }
+  /* executa uma alteração na API, recarrega o estado e redesenha */
+  async function executar(el, fn, ok) {
+    if (el && el.disabled) return null;
+    const txt = el ? el.innerHTML : '';
+    if (el) { el.disabled = true; el.innerHTML = 'Salvando...'; }
+    try {
+      const r = await fn();
+      await recarregar();
+      if (ok !== false) UI.toast(typeof ok === 'string' ? ok : (r && r.resumo) || 'Alteração salva.');
+      return r || true;
+    } catch (e) { UI.toast(e.message); return null; }
+    finally { if (el && el.isConnected) { el.disabled = false; el.innerHTML = txt; } }
+  }
+  function confirmar(el, txt, fn) {
+    if (el.dataset.armed) { fn(); return; }
+    el.dataset.armed = '1'; const old = el.innerHTML; el.innerHTML = txt; el.classList.add('danger');
+    setTimeout(() => { if (el.isConnected && el.dataset.armed) { delete el.dataset.armed; el.innerHTML = old; el.classList.remove('danger'); } }, 3500);
+  }
+  const naoLidas = () => H.notificacoes(S).filter(n => !S.lidas.includes(n.id));
+  const primeiroNome = () => (S.usuario.nome || '').split(' ')[0];
+
+  const NAV = [
+    ['painel', 'Painel', IC.home], ['animais', 'Animais', IC.horse], ['importar', 'Importar ABCCMM', IC.upload], ['agenda', 'Agenda', IC.cal],
+    ['protocolos', 'Protocolos', IC.rules], ['notificacoes', 'Notificações', IC.bell], ['equipe', 'Equipe', IC.team], ['assistente', 'Assistente ABCCMM', IC.chat], ['plano', 'Plano', IC.card]
+  ];
+  const TITULOS = {
+    painel: ['Visão geral', ''], animais: ['Plantel', 'Animais'], ficha: ['Ficha do animal', ''], importar: ['Onboarding', 'Importar Relatório de Plantel'],
+    agenda: ['Motor de regras', 'Agenda sanitária'], protocolos: ['Motor de regras', 'Protocolos e intervalos'], notificacoes: ['Alertas', 'Notificações'],
+    equipe: ['Usuários e perfis', 'Equipe do haras'], assistente: ['Inteligência artificial', 'Assistente ABCCMM'], plano: ['Assinatura', 'Plano e cobrança']
+  };
+
+  function go(v, p) { view = v; param = p || null; if (v === 'ficha' && !p) view = 'animais'; render(); window.scrollTo(0, 0); }
+
+  function render() {
+    const nl = naoLidas().length;
+    $('#nav').innerHTML = NAV.map(([id, lab, ic]) => '<button data-act="nav" data-v="' + id + '" aria-label="' + lab + '"' + ((view === id || (view === 'ficha' && id === 'animais')) ? ' aria-current="page"' : '') + '>' + ic + '<span class="lbl">' + lab + '</span>' + (id === 'notificacoes' && nl ? '<span class="badge">' + nl + '</span>' : '') + '</button>').join('');
+    $('#haras').innerHTML = '<b>' + esc(S.haras.nome) + '</b><span>' + S.animais.filter(a => a.vivo).length + ' animais ativos · limite ' + H.LIMITE_ANIMAIS + '</span>';
+    $('#bell').innerHTML = IC.bell + (nl ? '<span class="badge">' + nl + '</span>' : '');
+    const [eb, ti0] = TITULOS[view] || ['', ''];
+    const ti = view === 'painel' ? S.haras.nome : ti0;
+    $('#who-n').textContent = S.usuario.nome; $('#av').textContent = S.usuario.nome.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase(); $('#versao').textContent = 'Haras360 v' + S.versao;
+    $('#v-eyebrow').textContent = eb;
+    $('#v-title').textContent = view === 'ficha' ? ((H.animal(S, param) || {}).nome || 'Animal') : ti;
+    const v = $('#view');
+    v.classList.remove('view-in'); void v.offsetWidth; v.classList.add('view-in');
+    v.innerHTML = VIEWS[view](param);
+    if (AFTER[view]) AFTER[view](param);
+  }
+
+  /* ================= PAINEL ================= */
+  function vPainel() {
+    const ts = H.tarefas(S);
+    const atras = ts.filter(t => t.status === 'atrasado'), semana = ts.filter(t => t.status === 'hoje' || t.status === 'semana'), pend = ts.filter(t => t.doc);
+    const ativos = S.animais.filter(a => a.vivo);
+    const h = new Date().getHours(); const sauda = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+    const foco = atras.concat(semana, pend).slice(0, 10);
+    const gest = ativos.map(a => [a, H.gestacao(S, a)]).filter(x => x[1]);
+    const campo = S.registros.filter(r => r.origem !== 'Portal Gestor').sort((a, b) => a.data < b.data ? 1 : -1).slice(0, 4);
+    const fem = ativos.filter(a => a.sexo === 'F').length, potros = ativos.filter(a => a.nascimento && H.idadeMeses(a.nascimento) < 12).length;
+    const n = ativos.length;
+    return '<div class="sec">' +
+      '<p class="muted">' + sauda + ', ' + esc(primeiroNome()) + '. Hoje é ' + new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }) + '.</p>' +
+      '<div class="kpis">' +
+      '<button class="kpi" data-act="nav" data-v="animais"><span>Animais ativos</span><b>' + n + '</b><span>de ' + H.LIMITE_ANIMAIS + ' no plano</span></button>' +
+      '<button class="kpi late" data-act="agenda-ir" data-f="aberto"><span>Atrasados</span><b>' + atras.length + '</b><span>procedimentos vencidos</span></button>' +
+      '<button class="kpi soon" data-act="agenda-ir" data-f="aberto"><span>Próximos 7 dias</span><b>' + semana.length + '</b><span>procedimentos previstos</span></button>' +
+      '<button class="kpi info" data-act="agenda-ir" data-f="aberto"><span>Pendências ABCCMM</span><b>' + pend.length + '</b><span>registro, DNA ou bloqueio</span></button>' +
+      '</div>' +
+      '<div class="grid2">' +
+      '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><h2>Atenção agora</h2><button class="btn ghost sm" data-act="nav" data-v="agenda">Agenda completa</button></div>' +
+      '<div class="tasks" style="padding:4px 18px 8px 0">' + (foco.length ? foco.map(t => UI.linhaTarefa(t)).join('') : '<div class="empty">Nenhum procedimento atrasado ou previsto para os próximos 7 dias.</div>') + '</div></div>' +
+      '<div class="stack" style="gap:20px">' +
+      '<div class="card"><div class="card-h"><h3>Gestações</h3><span class="small muted">' + gest.length + ' em andamento</span></div>' +
+      (gest.length ? gest.map(([a, g]) => gestBloco(a, g)).join('<hr style="border:0;border-top:1px solid var(--line-2);margin:14px 0">') : '<p class="muted small">Nenhuma égua com diagnóstico positivo registrado.</p>') + '</div>' +
+      '<div class="card"><div class="card-h"><h3>Plantel e plano</h3><button class="btn ghost sm" data-act="nav" data-v="plano">Ver plano</button></div>' +
+      '<dl class="facts" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div><dt>Fêmeas</dt><dd>' + fem + '</dd></div><div><dt>Machos</dt><dd>' + (n - fem) + '</dd></div><div><dt>Potros</dt><dd>' + potros + '</dd></div></dl>' +
+      '<div style="margin-top:14px" class="stack"><div class="meter" role="img" aria-label="' + n + ' de 30 animais"><i style="width:' + (n / H.LIMITE_ANIMAIS * 100) + '%"></i></div><p class="small muted">' + n + ' de ' + H.LIMITE_ANIMAIS + ' animais · mensalidade simulada <b style="color:var(--ink)">' + H.moeda(H.mensalidade(n)) + '</b></p></div></div>' +
+      '<div class="card"><div class="card-h"><h3>Últimos registros do campo</h3><span class="small muted">Caseiro / operador</span></div>' + UI.linhaTempo(S, campo, { comAnimal: true }) + '</div>' +
+      '</div></div></div>';
+  }
+  function gestBloco(a, g) {
+    return '<div class="gest"><div class="spread"><a href="#" data-act="ver-animal" data-id="' + a.id + '"><b>' + esc(a.nome) + '</b></a><span class="chip c-accent">' + g.mes + 'º mês · ' + g.dias + ' dias</span></div>' +
+      '<div class="gbar" role="img" aria-label="' + g.pct + '% da gestação"><i style="width:' + g.pct + '%"></i></div>' +
+      '<div class="gmarks"><span>Cobertura ' + H.brCurta(g.cobertura) + '</span><span>Rino 5º · 7º · 9º</span><span>Parto ' + H.brCurta(g.parto) + '</span></div>' +
+      '<p class="small muted">Parto previsto ' + H.relativo(g.parto) + (g.garanhao ? ' · garanhão ' + esc(g.garanhao) : '') + '</p></div>';
+  }
+
+  /* ================= ANIMAIS ================= */
+  let busca = '', sexoF = '';
+  function vAnimais() {
+    return '<div class="sec"><div class="spread"><div class="row"><input id="busca" class="inp" style="width:min(320px,100%)" placeholder="Buscar por nome, registro ou chip" value="' + esc(busca) + '">' +
+      '<select id="sexoF" class="inp" style="width:auto"><option value="">Todos os sexos</option><option value="F"' + (sexoF === 'F' ? ' selected' : '') + '>Fêmeas</option><option value="M"' + (sexoF === 'M' ? ' selected' : '') + '>Machos</option></select></div>' +
+      '<div class="row"><button class="btn" data-act="nav" data-v="importar">' + IC.upload + 'Importar PDF ABCCMM</button><button class="btn pri" data-act="novo-animal">' + IC.plus + 'Novo animal</button></div></div>' +
+      '<div class="card flush"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Animal</th><th>Sexo</th><th>Idade</th><th>Livro</th><th>DNA</th><th>Situação</th><th>Próxima etapa</th></tr></thead><tbody id="tb-animais"></tbody></table></div></div></div>';
+  }
+  function linhasAnimais() {
+    const q = H.norm(busca);
+    const ts = H.tarefas(S);
+    const lst = S.animais.filter(a => (!sexoF || a.sexo === sexoF) && (!q || H.norm(a.nome + ' ' + a.registro + ' ' + a.chip).includes(q)));
+    if (!lst.length) return '<tr><td colspan="7"><div class="empty">Nenhum animal encontrado.</div></td></tr>';
+    return lst.map(a => {
+      const t = ts.filter(x => x.animalId === a.id);
+      const at = t.filter(x => x.status === 'atrasado').length, pd = t.filter(x => x.doc).length;
+      const prox = t.find(x => !x.doc && x.status !== 'atrasado');
+      const g = H.gestacao(S, a);
+      const sit = [!a.vivo ? '<span class="chip c-muted">Inativo</span>' : '', at ? '<span class="chip c-late">' + at + ' atrasado' + (at > 1 ? 's' : '') + '</span>' : '', pd ? '<span class="chip c-info">' + pd + ' pendência' + (pd > 1 ? 's' : '') + '</span>' : '', g ? '<span class="chip c-accent">Gestante ' + g.mes + 'º mês</span>' : '', (a.vivo && !at && !pd) ? '<span class="chip c-ok">Em dia</span>' : ''].join(' ');
+      return '<tr class="click" data-act="ver-animal" data-id="' + a.id + '"><td><b>' + esc(a.nome) + '</b><br><span class="mono muted">' + (a.registro ? 'Reg. ' + esc(a.registro) : 'Sem registro') + '</span></td><td>' + (a.sexo === 'F' ? 'Fêmea' : 'Macho') + '</td><td style="white-space:nowrap">' + H.idadeTxt(a.nascimento) + '</td><td class="small">' + esc(a.livro || '-') + '</td><td><span class="chip ' + (/sem/i.test(a.dna) ? 'c-late' : 'c-ok') + '">' + esc(a.dna || '-') + '</span></td><td><div class="row" style="gap:4px">' + sit + '</div></td><td class="small">' + (prox ? esc(prox.titulo) + '<br><span class="muted">' + H.br(prox.due) + '</span>' : '-') + '</td></tr>';
+    }).join('');
+  }
+
+  /* ================= FICHA ================= */
+  function vFicha(id) {
+    const a = H.animal(S, id); if (!a) return '<div class="empty">Animal não encontrado.</div>';
+    const g = H.gestacao(S, a);
+    const tabs = [['prontuario', 'Prontuário'], ['agenda', 'Agenda'], ['dados', 'Dados e genealogia']];
+    let corpo = '';
+    if (fichaTab === 'prontuario') {
+      const regs = S.registros.filter(r => r.animalId === a.id && (filtroCat === 'todos' || r.tipo === filtroCat)).sort((x, y) => x.data < y.data ? 1 : -1);
+      corpo = '<div class="spread" style="margin-bottom:6px"><select id="filtroCat" class="inp" style="width:auto"><option value="todos">Todas as categorias</option>' + Object.keys(H.CATS).filter(k => k !== 'documental').map(k => '<option value="' + k + '"' + (filtroCat === k ? ' selected' : '') + '>' + H.CATS[k].nome + '</option>').join('') + '</select><button class="btn pri" data-act="registrar" data-id="' + a.id + '">' + IC.plus + 'Novo registro</button></div>' + UI.linhaTempo(S, regs, { excluir: true });
+    } else if (fichaTab === 'agenda') {
+      const ts = H.tarefas(S, { animalId: a.id });
+      const ab = ts.filter(t => t.status !== 'futuro'), fu = ts.filter(t => t.status === 'futuro');
+      corpo = '<h3 style="margin:4px 0 6px">Em aberto e próximos 30 dias</h3><div class="tasks">' + (ab.length ? ab.map(t => UI.linhaTarefa(t, { semAnimal: true })).join('') : '<div class="empty">Nada em aberto.</div>') + '</div>' +
+        '<h3 style="margin:22px 0 6px">Programados</h3><div class="tasks">' + (fu.length ? fu.map(t => UI.linhaTarefa(t, { semAnimal: true })).join('') : '<div class="empty">Sem etapas futuras.</div>') + '</div>';
+    } else {
+      const ge = a.genealogia || {};
+      const f = (id, lab, val, extra) => '<div class="field' + (extra || '') + '"><label for="d-' + id + '">' + lab + '</label><input id="d-' + id + '" class="inp" value="' + esc(val || '') + '"></div>';
+      corpo = '<form id="fd" class="stack" novalidate><h3>Dados cadastrais</h3><div class="fgrid">' +
+        f('nome', 'Nome', a.nome) + f('pelagem', 'Pelagem', a.pelagem) +
+        f('registro', 'Registro ABCCMM', a.registro) + f('livro', 'Livro', a.livro) +
+        '<div class="field"><label for="d-sexo">Sexo</label><select id="d-sexo" class="inp"><option value="F"' + (a.sexo === 'F' ? ' selected' : '') + '>Fêmea</option><option value="M"' + (a.sexo === 'M' ? ' selected' : '') + '>Macho</option></select></div>' +
+        '<div class="field"><label for="d-nasc">Nascimento</label><input id="d-nasc" type="date" class="inp" value="' + esc(a.nascimento) + '"></div>' +
+        f('chip', 'Microchip', a.chip) +
+        '<div class="field"><label for="d-dna">DNA</label><select id="d-dna" class="inp">' + ['DNA - VP', 'Sem exame'].concat(['DNA - VP', 'Sem exame'].includes(a.dna) ? [] : [a.dna]).map(o => '<option' + (o === a.dna ? ' selected' : '') + '>' + esc(o) + '</option>').join('') + '</select></div>' +
+        '<div class="field"><label for="d-vivo">Situação</label><select id="d-vivo" class="inp"><option value="1"' + (a.vivo ? ' selected' : '') + '>Vivo, ativo no plantel</option><option value="0"' + (!a.vivo ? ' selected' : '') + '>Morto ou baixado</option></select></div>' +
+        '<div class="field"><label for="d-bloq">Bloqueio ABCCMM</label><select id="d-bloq" class="inp"><option value="0"' + (!a.bloqueado ? ' selected' : '') + '>Não bloqueado</option><option value="1"' + (a.bloqueado ? ' selected' : '') + '>Bloqueado</option></select></div>' +
+        '</div><div class="spread" style="margin-top:8px"><h3>Genealogia</h3><div class="row"><label class="btn sm" for="cert">' + IC.file + 'Importar certificado (PDF)</label><input id="cert" type="file" accept="application/pdf,.pdf" hidden></div></div>' +
+        '<p class="small muted">O Relatório de Plantel não traz genealogia. Preencha à mão ou importe o certificado de registro, se houver. Os campos encontrados no PDF aparecem destacados para conferência.</p><p id="cert-st" class="note" hidden></p>' +
+        '<div class="fgrid">' + f('pai', 'Pai', ge.pai) + f('mae', 'Mãe', ge.mae) + f('avoPaterno', 'Avô paterno', ge.avoPaterno) + f('avoPaterna', 'Avó paterna', ge.avoPaterna) + f('avoMaterno', 'Avô materno', ge.avoMaterno) + f('avoMaterna', 'Avó materna', ge.avoMaterna) + '</div>' +
+        '<div class="row" style="justify-content:flex-end"><button type="button" class="btn pri" data-act="salvar-dados" data-id="' + a.id + '">' + IC.check + 'Salvar dados</button></div></form>';
+    }
+    const chips = [(a.sexo === 'F' ? 'Fêmea' : 'Macho'), H.idadeTxt(a.nascimento)].map(x => '<span class="chip nodot c-muted">' + x + '</span>').join(' ') +
+      (g ? ' <span class="chip c-accent">Gestante · ' + g.mes + 'º mês</span>' : '') + (!a.registro ? ' <span class="chip c-late">Sem registro</span>' : '') + (/sem/i.test(a.dna) ? ' <span class="chip c-late">DNA pendente</span>' : '') + (!a.vivo ? ' <span class="chip c-muted">Inativo</span>' : '');
+    return '<div class="sec"><div class="spread"><button class="btn ghost" data-act="nav" data-v="animais">' + IC.back + 'Voltar ao plantel</button><div class="row">' + chips + '</div></div>' +
+      '<div class="card"><dl class="facts"><div><dt>Registro</dt><dd class="mono">' + esc(a.registro || '-') + '</dd></div><div><dt>Livro</dt><dd>' + esc(a.livro || '-') + '</dd></div><div><dt>Nascimento</dt><dd>' + br(a.nascimento) + '</dd></div><div><dt>Microchip</dt><dd class="mono">' + esc(a.chip || '-') + '</dd></div><div><dt>DNA</dt><dd>' + esc(a.dna || '-') + '</dd></div><div><dt>Origem do cadastro</dt><dd>' + esc(a.origem || 'Manual') + (a.importadoEm ? ' · ' + br(a.importadoEm) : '') + '</dd></div></dl>' +
+      (g ? '<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line-2)">' + gestBloco(a, g) + '</div>' : '') + '</div>' +
+      '<div class="card"><div class="tabs" role="tablist">' + tabs.map(([k, l]) => '<button role="tab" aria-selected="' + (fichaTab === k) + '" data-act="tab" data-t="' + k + '">' + l + '</button>').join('') + '</div><div style="padding-top:14px">' + corpo + '</div></div></div>';
+  }
+
+  /* ================= IMPORTAR ================= */
+  function vImportar() {
+    if (!importacao) {
+      return '<div class="sec"><div class="steps"><span class="on">1. Enviar PDF</span><span>2. Conferir</span><span>3. Importar</span></div>' +
+        '<div class="grid2"><div class="card stack"><h2>Relatório de Plantel da ABCCMM</h2><p class="muted">Envie o PDF gerado no Sistema de Gestão ABCCMM. O Haras360 lê nome, livro, registro, sexo, bloqueio, situação, DNA, nascimento e microchip de cada animal e confere com o resumo do relatório antes de gravar.</p>' +
+        '<label class="drop" id="drop" for="pdf">' + IC.upload + '<b>Arraste o PDF aqui ou clique para escolher</b><span class="small muted">Arquivo .pdf · o conteúdo é lido no seu navegador</span></label><input id="pdf" type="file" accept="application/pdf,.pdf" hidden>' +
+        '<p id="imp-st" class="note" hidden></p></div>' +
+        '<div class="card stack"><h3>Como funciona</h3><ol class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px"><li>Animais já cadastrados são reconhecidos pelo registro, chip ou nome, e não são duplicados.</li><li>Animais sem registro ou sem exame de DNA geram pendências documentais.</li><li>A data de nascimento alimenta o motor de regras, que calcula a agenda de vacinas e manejos.</li><li>A genealogia é completada depois, na ficha, à mão ou pelo certificado.</li></ol>' +
+        '<p class="note">O PDF é lido no seu navegador; só os dados dos animais selecionados são enviados ao servidor. O CPF do associado não é gravado.</p></div></div></div>';
+    }
+    const { res, comp } = importacao;
+    const sel = importacao.sel;
+    const novos = comp.filter((c, i) => sel.has(i) && c.situacao === 'novo').length;
+    const atual = comp.filter((c, i) => sel.has(i) && c.situacao === 'atualizar').length;
+    const ativos = S.animais.filter(a => a.vivo).length;
+    const depois = ativos + comp.filter((c, i) => sel.has(i) && c.situacao === 'novo' && c.novo.vivo).length;
+    const confere = res.totalInformado === null ? '<p class="note warn">O resumo do relatório não foi encontrado. Confira a lista manualmente.</p>' : res.totalInformado === res.animais.length ? '<p class="note good">Conferência ok: ' + res.animais.length + ' animais lidos, igual ao total informado no relatório (' + res.machos + ' machos e ' + res.femeas + ' fêmeas).</p>' : '<p class="note bad">Atenção: ' + res.animais.length + ' animais lidos, mas o relatório informa ' + res.totalInformado + '. Confira as linhas não reconhecidas abaixo.</p>';
+    const lim = depois > H.LIMITE_ANIMAIS ? '<p class="note bad">O plano atende até ' + H.LIMITE_ANIMAIS + ' animais por haras. Desmarque ' + (depois - H.LIMITE_ANIMAIS) + ' animal(is) para continuar.</p>' : (depois > 3 && H.mensalidade(depois) !== H.mensalidade(ativos)) ? '<p class="note">Com ' + depois + ' animais ativos, a mensalidade simulada passa de ' + H.moeda(H.mensalidade(ativos)) + ' para ' + H.moeda(H.mensalidade(depois)) + '.</p>' : '';
+    const sit = { novo: '<span class="chip c-ok">Novo</span>', atualizar: '<span class="chip c-soon">Atualizar</span>', igual: '<span class="chip c-muted">Já cadastrado</span>' };
+    const rot = { nome: 'nome', livro: 'livro', registro: 'registro', sexo: 'sexo', bloqueado: 'bloqueio', vivo: 'situação', dna: 'DNA', nascimento: 'nascimento', chip: 'chip' };
+    return '<div class="sec"><div class="steps"><span>1. Enviar PDF</span><span class="on">2. Conferir</span><span>3. Importar</span></div>' +
+      '<div class="card"><dl class="facts"><div><dt>Arquivo</dt><dd>' + esc(importacao.arquivo) + '</dd></div><div><dt>Associado(a)</dt><dd>' + esc(res.associado || 'Não identificado') + '</dd></div><div><dt>CPF</dt><dd class="mono">' + esc(H.mascaraCPF(res.cpf)) + '</dd></div><div><dt>Impresso em</dt><dd>' + (res.impresso ? br(res.impresso) : '-') + '</dd></div></dl></div>' +
+      confere + lim +
+      '<div class="card flush"><div class="tbl-wrap"><table class="tbl"><thead><tr><th><span class="sr">Incluir</span></th><th>Situação</th><th>Animal</th><th>Livro</th><th>Registro</th><th>Sexo</th><th>Nascimento</th><th>DNA</th><th>Chip</th><th>Alertas</th></tr></thead><tbody>' +
+      comp.map((c, i) => {
+        const n = c.novo;
+        const al = [!n.registro ? 'Sem registro' : '', /sem/i.test(n.dna) ? 'Sem DNA' : '', n.bloqueado ? 'Bloqueado' : '', !n.vivo ? 'Morto' : ''].filter(Boolean).map(x => '<span class="chip c-late">' + x + '</span>').join(' ');
+        const dif = c.situacao === 'atualizar' ? '<br><span class="small muted">Muda: ' + c.diffs.map(d => rot[d]).join(', ') + '</span>' : '';
+        return '<tr><td><input type="checkbox" data-chg="imp-sel" data-i="' + i + '"' + (sel.has(i) ? ' checked' : '') + (c.situacao === 'igual' ? ' disabled' : '') + ' aria-label="Incluir ' + esc(n.nome) + '"></td><td>' + sit[c.situacao] + '</td><td><b>' + esc(n.nome) + '</b>' + dif + '</td><td class="small">' + esc(n.livro || '-') + '</td><td class="mono">' + esc(n.registro || '-') + '</td><td>' + n.sexo + '</td><td class="mono">' + br(n.nascimento) + '</td><td class="small">' + esc(n.dna) + '</td><td class="mono small">' + esc(n.chip || '-') + '</td><td><div class="row" style="gap:4px">' + (al || '<span class="muted small">-</span>') + '</div></td></tr>';
+      }).join('') + '</tbody></table></div></div>' +
+      (res.ignoradas.length ? '<div class="note warn"><b>Linhas não reconhecidas:</b><br>' + res.ignoradas.map(esc).join('<br>') + '</div>' : '') +
+      '<div class="row" style="justify-content:flex-end"><button class="btn" data-act="imp-cancelar">Cancelar</button><button class="btn pri" data-act="imp-confirmar"' + ((novos + atual === 0 || depois > H.LIMITE_ANIMAIS) ? ' disabled' : '') + '>' + IC.check + 'Importar ' + novos + ' novo(s) e atualizar ' + atual + '</button></div></div>';
+  }
+  async function lerPDF(file) {
+    const st = $('#imp-st');
+    const msg = (t, c) => { st.textContent = t; st.className = 'note ' + (c || ''); st.hidden = false; };
+    if (!file) return;
+    if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)) return msg('Envie um arquivo em PDF.', 'bad');
+    msg('Lendo o PDF...');
+    try {
+      const linhas = await H.linhasPDF(file);
+      const res = H.lerPlantel(linhas);
+      if (!linhas.length) return msg('Não encontramos texto neste PDF. Ele pode ser uma imagem digitalizada; gere o relatório novamente no Sistema de Gestão ABCCMM.', 'bad');
+      if (!res.animais.length) return msg(res.valido ? 'O PDF é da ABCCMM, mas não encontramos linhas de animais. Confira se é o Relatório de Plantel.' : 'Este PDF não parece ser um Relatório de Plantel da ABCCMM.', 'bad');
+      const comp = H.compararImportacao(S, res.animais);
+      importacao = { arquivo: file.name, res, comp, sel: new Set(comp.map((c, i) => c.situacao !== 'igual' ? i : -1).filter(i => i >= 0)) };
+      render();
+    } catch (e) { msg('Não foi possível ler o PDF: ' + e.message, 'bad'); }
+  }
+  async function confirmarImportacao(el) {
+    const { res, comp, sel } = importacao;
+    const animais = comp.filter((c, i) => sel.has(i) && c.situacao !== 'igual').map(c => c.novo);
+    const r = await executar(el, () => API.post('/api/importacao', { arquivo: importacao.arquivo, associado: res.associado, impresso: res.impresso, animais }));
+    if (r) { importacao = null; go('animais'); }
+  }
+
+  /* ================= AGENDA ================= */
+  function vAgenda() {
+    let ts = H.tarefas(S);
+    if (agendaCat !== 'todos') ts = ts.filter(t => t.cat === agendaCat);
+    const lim90 = H.iso(H.addDias(H.hoje(), 90));
+    if (agendaFiltro === 'aberto') ts = ts.filter(t => t.status !== 'futuro');
+    if (agendaFiltro === '90') ts = ts.filter(t => t.doc || t.due <= lim90);
+    const grupos = [['atrasado', 'Atrasados'], ['pendente', 'Pendências documentais'], ['hoje', 'Hoje'], ['semana', 'Próximos 7 dias'], ['mes', 'Próximos 30 dias'], ['futuro', 'Programados']];
+    const seg = [['aberto', 'Em aberto'], ['90', 'Próximos 90 dias'], ['tudo', 'Tudo']];
+    const cats = [...new Set(H.tarefas(S).map(t => t.cat))];
+    return '<div class="sec"><div class="spread"><div class="seg" role="group" aria-label="Período">' + seg.map(([k, l]) => '<button data-act="agenda-f" data-f="' + k + '" aria-pressed="' + (agendaFiltro === k) + '">' + l + '</button>').join('') + '</div>' +
+      '<select id="agendaCat" class="inp" style="width:auto"><option value="todos">Todas as categorias</option>' + cats.map(c => '<option value="' + c + '"' + (agendaCat === c ? ' selected' : '') + '>' + H.CATS[c].nome + '</option>').join('') + '</select></div>' +
+      (ts.length ? grupos.map(([k, l]) => { const g = ts.filter(t => t.status === k); return g.length ? '<div class="card flush"><div class="card-h" style="padding:14px 18px 0"><h3>' + l + '</h3><span class="small muted">' + g.length + '</span></div><div class="tasks" style="padding:2px 18px 6px 0">' + g.map(t => UI.linhaTarefa(t)).join('') + '</div></div>' : ''; }).join('') : '<div class="card empty">Nada para mostrar com esses filtros.</div>') +
+      '<p class="small muted">Datas calculadas pelo motor de regras a partir do nascimento, do último registro e dos protocolos configurados. Ajuste intervalos em Protocolos.</p></div>';
+  }
+
+  /* ================= PROTOCOLOS ================= */
+  function vProtocolos() {
+    const vac = S.protocolos.filter(p => p.cat === 'vacina'), outros = S.protocolos.filter(p => p.cat !== 'vacina');
+    const inp = (p, k, val, extra) => '<input class="inp w-num mono" id="p-' + p.id + '-' + k + '" value="' + esc(val) + '" inputmode="numeric"' + (extra || '') + '>';
+    return '<div class="sec"><p class="note">Vacinas seguem o protocolo publicado pela VetJr. UFMG; os demais manejos usam padrões de mercado. Os intervalos são editáveis e devem ser validados pelo médico veterinário responsável pelo plantel.</p>' +
+      '<div class="card spread"><div><h3>Reforço da vacina de raiva</h3><p class="small muted">Em estados endêmicos para raiva o reforço passa a ser semestral.</p></div><div class="seg" role="group" aria-label="Reforço da raiva"><button data-act="raiva" data-v="0" aria-pressed="' + !S.haras.raivaSemestral + '">Anual</button><button data-act="raiva" data-v="1" aria-pressed="' + !!S.haras.raivaSemestral + '">Semestral</button></div></div>' +
+      '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><h2>Vacinas</h2><span class="chip nodot c-info">Fonte: VetJr. UFMG</span></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ativa</th><th>Vacina</th><th>1ª dose (meses)</th><th>Série inicial (dias entre doses)</th><th>Reforço (dias)</th><th>Via</th></tr></thead><tbody>' +
+      vac.map(p => '<tr><td><input type="checkbox" id="p-' + p.id + '-ativo"' + (p.ativo ? ' checked' : '') + ' aria-label="Ativar ' + esc(p.nome) + '"></td><td><b>' + esc(p.nome) + '</b> <span class="chip nodot ' + (/^Obrigat/.test(p.obrig) ? 'c-late' : 'c-muted') + '">' + esc(p.obrig) + '</span>' + (p.nota ? '<br><span class="small muted">' + esc(p.nota) + '</span>' : '') + '</td><td>' + inp(p, 'idade', p.idadeMeses) + '</td><td>' + inp(p, 'serie', (p.serie || []).join(', '), ' placeholder="dose única" style="width:130px"') + '</td><td>' + (p.id === 'raiva' ? '<span class="mono">' + (S.haras.raivaSemestral ? 180 : 365) + '</span><br><span class="small muted">pela configuração acima</span>' : inp(p, 'ref', p.reforcoDias)) + '</td><td class="small">' + esc(p.via || '') + '</td></tr>').join('') +
+      '</tbody></table></div></div>' +
+      '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><h2>Manejos e exames</h2><span class="chip nodot c-muted">Padrão de mercado</span></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ativo</th><th>Procedimento</th><th>Início</th><th>Intervalo (dias)</th></tr></thead><tbody>' +
+      outros.map(p => '<tr><td><input type="checkbox" id="p-' + p.id + '-ativo"' + (p.ativo ? ' checked' : '') + ' aria-label="Ativar ' + esc(p.nome) + '"></td><td><b>' + esc(p.nome) + '</b> ' + UI.chipCat(p.cat) + (p.nota ? '<br><span class="small muted">' + esc(p.nota) + '</span>' : '') + '</td><td>' + (p.gatilho === 'idade' ? '<div class="row" style="gap:6px">' + inp(p, 'idade', p.idadeMeses) + '<span class="small muted">meses de idade</span></div>' : '<span class="small muted">A partir do 1º registro</span>') + '</td><td>' + inp(p, 'ref', p.reforcoDias) + '</td></tr>').join('') +
+      '</tbody></table></div></div>' +
+      '<div class="card"><h3 style="margin-bottom:10px">Regras automáticas</h3><ul class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px">' +
+      '<li>Reforço vencido há mais de 15 dias: a vacina volta para a primovacinação, a partir da 1ª dose.</li>' +
+      '<li>Potros que concluíram a série inicial recebem o primeiro reforço aos 12 meses de idade.</li>' +
+      '<li>Diagnóstico de gestação positivo agenda rinopneumonite no 5º, 7º e 9º mês e a previsão de parto em ' + H.GESTACAO_DIAS + ' dias após a cobertura.</li>' +
+      '<li>Vacinas multivalentes atualizam todas as doenças marcadas no mesmo registro.</li>' +
+      '<li>Animais sem registro, sem exame de DNA ou bloqueados geram pendência documental.</li></ul></div>' +
+      '<div class="row" style="justify-content:flex-end"><button class="btn" data-act="restaurar-prot">Restaurar padrões</button><button class="btn pri" data-act="salvar-prot">' + IC.check + 'Salvar protocolos</button></div></div>';
+  }
+  function salvarProtocolos(el) {
+    const lista = [];
+    for (const p of S.protocolos) {
+      const g = k => document.getElementById('p-' + p.id + '-' + k);
+      const item = { id: p.id };
+      const at = g('ativo'); if (at) item.ativo = at.checked;
+      const id = g('idade'); if (id) { const v = parseInt(id.value, 10); if (isNaN(v) || v < 0 || v > 120) { UI.toast('Idade inválida em ' + p.nome + '. Use meses entre 0 e 120.'); id.focus(); return; } item.idadeMeses = v; }
+      const se = g('serie'); if (se) { const arr = se.value.split(/[,;\s]+/).filter(Boolean).map(Number); if (arr.some(x => isNaN(x) || x < 1 || x > 400)) { UI.toast('Série inválida em ' + p.nome + '. Informe dias separados por vírgula, ex.: 30, 30.'); se.focus(); return; } item.serie = arr; }
+      const rf = g('ref'); if (rf) { const v = parseInt(rf.value, 10); if (isNaN(v) || v < 1 || v > 1500) { UI.toast('Intervalo inválido em ' + p.nome + '.'); rf.focus(); return; } item.reforcoDias = v; }
+      lista.push(item);
+    }
+    executar(el, () => API.put('/api/protocolos', lista)).then(r => { if (r) render(); });
+  }
+
+  /* ================= NOTIFICAÇÕES ================= */
+  function vNotificacoes() {
+    let ns = H.notificacoes(S);
+    if (notifFiltro === 'naolidas') ns = ns.filter(n => !S.lidas.includes(n.id));
+    const pref = S.notifPrefs;
+    const CH = [['push', 'Push no app'], ['email', 'E-mail'], ['web', 'Web']];
+    return '<div class="grid2"><div class="card flush"><div class="card-h" style="padding:16px 18px 0"><div class="seg" role="group" aria-label="Filtro"><button data-act="notif-f" data-f="todas" aria-pressed="' + (notifFiltro === 'todas') + '">Todas</button><button data-act="notif-f" data-f="naolidas" aria-pressed="' + (notifFiltro === 'naolidas') + '">Não lidas</button></div><button class="btn ghost sm" data-act="ler-todas">Marcar todas como lidas</button></div>' +
+      '<div style="padding:6px 18px 8px 0">' + (ns.length ? ns.map(n => {
+        const lida = S.lidas.includes(n.id);
+        const canais = CH.filter(([k]) => (pref[n.tipo] || {})[k]).map(([, l]) => '<span class="chip nodot c-muted">' + l + '</span>').join('');
+        return '<div class="notif ' + n.sev + (lida ? ' lida' : '') + '"><span class="bar"></span><div><b>' + esc(n.titulo) + '</b><p class="small muted">' + esc(n.texto) + '</p><div class="ch"><span class="chip nodot ' + (n.sev === 'critico' ? 'c-late' : n.sev === 'alerta' ? 'c-soon' : 'c-info') + '">' + esc(H.TIPOS_NOTIF[n.tipo]) + '</span>' + canais + '</div></div><div class="row" style="gap:4px;flex-direction:column;align-items:flex-end"><button class="btn sm" data-act="ver-animal" data-id="' + n.animalId + '">Abrir ficha</button>' + (lida ? '' : '<button class="btn ghost sm" data-act="ler" data-id="' + esc(n.id) + '">Marcar como lida</button>') + '</div></div>';
+      }).join('') : '<div class="empty">Nenhuma notificação.</div>') + '</div></div>' +
+      '<div class="card stack"><h3>Canais por tipo de alerta</h3><div class="tbl-wrap"><table class="tbl matrix"><thead><tr><th>Alerta</th>' + CH.map(([, l]) => '<th>' + l + '</th>').join('') + '</tr></thead><tbody>' +
+      Object.keys(H.TIPOS_NOTIF).map(t => '<tr><td class="small">' + H.TIPOS_NOTIF[t] + '</td>' + CH.map(([k, l]) => '<td><input type="checkbox" data-chg="pref" data-t="' + t + '" data-k="' + k + '"' + (pref[t][k] ? ' checked' : '') + ' aria-label="' + l + ' para ' + H.TIPOS_NOTIF[t] + '"></td>').join('') + '</tr>').join('') +
+      '</tbody></table></div><p class="note">Nesta versão, os alertas aparecem nos portais. O push chega com o app, e o e-mail será ativado quando o servidor de e-mail (SMTP) for configurado.</p></div></div>';
+  }
+
+  /* ================= EQUIPE ================= */
+  const PERFIS = { gestor: 'Proprietário / gestor', operador: 'Caseiro / operador de campo' };
+  function vEquipe() {
+    const P = [['Ver painel, indicadores e alertas', 1, 0], ['Cadastrar e editar animais', 1, 0], ['Importar Relatório de Plantel ABCCMM', 1, 0], ['Registrar atividades no prontuário', 1, 1], ['Anexar fotos aos registros', 1, 1], ['Ver tarefas do dia e agenda', 1, 1], ['Registrar ocorrências do dia a dia', 1, 1], ['Configurar protocolos sanitários', 1, 0], ['Gerenciar usuários e perfis', 1, 0], ['Gerenciar plano e cobrança', 1, 0], ['Usar o assistente ABCCMM', 1, 1], ['Excluir registros do prontuário', 1, 0]];
+    return '<div class="sec"><div class="card flush"><div class="card-h" style="padding:16px 18px 0"><h2>Usuários</h2><button class="btn pri" data-act="convidar">' + IC.plus + 'Convidar usuário</button></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Situação</th><th></th></tr></thead><tbody>' +
+      (S.usuarios || []).map(u => '<tr><td><b>' + esc(u.nome) + '</b></td><td class="small">' + esc(u.email) + '</td><td><span class="chip nodot ' + (u.perfil === 'gestor' ? 'c-accent' : 'c-info') + '">' + PERFIS[u.perfil] + '</span></td><td>' + (u.ativo ? '<span class="chip c-ok">Ativo</span>' : '<span class="chip c-muted">Desativado</span>') + '</td><td class="num">' + (u.id === S.usuario.id ? '<span class="small muted">Você</span>' : '<button class="btn ghost sm" data-act="senha-user" data-id="' + u.id + '">Redefinir senha</button><button class="btn ghost sm" data-act="toggle-user" data-id="' + u.id + '">' + (u.ativo ? 'Desativar' : 'Reativar') + '</button>') + '</td></tr>').join('') +
+      '</tbody></table></div></div>' +
+      '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><h2>Permissões por perfil</h2></div><div class="tbl-wrap"><table class="tbl matrix"><thead><tr><th>Permissão</th><th>Proprietário / gestor</th><th>Caseiro / operador</th></tr></thead><tbody>' +
+      P.map(([l, g, o]) => '<tr><td>' + l + '</td><td>' + (g ? '<span class="yes">Sim</span>' : '<span class="no">Não</span>') + '</td><td>' + (o ? '<span class="yes">Sim</span>' : '<span class="no">Não</span>') + '</td></tr>').join('') +
+      '</tbody></table></div></div></div>';
+  }
+
+  /* ================= ASSISTENTE ================= */
+  function vAssistente() { return UI.chatHTML(chat, 'Pergunte ao assistente', 'Respostas com base no plantel, na agenda e no protocolo de vacinação. A próxima versão será treinada com as normas e regulamentos da ABCCMM.'); }
+  function perguntar(q) {
+    q = (q || '').trim(); if (!q) return;
+    chat.push({ de: 'me', t: q });
+    const r = H.responder(S, q);
+    chat.push({ de: 'bot', t: r.t, f: r.f });
+    render();
+  }
+
+  /* ================= PLANO ================= */
+  let simN = null;
+  function vPlano() {
+    const n = S.animais.filter(a => a.vivo).length;
+    if (simN === null) simN = Math.max(n, 4);
+    return '<div class="sec"><div class="grid2"><div class="card stack"><div class="eyebrow">Plano atual</div><div class="spread"><h2>' + (n <= 3 ? 'Gratuito' : 'Por animal') + '</h2><b style="font-family:var(--f-display);font-size:1.8rem">' + H.moeda(H.mensalidade(n)) + '<span class="small muted" style="font-family:var(--f-body)"> /mês</span></b></div>' +
+      '<div class="meter" role="img" aria-label="' + n + ' de 30 animais"><i style="width:' + (n / H.LIMITE_ANIMAIS * 100) + '%"></i></div><p class="small muted">' + n + ' de ' + H.LIMITE_ANIMAIS + ' animais ativos. Os 3 primeiros não são cobrados; animais mortos ou baixados deixam de contar.</p>' +
+      '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Faixa</th><th>Animais</th><th class="num">Por animal / mês</th></tr></thead><tbody>' +
+      H.FAIXAS.map(f => '<tr><td>' + f.nome + '</td><td>' + f.de + ' a ' + f.ate + '</td><td class="num mono">' + (f.valor ? H.moeda(f.valor) : 'Grátis') + '</td></tr>').join('') +
+      '</tbody></table></div><p class="note">Valores ilustrativos para validação do modelo. A cobrança é progressiva: cada animal paga o valor da faixa em que entra.</p></div>' +
+      '<div class="card stack"><h3>Simular mensalidade</h3><label for="sim" class="lbl">Quantidade de animais: <b id="sim-n" style="color:var(--ink)">' + simN + '</b></label><input id="sim" type="range" min="1" max="30" value="' + simN + '"><div id="sim-out"></div>' +
+      '<p class="small muted">Forma de cobrança a definir na versão final, por exemplo cartão recorrente ou Pix Automático.</p></div></div></div>';
+  }
+  function simOut() {
+    const n = simN; const parts = [];
+    for (const f of H.FAIXAS) { const q = Math.max(0, Math.min(n, f.ate) - f.de + 1); if (q) parts.push(q + ' × ' + (f.valor ? H.moeda(f.valor) : 'grátis')); }
+    $('#sim-n').textContent = n;
+    $('#sim-out').innerHTML = '<b style="font-family:var(--f-display);font-size:2rem">' + H.moeda(H.mensalidade(n)) + '</b><span class="muted"> por mês</span><p class="small muted mono">' + parts.join(' + ') + '</p>';
+  }
+
+  const VIEWS = { painel: vPainel, animais: vAnimais, ficha: vFicha, importar: vImportar, agenda: vAgenda, protocolos: vProtocolos, notificacoes: vNotificacoes, equipe: vEquipe, assistente: vAssistente, plano: vPlano };
+  const AFTER = {
+    animais() {
+      $('#tb-animais').innerHTML = linhasAnimais();
+      $('#busca').addEventListener('input', e => { busca = e.target.value; $('#tb-animais').innerHTML = linhasAnimais(); });
+      $('#sexoF').addEventListener('change', e => { sexoF = e.target.value; $('#tb-animais').innerHTML = linhasAnimais(); });
+    },
+    ficha(id) {
+      const fc = $('#filtroCat'); if (fc) fc.addEventListener('change', e => { filtroCat = e.target.value; render(); });
+      const ce = $('#cert'); if (ce) ce.addEventListener('change', async e => {
+        const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+        const st = $('#cert-st'); st.hidden = false; st.className = 'note'; st.textContent = 'Lendo o certificado...';
+        try {
+          const g = H.lerGenealogia(await H.linhasPDF(f));
+          const ks = Object.keys(g);
+          if (!ks.length) { st.className = 'note warn'; st.textContent = 'Não encontramos campos de genealogia (Pai, Mãe, Avós) neste PDF. Preencha manualmente.'; return; }
+          ks.forEach(k => { const el = document.getElementById('d-' + k); if (el) { el.value = g[k]; el.style.borderColor = 'var(--accent)'; el.style.background = 'var(--accent-soft)'; } });
+          st.className = 'note good'; st.textContent = ks.length + ' campo(s) preenchido(s) a partir do PDF. Confira e clique em Salvar dados.';
+        } catch (err) { st.className = 'note bad'; st.textContent = 'Não foi possível ler o PDF: ' + err.message; }
+      });
+    },
+    importar() {
+      const inp = $('#pdf'), dr = $('#drop'); if (!inp) return;
+      inp.addEventListener('change', e => lerPDF(e.target.files[0]));
+      ['dragenter', 'dragover'].forEach(ev => dr.addEventListener(ev, e => { e.preventDefault(); dr.classList.add('over'); }));
+      ['dragleave', 'drop'].forEach(ev => dr.addEventListener(ev, e => { e.preventDefault(); dr.classList.remove('over'); }));
+      dr.addEventListener('drop', e => lerPDF(e.dataTransfer.files[0]));
+    },
+    agenda() { $('#agendaCat').addEventListener('change', e => { agendaCat = e.target.value; render(); }); },
+    assistente() {
+      const m = $('#msgs'); m.scrollTop = m.scrollHeight;
+      $('#chat-f').addEventListener('submit', e => { e.preventDefault(); perguntar($('#chat-q').value); setTimeout(() => { const q = $('#chat-q'); if (q) q.focus(); }, 0); });
+    },
+    plano() { simOut(); $('#sim').addEventListener('input', e => { simN = Number(e.target.value); simOut(); }); }
+  };
+
+  /* ================= AÇÕES ================= */
+  const senhaForm = (id, rot) => '<div class="field"><label for="' + id + '">' + rot + '</label><input id="' + id + '" type="password" class="inp" autocomplete="new-password" minlength="8"></div>';
+  const ACT = {
+    nav: el => go(el.dataset.v),
+    'agenda-ir': el => { agendaFiltro = el.dataset.f; go('agenda'); },
+    'ver-animal': el => { fichaTab = 'prontuario'; filtroCat = 'todos'; UI.fechar(); go('ficha', el.dataset.id); },
+    tab: el => { fichaTab = el.dataset.t; render(); },
+    registrar: el => UI.formRegistro(S, { animalId: el.dataset.id || (view === 'ficha' ? param : undefined) }),
+    'registrar-tarefa': el => { const t = H.tarefas(S).find(x => x.id === el.dataset.id); if (t) UI.formRegistro(S, UI.preDeTarefa(t)); },
+    fechar: () => UI.fechar(),
+    'rem-foto': el => UI.remFoto(Number(el.dataset.i)),
+    'ver-foto': el => UI.verFoto(S, el.dataset.r, Number(el.dataset.i)),
+    'salvar-registro': async el => {
+      const r = UI.lerRegistro(S); if (!r) return;
+      if (await executar(el, () => API.post('/api/registros', r))) { UI.fechar(); render(); }
+    },
+    'excluir-reg': el => confirmar(el, 'Confirmar exclusão', async () => { if (await executar(el, () => API.del('/api/registros/' + el.dataset.id))) render(); }),
+    'novo-animal': () => {
+      if (S.animais.filter(a => a.vivo).length >= S.limiteAnimais) { UI.toast('Limite de ' + S.limiteAnimais + ' animais ativos atingido.'); return; }
+      UI.abrir({
+        titulo: 'Novo animal', corpo: '<form id="fa" class="fgrid" novalidate>' +
+          '<div class="field full"><label for="n-nome">Nome</label><input id="n-nome" class="inp"></div>' +
+          '<div class="field"><label for="n-sexo">Sexo</label><select id="n-sexo" class="inp"><option value="F">Fêmea</option><option value="M">Macho</option></select></div>' +
+          '<div class="field"><label for="n-nasc">Nascimento</label><input id="n-nasc" type="date" class="inp" max="' + H.iso(H.hoje()) + '"></div>' +
+          '<div class="field"><label for="n-reg">Registro ABCCMM</label><input id="n-reg" class="inp" placeholder="Deixe vazio se ainda não registrado"></div>' +
+          '<div class="field"><label for="n-chip">Microchip</label><input id="n-chip" class="inp" inputmode="numeric"></div>' +
+          '<div class="field"><label for="n-livro">Livro</label><input id="n-livro" class="inp" placeholder="Ex.: MM6 - DEFINITIVO FECHADO FÊMEA"></div>' +
+          '<div class="field"><label for="n-dna">DNA</label><select id="n-dna" class="inp"><option>Sem exame</option><option>DNA - VP</option></select></div>' +
+          '<p class="note full" id="n-erro" hidden></p></form>',
+        rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-novo-animal">' + IC.check + 'Cadastrar</button>'
+      });
+    },
+    'salvar-novo-animal': async el => {
+      const v = id => document.getElementById(id).value.trim();
+      const err = m => { const e = $('#n-erro'); e.textContent = m; e.className = 'note bad full'; e.hidden = false; };
+      if (!v('n-nome')) return err('Informe o nome do animal.');
+      if (!v('n-nasc')) return err('Informe a data de nascimento. Ela é a base da agenda sanitária.');
+      const r = await executar(el, () => API.post('/api/animais', { nome: v('n-nome'), sexo: v('n-sexo'), nascimento: v('n-nasc'), registro: v('n-reg'), chip: v('n-chip'), livro: v('n-livro'), dna: v('n-dna'), vivo: true, bloqueado: false }));
+      if (r) { UI.fechar(); fichaTab = 'agenda'; go('ficha', r.id); }
+    },
+    'salvar-dados': async el => {
+      const a = H.animal(S, el.dataset.id); if (!a) return;
+      const v = id => document.getElementById('d-' + id).value.trim();
+      if (!v('nome')) { UI.toast('O nome não pode ficar vazio.'); return; }
+      if (!v('nasc')) { UI.toast('Informe a data de nascimento.'); return; }
+      const genealogia = {}; ['pai', 'mae', 'avoPaterno', 'avoPaterna', 'avoMaterno', 'avoMaterna'].forEach(k => { genealogia[k] = v(k); });
+      if (await executar(el, () => API.put('/api/animais/' + a.id, { nome: v('nome'), pelagem: v('pelagem'), registro: v('registro'), livro: v('livro'), sexo: v('sexo'), nascimento: v('nasc'), chip: v('chip'), dna: v('dna'), vivo: v('vivo') === '1', bloqueado: v('bloq') === '1', genealogia }))) render();
+    },
+    'imp-cancelar': () => { importacao = null; render(); },
+    'imp-confirmar': el => confirmarImportacao(el),
+    'agenda-f': el => { agendaFiltro = el.dataset.f; render(); },
+    raiva: async el => { const sem = el.dataset.v === '1'; if (await executar(el, () => API.put('/api/haras', { raivaSemestral: sem }), 'Reforço da raiva: ' + (sem ? 'semestral' : 'anual') + '. Agenda recalculada.')) render(); },
+    'salvar-prot': el => salvarProtocolos(el),
+    'restaurar-prot': el => confirmar(el, 'Confirmar restauração', async () => { if (await executar(el, () => API.post('/api/protocolos/restaurar'))) render(); }),
+    'notif-f': el => { notifFiltro = el.dataset.f; render(); },
+    ler: async el => { if (await executar(el, () => API.post('/api/notificacoes/lidas', { ids: [el.dataset.id] }), false)) render(); },
+    'ler-todas': async el => { const ids = H.notificacoes(S).map(n => n.id).filter(id => !S.lidas.includes(id)); if (!ids.length) return; if (await executar(el, () => API.post('/api/notificacoes/lidas', { ids }), 'Notificações marcadas como lidas.')) render(); },
+    convidar: () => UI.abrir({
+      titulo: 'Adicionar usuário', corpo: '<form class="fgrid" novalidate><div class="field full"><label for="u-nome">Nome</label><input id="u-nome" class="inp"></div><div class="field full"><label for="u-email">E-mail (login)</label><input id="u-email" type="email" class="inp"></div><div class="field"><label for="u-perfil">Perfil</label><select id="u-perfil" class="inp"><option value="operador">Caseiro / operador de campo</option><option value="gestor">Proprietário / gestor</option></select></div>' + senhaForm('u-senha', 'Senha inicial (mín. 8)') + '<p class="note full" id="u-erro" hidden></p></form><p class="small muted">Passe o endereço do portal, o e-mail e a senha inicial para a pessoa. Ela pode trocar a senha depois.</p>',
+      rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-usuario">Adicionar</button>'
+    }),
+    'salvar-usuario': async el => {
+      const v = id => document.getElementById(id).value.trim();
+      const err = m => { const e = $('#u-erro'); e.textContent = m; e.className = 'note bad full'; e.hidden = false; };
+      if (!v('u-nome')) return err('Informe o nome.');
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v('u-email'))) return err('Informe um e-mail válido.');
+      if (document.getElementById('u-senha').value.length < 8) return err('A senha inicial precisa ter pelo menos 8 caracteres.');
+      if (await executar(el, () => API.post('/api/usuarios', { nome: v('u-nome'), email: v('u-email'), perfil: v('u-perfil'), senha: document.getElementById('u-senha').value }))) { UI.fechar(); render(); }
+    },
+    'toggle-user': async el => { const u = (S.usuarios || []).find(x => String(x.id) === el.dataset.id); if (!u) return; if (await executar(el, () => API.patch('/api/usuarios/' + u.id, { ativo: !u.ativo }), u.nome + (u.ativo ? ' desativado.' : ' reativado.'))) render(); },
+    'senha-user': el => {
+      const u = (S.usuarios || []).find(x => String(x.id) === el.dataset.id); if (!u) return;
+      UI.abrir({ titulo: 'Redefinir senha de ' + esc(u.nome), corpo: '<form class="stack" novalidate>' + senhaForm('r-senha', 'Nova senha (mín. 8)') + '<input type="hidden" id="r-uid" value="' + u.id + '"></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-senha-user">Redefinir</button>' });
+    },
+    'salvar-senha-user': async el => {
+      const s = document.getElementById('r-senha').value; if (s.length < 8) { UI.toast('A senha precisa ter pelo menos 8 caracteres.'); return; }
+      if (await executar(el, () => API.post('/api/usuarios/' + document.getElementById('r-uid').value + '/senha', { senha: s }))) UI.fechar();
+    },
+    'minha-senha': () => UI.abrir({ titulo: 'Alterar minha senha', corpo: '<form class="stack" novalidate><div class="field"><label for="m-atual">Senha atual</label><input id="m-atual" type="password" class="inp" autocomplete="current-password"></div>' + senhaForm('m-nova', 'Nova senha (mín. 8)') + '</form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-minha-senha">Alterar</button>' }),
+    'salvar-minha-senha': async el => {
+      const n = document.getElementById('m-nova').value; if (n.length < 8) { UI.toast('A nova senha precisa ter pelo menos 8 caracteres.'); return; }
+      if (await executar(el, () => API.post('/api/me/senha', { atual: document.getElementById('m-atual').value, nova: n }), 'Senha alterada.')) UI.fechar();
+    },
+    sair: async () => { try { await API.post('/api/logout'); } catch (e) { } location.href = '/entrar'; },
+    sug: el => perguntar(el.dataset.q)
+  };
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-act]'); if (!el) return;
+    const f = ACT[el.dataset.act]; if (!f) return;
+    if (el.tagName === 'A' || el.tagName === 'TR' || el.closest('form')) e.preventDefault();
+    f(el, e);
+  });
+  document.addEventListener('change', async e => {
+    const el = e.target.closest('[data-chg]'); if (!el) return;
+    if (el.dataset.chg === 'imp-sel') { const i = Number(el.dataset.i); el.checked ? importacao.sel.add(i) : importacao.sel.delete(i); render(); }
+    if (el.dataset.chg === 'pref') {
+      const p = JSON.parse(JSON.stringify(S.notifPrefs)); p[el.dataset.t][el.dataset.k] = el.checked;
+      if (await executar(null, () => API.put('/api/notif-prefs', p), 'Preferência salva.')) render();
+    }
+  });
+  (async () => {
+    $('#view').innerHTML = '<div class="empty">Carregando o haras...</div>';
+    try {
+      await recarregar();
+      if (S.usuario.perfil !== 'gestor') { location.href = '/campo'; return; }
+      render();
+    } catch (e) { $('#view').innerHTML = '<div class="note bad">' + esc(e.message) + '</div>'; }
+  })();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Haras360 Campo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Zilla+Slab:wght@500;600;700&display=swap">
+<style>
+[hidden]{display:none!important}
+body{margin:0}
+img{max-width:100%}
+:root{
+  /* Layout: barra lateral verde-floresta fixa + área de trabalho em grade; no celular a barra vira faixa superior rolável */
+  --bg:#eceee8; --surface:#fafbf7; --surface-2:#f1f3ed; --ink:#1b231e; --muted:#58645c; --line:#d4d9cf; --line-2:#e3e7df;
+  --forest:#1e3a2b; --forest-2:#27493a; --forest-ink:#e8f0e9; --forest-muted:#a3baa9;
+  --accent:#96541d; --accent-soft:#f2e4d4; --accent-ink:#ffffff;
+  --late:#ad3327; --late-soft:#f6e0db; --soon:#9b640c; --soon-soft:#f5e9cf; --ok:#2a6f46; --ok-soft:#dbeee1; --info:#2c5b84; --info-soft:#dee8f2;
+  --shadow:0 1px 2px rgba(20,32,24,.06),0 8px 24px rgba(20,32,24,.07);
+  --f-display:"Zilla Slab",Rockwell,"Roboto Slab",Georgia,serif;
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101511; --surface:#171f19; --surface-2:#1d261f; --ink:#e3eae3; --muted:#97a59b; --line:#2b362e; --line-2:#232d26;
+  --forest:#0b150f; --forest-2:#16251b; --forest-ink:#dde8df; --forest-muted:#85a08d;
+  --accent:#d38b4c; --accent-soft:#38261a; --accent-ink:#1b120a;
+  --late:#ec7c6a; --late-soft:#3a1d18; --soon:#e1aa52; --soon-soft:#352810; --ok:#6cbf88; --ok-soft:#163022; --info:#7eaedb; --info-soft:#172838;
+  --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#101511; --surface:#171f19; --surface-2:#1d261f; --ink:#e3eae3; --muted:#97a59b; --line:#2b362e; --line-2:#232d26;
+  --forest:#0b150f; --forest-2:#16251b; --forest-ink:#dde8df; --forest-muted:#85a08d;
+  --accent:#d38b4c; --accent-soft:#38261a; --accent-ink:#1b120a;
+  --late:#ec7c6a; --late-soft:#3a1d18; --soon:#e1aa52; --soon-soft:#352810; --ok:#6cbf88; --ok-soft:#163022; --info:#7eaedb; --info-soft:#172838;
+  --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.005em}
+h1{font-size:clamp(1.6rem,1.2rem + 1.4vw,2.2rem)}
+h2{font-size:1.3rem}
+h3{font-size:1.06rem}
+p{margin:0}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-size:.86em;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+.eyebrow{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spread{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1000px){.grid2{grid-template-columns:minmax(0,1fr)}}
+
+/* botões */
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem;line-height:1.2;text-decoration:none;color:var(--ink);white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--accent);padding-inline:8px}
+.btn.ghost:hover{background:var(--accent-soft)}
+.btn.sm{padding:5px 10px;font-size:.82rem}
+.btn.danger{color:var(--late)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn svg{width:16px;height:16px;flex:none}
+
+/* superfícies */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.card.flush{padding:0;overflow:hidden}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.sec{display:flex;flex-direction:column;gap:18px}
+
+/* chips de estado */
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.76rem;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap;border:1px solid transparent}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.85}
+.chip.nodot::before{display:none}
+.c-late{background:var(--late-soft);color:var(--late)}
+.c-soon{background:var(--soon-soft);color:var(--soon)}
+.c-ok{background:var(--ok-soft);color:var(--ok)}
+.c-info{background:var(--info-soft);color:var(--info)}
+.c-accent{background:var(--accent-soft);color:var(--accent)}
+.c-muted{background:var(--surface-2);color:var(--muted)}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:2px;text-align:left;cursor:pointer}
+.kpi:hover{border-color:var(--muted)}
+.kpi b{font-family:var(--f-display);font-size:2rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.84rem;color:var(--muted)}
+.kpi.late b{color:var(--late)} .kpi.soon b{color:var(--soon)} .kpi.info b{color:var(--info)}
+
+/* tarefas */
+.tasks{display:flex;flex-direction:column}
+.task{display:grid;grid-template-columns:4px 64px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 16px 11px 0;border-top:1px solid var(--line-2)}
+.task:first-child{border-top:0}
+.task .bar{align-self:stretch;border-radius:0 3px 3px 0;background:var(--line)}
+.task.atrasado .bar{background:var(--late)} .task.hoje .bar,.task.semana .bar{background:var(--soon)} .task.pendente .bar{background:var(--info)} .task.mes .bar{background:var(--ok)}
+.task .when{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);line-height:1.25}
+.task .when b{display:block;font-size:.95rem;color:var(--ink);font-weight:500}
+.task .what{min-width:0}
+.task .what strong{font-weight:600}
+.task .what .sub{font-size:.84rem;color:var(--muted)}
+@media (max-width:560px){.task{grid-template-columns:4px 54px minmax(0,1fr)}.task .act{grid-column:3}}
+
+/* tabelas */
+.tbl-wrap{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse;font-size:.9rem}
+.tbl th{text-align:left;font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:11px 12px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tbody tr.click{cursor:pointer}
+.tbl tbody tr.click:hover td{background:var(--surface-2)}
+.tbl .num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* formulários */
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field>label,.lbl{font-size:.8rem;font-weight:600;color:var(--muted)}
+.inp{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 11px;min-width:0}
+.inp:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+textarea.inp{min-height:84px;resize:vertical}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.fgrid .full{grid-column:1/-1}
+@media (max-width:560px){.fgrid{grid-template-columns:minmax(0,1fr)}}
+.checks{display:flex;flex-wrap:wrap;gap:8px}
+.check{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:.88rem;background:var(--surface)}
+.check:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.check input{accent-color:var(--accent)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:7px 14px;cursor:pointer;font-weight:600;font-size:.86rem}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.drop{border:1.5px dashed var(--line);border-radius:var(--r);padding:28px 18px;text-align:center;background:var(--surface-2);display:flex;flex-direction:column;gap:10px;align-items:center}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+
+/* abas */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;cursor:pointer;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+
+/* prontuário */
+.timeline{display:flex;flex-direction:column}
+.ev{display:grid;grid-template-columns:96px minmax(0,1fr);gap:16px;padding:14px 0;border-top:1px solid var(--line-2)}
+.ev:first-child{border-top:0}
+.ev .d{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);padding-top:2px}
+.ev .body{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ev .meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--muted)}
+.ev .obs{font-size:.92rem;overflow-wrap:anywhere}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.thumbs button{padding:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;cursor:zoom-in;width:72px;height:72px;background:var(--surface-2)}
+.thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+@media (max-width:560px){.ev{grid-template-columns:minmax(0,1fr);gap:4px}}
+
+/* gestação */
+.gest{display:flex;flex-direction:column;gap:8px}
+.gbar{height:8px;border-radius:99px;background:var(--surface-2);position:relative;overflow:hidden;border:1px solid var(--line-2)}
+.gbar i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:99px}
+.gmarks{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:.7rem;color:var(--muted)}
+
+/* modal e toast */
+.modal{position:fixed;inset:0;background:rgba(10,16,12,.5);display:flex;align-items:flex-start;justify-content:center;z-index:50;padding:max(24px,env(safe-area-inset-top,0px)) 16px 24px;overflow-y:auto}
+.sheet{background:var(--surface);color:var(--ink);border-radius:14px;width:min(640px,100%);box-shadow:0 20px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;max-height:none}
+.sheet header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line)}
+.sheet .sbody{padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.sheet footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--line);flex-wrap:wrap}
+.sheet.wide{width:min(900px,100%)}
+.x{border:0;background:none;cursor:pointer;font-size:1.4rem;line-height:1;color:var(--muted);padding:4px 8px;border-radius:6px}
+.x:hover{background:var(--surface-2)}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:10px;font-size:.9rem;max-width:min(560px,calc(100% - 32px));z-index:60;box-shadow:var(--shadow)}
+.note{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:10px 12px;font-size:.86rem;color:var(--muted)}
+.note.warn{background:var(--soon-soft);border-color:transparent;color:var(--soon)}
+.note.bad{background:var(--late-soft);border-color:transparent;color:var(--late)}
+.note.good{background:var(--ok-soft);border-color:transparent;color:var(--ok)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+
+/* chat */
+.chat{display:flex;flex-direction:column;height:min(68vh,640px)}
+.msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:18px}
+.msg{max-width:78%;padding:10px 14px;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.93rem}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:4px}
+.msg.bot{align-self:flex-start;background:var(--surface-2);border:1px solid var(--line-2);border-bottom-left-radius:4px}
+.msg .src{display:block;margin-top:6px;font-size:.74rem;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.chat form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+.sugs{display:flex;gap:6px;flex-wrap:wrap;padding:0 18px 12px}
+.sugs button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:5px 11px;font-size:.82rem;cursor:pointer}
+.sugs button:hover{border-color:var(--accent);color:var(--accent)}
+@media (max-width:560px){.msg{max-width:92%}}
+
+@media (prefers-reduced-motion:no-preference){
+  .view-in{animation:vin .22s ease-out}
+  @keyframes vin{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+:root{--forest-accent:#e3ab6c}
+.hdr{background:var(--forest);color:var(--forest-ink);padding-inline:16px;padding-block:14px 0}
+.hdr-in{max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{width:30px;height:30px;color:var(--forest-accent);flex:none}
+.brand b{font-family:var(--f-display);font-size:1.3rem;font-weight:700;line-height:1;display:block}
+.brand small{display:block;font-size:.72rem;color:var(--forest-muted);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+.me{display:flex;align-items:center;gap:10px;font-size:.84rem;color:var(--forest-muted);text-align:right;line-height:1.3}
+.me b{color:var(--forest-ink);font-weight:600}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--forest-accent);color:var(--forest);display:grid;place-items:center;font-weight:700;font-size:.8rem;flex:none}
+.tnav{max-width:900px;margin:12px auto 0;display:flex;gap:2px}
+.tnav button{display:flex;align-items:center;gap:8px;border:0;background:none;color:var(--forest-muted);padding:10px 14px;border-radius:8px 8px 0 0;cursor:pointer;font-weight:600;font-size:.92rem;position:relative}
+.tnav button svg{width:18px;height:18px}
+.tnav button:hover{color:var(--forest-ink)}
+.tnav button[aria-current="page"]{background:var(--bg);color:var(--ink)}
+.tnav .badge{background:var(--late);color:#fff;font-size:.68rem;font-weight:700;padding:1px 6px;border-radius:99px}
+.wrap{max-width:900px;margin:0 auto;padding-inline:16px;padding-block:22px 110px}
+.daybar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.cnt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.cnt div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.cnt b{display:block;font-family:var(--f-display);font-size:1.9rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.cnt span{font-size:.82rem;color:var(--muted)}
+.cnt .late b{color:var(--late)} .cnt .soon b{color:var(--soon)}
+.quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.quick button{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;text-align:left}
+.quick button svg{width:22px;height:22px;color:var(--accent);flex:none}
+.quick button:hover{border-color:var(--accent)}
+.quick small{display:block;font-weight:400;color:var(--muted);font-size:.8rem}
+.acards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.acard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+.acard:hover{border-color:var(--muted)}
+.acard b{font-family:var(--f-display);font-size:1.12rem;font-weight:600}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px 18px;margin:0}
+.facts div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.facts dt{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.facts dd{margin:0;font-weight:500;overflow-wrap:anywhere}
+.notif{display:grid;grid-template-columns:4px minmax(0,1fr);gap:14px;padding:13px 16px 13px 0;border-top:1px solid var(--line-2)}
+.notif:first-child{border-top:0}
+.notif .bar{align-self:stretch;border-radius:0 3px 3px 0;background:var(--info)}
+.notif.critico .bar{background:var(--late)} .notif.alerta .bar{background:var(--soon)}
+.notif.lida{opacity:.6}
+@media (max-width:640px){
+  .me #me-n,.me br{display:none}
+  .hdr{padding-block:12px}
+  .tnav{position:fixed;left:0;right:0;bottom:0;margin:0;background:var(--surface);border-top:1px solid var(--line);justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));z-index:30}
+  .tnav button{flex-direction:column;gap:2px;font-size:.7rem;color:var(--muted);padding:6px 8px;border-radius:8px}
+  .tnav button[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+  .tnav .badge{position:absolute;top:0;right:4px}
+  .cnt b{font-size:1.6rem}
+  .quick{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+
+
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M11 34V20a9 9 0 0 1 18 0v14"/><path d="M7 34h8M25 34h8"/><circle cx="14" cy="22" r="1.2" fill="currentColor"/><circle cx="26" cy="22" r="1.2" fill="currentColor"/><circle cx="16" cy="14.5" r="1.2" fill="currentColor"/><circle cx="24" cy="14.5" r="1.2" fill="currentColor"/></svg>
+      <div><b>Haras360</b><small id="haras-n">Campo</small></div>
+    </div>
+    <div class="me"><div><b id="me-n"></b><br><a href="#" data-act="minha-senha" style="color:var(--forest-muted)">Senha</a> · <a href="#" data-act="sair" style="color:var(--forest-muted)">Sair</a></div><span class="avatar" id="av"></span></div>
+  </div>
+  <nav class="tnav" id="tnav" aria-label="Navegação"></nav>
+</header>
+<main class="wrap"><div id="view" class="view-in"></div></main>
+<div id="modal" class="modal" hidden></div>
+<div id="toast" role="status" hidden></div>
+
+<script>window.H360_PORTAL = 'campo';</script>
+<script>
+/* Haras360 · cliente da API */
+const API = (function () {
+  async function req(metodo, url, corpo) {
+    let r;
+    try {
+      r = await fetch(url, { method: metodo, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Haras360': '1', 'X-Portal': window.H360_PORTAL || '' }, body: corpo === undefined ? undefined : JSON.stringify(corpo) });
+    } catch (e) { throw new Error('Sem conexão com o servidor. Verifique a internet e tente de novo.'); }
+    let dados = null;
+    try { dados = await r.json(); } catch (e) { }
+    if (r.status === 401 && !/\/api\/(login|me\/senha)/.test(url)) {
+      location.href = '/entrar?volta=' + encodeURIComponent(location.pathname);
+      throw new Error('Sessão expirada. Faça login novamente.');
+    }
+    if (!r.ok) {
+      const d = dados && dados.detail;
+      throw new Error(typeof d === 'string' ? d : r.status === 413 ? 'Arquivo grande demais.' : 'Não foi possível concluir (erro ' + r.status + '). Confira os dados e tente de novo.');
+    }
+    return dados;
+  }
+  return { get: u => req('GET', u), post: (u, b) => req('POST', u, b || {}), put: (u, b) => req('PUT', u, b), patch: (u, b) => req('PATCH', u, b), del: u => req('DELETE', u) };
+})();
+
+</script>
+<script>
+/* Haras360 · núcleo do navegador: utilidades, catálogos, leitura de PDF ABCCMM e assistente. O motor de regras roda na API. */
+const H = (function () {
+  const DAY = 86400000;
+  const pad = n => String(n).padStart(2, '0');
+
+  /* ---------- datas ---------- */
+  function hoje() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+  function dt(s) {
+    if (s instanceof Date) { const x = new Date(s); x.setHours(0, 0, 0, 0); return x; }
+    const [y, m, d] = String(s).slice(0, 10).split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  function iso(d) { d = dt(d); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function addDias(d, n) { const x = dt(d); x.setDate(x.getDate() + n); return x; }
+  function addMeses(d, n) {
+    const x = dt(d); const day = x.getDate(); x.setDate(1); x.setMonth(x.getMonth() + n);
+    const last = new Date(x.getFullYear(), x.getMonth() + 1, 0).getDate(); x.setDate(Math.min(day, last)); return x;
+  }
+  function dias(a, b) { return Math.round((dt(b) - dt(a)) / DAY); }
+  function br(s) { if (!s) return '-'; const d = dt(s); return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear(); }
+  function brCurta(s) { const d = dt(s); const m = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']; return pad(d.getDate()) + ' ' + m[d.getMonth()]; }
+  function brParaIso(s) { const [d, m, y] = s.split('/'); return y + '-' + m + '-' + d; }
+  function idadeMeses(nasc) {
+    const n = dt(nasc), t = hoje();
+    let m = (t.getFullYear() - n.getFullYear()) * 12 + (t.getMonth() - n.getMonth());
+    if (t.getDate() < n.getDate()) m--; return Math.max(0, m);
+  }
+  function idadeTxt(nasc) {
+    if (!nasc) return '-';
+    const m = idadeMeses(nasc);
+    if (m < 24) return m + (m === 1 ? ' mês' : ' meses');
+    const a = Math.floor(m / 12), r = m % 12;
+    return a + ' anos' + (r ? ' e ' + r + (r === 1 ? ' mês' : ' meses') : '');
+  }
+  function relativo(due) {
+    const d = dias(hoje(), due);
+    if (d === 0) return 'hoje';
+    if (d === 1) return 'amanhã';
+    if (d === -1) return 'ontem';
+    if (d < 0) return 'há ' + (-d) + ' dias';
+    return 'em ' + d + ' dias';
+  }
+  function uid() { return Math.random().toString(36).slice(2, 10); }
+  function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+  function norm(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+  function moeda(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+  function mascaraCPF(c) { const d = String(c || '').replace(/\D/g, ''); if (d.length !== 11) return c || '-'; return d.slice(0, 3) + '.***.***-' + d.slice(9); }
+
+  /* ---------- catálogos ---------- */
+  const CATS = {
+    vacina: { nome: 'Vacinação', tom: 'info' },
+    vermifugacao: { nome: 'Vermifugação', tom: 'ok' },
+    odontologia: { nome: 'Odontologia', tom: 'accent' },
+    ferrageamento: { nome: 'Ferrageamento', tom: 'muted' },
+    exame: { nome: 'Exame clínico', tom: 'info' },
+    reprodutivo: { nome: 'Reprodução', tom: 'accent' },
+    ocorrencia: { nome: 'Ocorrência', tom: 'soon' },
+    documental: { nome: 'Documentação', tom: 'late' }
+  };
+  const EVENTOS_REPRO = ['Cobertura', 'Inseminação', 'Diagnóstico positivo', 'Diagnóstico negativo', 'Parto', 'Aborto'];
+  const GESTACAO_DIAS = 340;
+
+  const FAIXAS = [
+    { de: 1, ate: 3, valor: 0, nome: 'Gratuito' },
+    { de: 4, ate: 10, valor: 12.9, nome: 'Faixa 1' },
+    { de: 11, ate: 20, valor: 10.9, nome: 'Faixa 2' },
+    { de: 21, ate: 30, valor: 8.9, nome: 'Faixa 3' }
+  ];
+  let LIMITE_ANIMAIS = 30;
+  function mensalidade(n) {
+    let t = 0;
+    for (const f of FAIXAS) { const q = Math.max(0, Math.min(n, f.ate) - f.de + 1); t += q * f.valor; }
+    return Math.round(t * 100) / 100;
+  }
+
+  /* ---------- leitura do estado calculado pela API (motor de regras no servidor) ---------- */
+  function protocolo(st, id) { return st.protocolos.find(p => p.id === id); }
+  function animal(st, id) { return st.animais.find(a => a.id === id); }
+  function gestacao(st, a) { return a && st.gestacoes ? (st.gestacoes[a.id] || null) : null; }
+  function tarefas(st, opts) { opts = opts || {}; return (st.tarefas || []).filter(t => !opts.animalId || t.animalId === opts.animalId); }
+  function notificacoes(st) { return st.notificacoes || []; }
+  const STATUS_TXT = { atrasado: 'Atrasado', hoje: 'Hoje', semana: 'Próximos 7 dias', mes: 'Próximos 30 dias', futuro: 'Programado', pendente: 'Pendência' };
+  const TIPOS_NOTIF = {
+    atrasado: 'Procedimento atrasado',
+    semana: 'Procedimento nos próximos 7 dias',
+    parto: 'Previsão de parto',
+    documental: 'Pendência documental ABCCMM',
+    campo: 'Registro feito pelo operador de campo'
+  };
+
+  function tituloRegistro(st, r) {
+    if (r.tipo === 'vacina') return 'Vacina ' + (r.protocolos || []).map(id => (protocolo(st, id) || { nome: id }).nome).join(' + ');
+    if (r.tipo === 'reprodutivo') return r.evento || 'Evento reprodutivo';
+    if (r.tipo === 'ocorrencia') return r.titulo || 'Ocorrência';
+    if (r.tipo === 'exame') return 'Exame: ' + (r.exame || 'clínico');
+    if (r.tipo === 'odontologia') return r.procedimento || 'Odontologia';
+    if (r.tipo === 'ferrageamento') return 'Ferrageamento';
+    if (r.tipo === 'vermifugacao') return 'Vermifugação';
+    return CATS[r.tipo] ? CATS[r.tipo].nome : 'Registro';
+  }
+  function doseTxt(d) { if (d === 'reforco') return 'Reforço'; if (d === 'unica' || !d) return ''; return d + 'ª dose'; }
+
+  /* ---------- leitura de PDF (Relatório de Plantel ABCCMM) ---------- */
+  async function linhasPDF(file) {
+    if (!window.pdfjsLib) throw new Error('O leitor de PDF não carregou. Verifique a conexão e recarregue a página.');
+    try { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; } catch (e) { }
+    const data = new Uint8Array(await file.arrayBuffer());
+    const pdf = await pdfjsLib.getDocument({ data, isEvalSupported: false }).promise;
+    const linhas = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const pg = await pdf.getPage(i);
+      const tc = await pg.getTextContent();
+      const its = tc.items.filter(it => it.str && it.str.trim()).map(it => ({ s: it.str, x: it.transform[4], y: it.transform[5], w: it.width || 0, h: Math.abs(it.transform[3]) || 8 }));
+      its.sort((p, q) => q.y - p.y || p.x - q.x);
+      const rows = [];
+      for (const it of its) {
+        const row = rows.find(r => Math.abs(r.y - it.y) <= Math.max(2, it.h * 0.4));
+        if (row) row.items.push(it); else rows.push({ y: it.y, items: [it] });
+      }
+      rows.sort((p, q) => q.y - p.y);
+      for (const row of rows) {
+        row.items.sort((p, q) => p.x - q.x);
+        let s = '', fim = null;
+        for (const it of row.items) { if (fim !== null && it.x - fim > 0.8) s += ' '; s += it.s; fim = it.x + it.w; }
+        s = s.replace(/\s+/g, ' ').trim();
+        if (s) linhas.push(s);
+      }
+    }
+    return linhas;
+  }
+
+  const RE_ANIMAL = /^(.+?)\s+(?:(MM\s?\d+\s*-\s*.+?)\s+)?(?:(\d{4,8})\s+)?([MF])\s+(\S+)\s+(Viv[oa]|Mort[oa])\s+(.+?)\s+(\d{2}\/\d{2}\/\d{4})(?:\s+(\d{6,20}))?$/i;
+  function lerPlantel(linhas) {
+    const texto = linhas.join('\n');
+    const plano = linhas.join(' ');
+    const res = { valido: /RELAT[ÓO]RIO DE PLANTEL/i.test(texto) || /ABCCMM|Mangalarga/i.test(texto), associado: '', cpf: '', impresso: '', totalInformado: null, machos: null, femeas: null, animais: [], ignoradas: [] };
+    let m = plano.match(/Associado\(a\):\s*(.+?)\s*-\s*CPF:\s*([\d.\-]+)/i);
+    if (m) { res.associado = m[1].trim(); res.cpf = m[2].replace(/\D/g, ''); }
+    m = plano.match(/Impresso em\s*(\d{2}\/\d{2}\/\d{4})/i); if (m) res.impresso = brParaIso(m[1]);
+    m = plano.match(/Total de animais:\s*(\d+)/i); if (m) res.totalInformado = Number(m[1]);
+    for (const l of linhas) {
+      if (!/\d{2}\/\d{2}\/\d{4}/.test(l) || /Impresso em|Associado\(a\)/i.test(l)) continue;
+      const x = l.match(RE_ANIMAL);
+      if (!x) { res.ignoradas.push(l); continue; }
+      res.animais.push({
+        nome: x[1].trim().toUpperCase(),
+        livro: (x[2] || '').trim(),
+        registro: x[3] || '',
+        sexo: x[4].toUpperCase(),
+        bloqueado: !/^(-|n[aã]o|n)$/i.test(x[5]),
+        vivo: /viv/i.test(x[6]),
+        dna: x[7].trim(),
+        nascimento: brParaIso(x[8]),
+        chip: x[9] || ''
+      });
+    }
+    res.machos = res.animais.filter(a => a.sexo === 'M').length;
+    res.femeas = res.animais.filter(a => a.sexo === 'F').length;
+    return res;
+  }
+
+  function compararImportacao(st, lidos) {
+    return lidos.map(n => {
+      const ex = st.animais.find(a => (n.registro && a.registro === n.registro) || (n.chip && a.chip === n.chip) || norm(a.nome) === norm(n.nome));
+      if (!ex) return { novo: n, situacao: 'novo', diffs: [] };
+      const campos = ['nome', 'livro', 'registro', 'sexo', 'bloqueado', 'vivo', 'dna', 'nascimento', 'chip'];
+      const diffs = campos.filter(c => String(ex[c] ?? '') !== String(n[c] ?? ''));
+      return { novo: n, existente: ex, situacao: diffs.length ? 'atualizar' : 'igual', diffs };
+    });
+  }
+
+  /* certificado ou outro PDF com genealogia: busca rótulos usuais */
+  function lerGenealogia(linhas) {
+    const g = {};
+    const regras = [
+      ['avoPaterno', /av[ôo]\s*paterno\s*[:\-]?\s*(.+)/i],
+      ['avoPaterna', /av[óo]\s*paterna\s*[:\-]?\s*(.+)/i],
+      ['avoMaterno', /av[ôo]\s*materno\s*[:\-]?\s*(.+)/i],
+      ['avoMaterna', /av[óo]\s*materna\s*[:\-]?\s*(.+)/i],
+      ['pai', /^(?:.*\s)?pai\s*[:\-]\s*(.+)/i],
+      ['mae', /^(?:.*\s)?m[ãa]e\s*[:\-]\s*(.+)/i]
+    ];
+    for (const l of linhas) {
+      for (const [k, re] of regras) {
+        if (g[k]) continue;
+        const m = l.match(re);
+        if (m) { const v = m[1].replace(/\s+(registro|reg\.?|n[ºo])\s*.*$/i, '').trim(); if (v && v.length < 80) { g[k] = v.toUpperCase(); break; } }
+      }
+    }
+    return g;
+  }
+
+  /* ---------- assistente (base de demonstração) ---------- */
+  function responder(st, pergunta) {
+    const q = norm(pergunta);
+    const has = (...k) => k.some(w => q.includes(w));
+    const alvo = st.animais.find(a => q.includes(norm(a.nome).split(' ')[0]));
+    const ts = tarefas(st);
+    const vac = id => protocolo(st, id);
+    const lista = arr => arr.map(t => '• ' + t.animal + ': ' + t.titulo + ' (' + t.etapa + ', ' + br(t.due) + ')').join('\n');
+
+    if (alvo && has('parto', 'gestac', 'prenhe', 'parir')) {
+      const g = gestacao(st, alvo);
+      if (!g) return { t: alvo.nome + ' não tem gestação ativa registrada no prontuário.' };
+      return { t: alvo.nome + ' está com ' + g.dias + ' dias de gestação (' + g.mes + 'º mês). A cobertura foi em ' + br(g.cobertura) + (g.garanhao ? ' com ' + g.garanhao : '') + ', e o parto está previsto para ' + br(g.parto) + ', ' + relativo(g.parto) + '. A estimativa usa ' + GESTACAO_DIAS + ' dias; o veterinário deve confirmar por ultrassonografia.', f: 'Dados do prontuário' };
+    }
+    if (alvo && has('vacina', 'pendente', 'atras', 'proxim', 'agenda')) {
+      const t = ts.filter(x => x.animalId === alvo.id && x.status !== 'futuro');
+      if (!t.length) return { t: alvo.nome + ' não tem procedimentos atrasados nem previstos para os próximos 30 dias.', f: 'Motor de regras' };
+      return { t: 'Pendências e próximos 30 dias de ' + alvo.nome + ':\n' + lista(t), f: 'Motor de regras' };
+    }
+    if (has('atrasad', 'pendenc', 'vencid')) {
+      const t = ts.filter(x => x.status === 'atrasado');
+      if (!t.length) return { t: 'Nenhum procedimento atrasado no plantel.', f: 'Motor de regras' };
+      return { t: 'Há ' + t.length + ' procedimento(s) atrasado(s):\n' + lista(t), f: 'Motor de regras' };
+    }
+    if (has('raiva')) {
+      const r = vac('raiva');
+      return { t: 'Raiva é obrigatória. 1ª dose aos 4 meses, 2ª dose 30 dias depois e reforço anual. Em estados endêmicos o reforço passa a ser semestral. Neste haras o reforço está configurado como ' + (st.haras.raivaSemestral ? 'semestral' : 'anual') + '. Via ' + (r ? r.via : 'SC ou IM') + ', conforme a bula.', f: 'Protocolo VetJr. UFMG' };
+    }
+    if (has('gestante', 'prenha', 'gestacao', 'rinopneu', 'herpes')) return { t: 'Para rinopneumonite: 1ª dose na desmama, 2ª dose 3 a 4 semanas depois e 3ª dose 6 meses após a segunda. Éguas gestantes recebem doses no 5º, 7º e 9º mês de gestação. O Haras360 agenda essas doses automaticamente quando um diagnóstico positivo é registrado.', f: 'Protocolo VetJr. UFMG' };
+    if (has('reinici', 'perdeu', 'perdi', 'esqueci', 'nunca vacin')) return { t: 'Animais que nunca foram vacinados ou que perderam o prazo do reforço devem refazer a primovacinação daquela vacina, ou seja, reiniciar o esquema desde a 1ª dose. O sistema sinaliza "Reiniciar primovacinação" quando o reforço passa de 15 dias do vencimento.', f: 'Protocolo VetJr. UFMG' };
+    if (has('potro', 'potra', 'filhote', '12 meses')) return { t: 'Potros iniciam a vacinação entre 3 e 4 meses (tétano, encefalomielite e influenza a partir de 3; raiva e leptospirose a partir de 4; rinopneumonite na desmama). Concluído o esquema inicial, o primeiro reforço é feito a partir dos 12 meses de idade, e o sistema já programa nessa data.', f: 'Protocolo VetJr. UFMG' };
+    if (has('multival', 'trivalen', 'bivalen', 'combinad')) return { t: 'Vacinas multivalentes protegem contra mais de uma doença na mesma aplicação, geralmente com custo menor. No Haras360 basta marcar todas as doenças cobertas em um único registro, e cada protocolo é atualizado.', f: 'Protocolo VetJr. UFMG' };
+    if (has('transport', 'gta', 'viagem', 'evento', 'exposic', 'leilao')) return { t: 'Para transporte, a vacina de encefalomielite é obrigatória, e o trânsito de equídeos costuma exigir exames negativos de Anemia Infecciosa (AIE) e Mormo dentro da validade. O sistema usa 60 dias como validade padrão, editável em Protocolos. Confirme a exigência do órgão de defesa agropecuária do seu estado e do evento.', f: 'Protocolo VetJr. UFMG e padrão de mercado' };
+    if (has('obrigator')) return { t: 'Pelo protocolo de referência: raiva é obrigatória; encefalomielite é obrigatória para transporte e em alguns estabelecimentos; rinopneumonite é exigida por alguns estabelecimentos. Tétano, influenza e leptospirose são fortemente recomendadas, e garrotilho depende do risco do plantel.', f: 'Protocolo VetJr. UFMG' };
+    if (has('dna')) return { t: 'O Relatório de Plantel informa a situação do exame de DNA de cada animal. Quando aparece "Sem exame", o Haras360 abre uma pendência documental, porque o exame é necessário para o registro genealógico.', f: 'Relatório de Plantel ABCCMM' };
+    if (has('livro', 'mm5', 'mm6', 'definitivo', 'registro')) return { t: 'O campo "Livro" do relatório indica a categoria em que o animal está inscrito no registro genealógico, por exemplo "MM6 - Definitivo Fechado Fêmea". Animais sem livro e sem número de registro geram a pendência "Registro ABCCMM pendente". Na versão final, o assistente explicará cada categoria citando o artigo do Regulamento do Registro Genealógico.', f: 'Relatório de Plantel ABCCMM' };
+    if (has('plano', 'preco', 'mensal', 'cobran', 'pagar', 'gratis', 'gratuito')) { const n = st.animais.filter(a => a.vivo).length; return { t: 'O plano é gratuito até 3 animais. A partir do 4º, cobra-se por animal em faixas decrescentes. Com ' + n + ' animais ativos, a mensalidade simulada é ' + moeda(mensalidade(n)) + '. Os valores atuais são ilustrativos.', f: 'Plano Haras360' }; }
+    if (has('vermif', 'verme')) return { t: 'O padrão configurado é vermifugação a cada 90 dias a partir dos 2 meses de idade. Esse intervalo é um padrão de mercado e deve ser ajustado pelo veterinário, de preferência com base em exame de OPG (contagem de ovos nas fezes).', f: 'Padrão de mercado' };
+    if (has('dente', 'odonto', 'aparelho')) return { t: 'A avaliação odontológica está programada a cada 12 meses a partir dos 2 anos. Quando um aparelho dentário é registrado, o sistema agenda o retorno em 24 meses.', f: 'Padrão de mercado' };
+    if (has('ferra', 'casco')) return { t: 'O ferrageamento é agendado a cada 45 dias a partir do primeiro registro de ferrageamento do animal. Ajuste o intervalo em Protocolos conforme o ferrador.', f: 'Padrão de mercado' };
+    return { t: 'Ainda não tenho essa resposta na base atual. Na próxima versão, o assistente será treinado com o Estatuto e o Regulamento do Registro Genealógico da ABCCMM e responderá citando o artigo correspondente. Experimente perguntar sobre vacinas, gestação, transporte, DNA ou plano.', f: 'Demonstração' };
+  }
+
+  return {
+    hoje, dt, iso, addDias, addMeses, dias, br, brCurta, brParaIso, idadeMeses, idadeTxt, relativo, uid, esc, norm, moeda, mascaraCPF,
+    CATS, EVENTOS_REPRO, GESTACAO_DIAS, FAIXAS, LIMITE_ANIMAIS, STATUS_TXT, TIPOS_NOTIF,
+    mensalidade,
+    protocolo, animal, gestacao, tarefas, notificacoes, tituloRegistro, doseTxt,
+    linhasPDF, lerPlantel, compararImportacao, lerGenealogia, responder
+  };
+})();
+
+</script>
+<script>
+/* Haras360 · componentes de interface compartilhados pelos dois portais */
+const UI = (function () {
+  const { esc, br, brCurta, relativo } = H;
+  const $ = s => document.querySelector(s);
+
+  const I = (p, extra) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"' + (extra || '') + '>' + p + '</svg>';
+  const ICON = {
+    plus: I('<path d="M12 5v14M5 12h14"/>'),
+    home: I('<path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/>'),
+    horse: I('<path d="M5 20l2-6c-1-2-1-4 1-6l3-3 1 2 3-1c2 0 4 2 4 4l1 3-2 1-2-2-2 2v6"/><path d="M14 20v-4"/>'),
+    upload: I('<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>'),
+    cal: I('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),
+    rules: I('<path d="M4 6h10M4 12h16M4 18h7"/><circle cx="17" cy="6" r="2"/><circle cx="14" cy="18" r="2"/>'),
+    bell: I('<path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>'),
+    team: I('<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 15c3 0 5 2 5 4"/>'),
+    chat: I('<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>'),
+    card: I('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>'),
+    back: I('<path d="M15 5l-7 7 7 7"/>'),
+    cam: I('<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>'),
+    check: I('<path d="M5 12l5 5 9-10"/>'),
+    file: I('<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>'),
+    send: I('<path d="M4 12l16-8-6 16-3-6z"/>'),
+    alert: I('<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/>')
+  };
+
+  /* ---------- toast e modal ---------- */
+  let tt;
+  function toast(msg) {
+    let t = $('#toast');
+    t.textContent = msg; t.hidden = false;
+    clearTimeout(tt); tt = setTimeout(() => { t.hidden = true; }, 4200);
+  }
+  let onClose = null;
+  function abrir({ titulo, corpo, rodape, largo }) {
+    const m = $('#modal');
+    m.innerHTML = '<div class="sheet' + (largo ? ' wide' : '') + '" role="dialog" aria-modal="true" aria-labelledby="mt"><header><h2 id="mt">' + titulo + '</h2><button class="x" data-act="fechar" aria-label="Fechar">×</button></header><div class="sbody">' + corpo + '</div>' + (rodape ? '<footer>' + rodape + '</footer>' : '') + '</div>';
+    m.hidden = false;
+    document.body.style.overflow = 'hidden';
+    const f = m.querySelector('input:not([type=hidden]):not([type=checkbox]),select,textarea');
+    if (f) setTimeout(() => f.focus(), 30);
+    return m;
+  }
+  function fechar() { const m = $('#modal'); m.hidden = true; m.innerHTML = ''; document.body.style.overflow = ''; if (onClose) { const f = onClose; onClose = null; f(); } }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#modal').hidden) fechar(); });
+  document.addEventListener('click', e => { if (e.target.id === 'modal') fechar(); });
+
+  /* ---------- tons ---------- */
+  const TOM = { atrasado: 'c-late', hoje: 'c-soon', semana: 'c-soon', mes: 'c-ok', futuro: 'c-muted', pendente: 'c-info' };
+  const TOMCAT = t => 'c-' + ((H.CATS[t] || {}).tom || 'muted');
+  function chipStatus(s) { return '<span class="chip ' + TOM[s] + '">' + H.STATUS_TXT[s] + '</span>'; }
+  function chipCat(c) { return '<span class="chip nodot ' + TOMCAT(c) + '">' + esc((H.CATS[c] || { nome: c }).nome) + '</span>'; }
+
+  /* ---------- linha de tarefa ---------- */
+  function linhaTarefa(t, o) {
+    o = o || {};
+    const quando = t.doc ? '<b>Pend.</b>doc.' : '<b>' + brCurta(t.due) + '</b>' + relativo(t.due);
+    const animal = o.semAnimal ? '' : '<a href="#" data-act="ver-animal" data-id="' + t.animalId + '">' + esc(t.animal) + '</a> · ';
+    const acao = t.doc ? '' : t.parto ? '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(t.id) + '">Registrar parto</button>' : '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(t.id) + '">' + ICON.check + 'Registrar</button>';
+    return '<div class="task ' + t.status + '"><span class="bar"></span><div class="when">' + quando + '</div><div class="what"><div class="row" style="gap:8px"><strong>' + esc(t.titulo) + '</strong><span class="chip nodot c-muted">' + esc(t.etapa) + '</span>' + (t.status === 'atrasado' ? '<span class="chip c-late">Atrasado</span>' : '') + '</div><div class="sub">' + animal + esc(t.nota || '') + '</div></div><div class="act">' + acao + '</div></div>';
+  }
+
+  /* ---------- prontuário ---------- */
+  function linhaTempo(st, regs, o) {
+    o = o || {};
+    if (!regs.length) return '<div class="empty">Nenhum registro nesta categoria.</div>';
+    return '<div class="timeline">' + regs.map(r => {
+      const meta = [];
+      const dose = H.doseTxt(r.dose); if (r.tipo === 'vacina' && dose) meta.push(dose);
+      if (r.produto) meta.push('Produto: ' + esc(r.produto));
+      if (r.lote) meta.push('Lote <span class="mono">' + esc(r.lote) + '</span>');
+      if (r.ferrador) meta.push('Ferrador: ' + esc(r.ferrador));
+      if (r.resultado) meta.push('Resultado: ' + esc(r.resultado));
+      if (r.garanhao) meta.push('Garanhão: ' + esc(r.garanhao));
+      if (r.dataCobertura && r.evento === 'Diagnóstico positivo') meta.push('Cobertura em ' + br(r.dataCobertura));
+      if (r.gravidade) meta.push('Gravidade: ' + esc(r.gravidade));
+      const fotos = (r.fotos || []).length ? '<div class="thumbs">' + r.fotos.map((f, i) => '<button data-act="ver-foto" data-r="' + r.id + '" data-i="' + i + '" aria-label="Ampliar foto ' + (i + 1) + '"><img src="' + f + '" alt=""></button>').join('') + '</div>' : '';
+      const nome = o.comAnimal ? (() => { const a = H.animal(st, r.animalId); return a ? '<a href="#" data-act="ver-animal" data-id="' + a.id + '">' + esc(a.nome) + '</a> · ' : ''; })() : '';
+      const del = o.excluir ? '<button class="btn ghost sm danger" data-act="excluir-reg" data-id="' + r.id + '">Excluir</button>' : '';
+      return '<div class="ev"><div class="d">' + br(r.data) + '</div><div class="body"><div class="spread"><div class="row" style="gap:8px">' + chipCat(r.tipo) + '<strong>' + esc(H.tituloRegistro(st, r)) + '</strong></div>' + del + '</div>' + (meta.length ? '<div class="meta">' + meta.map(m => '<span>' + m + '</span>').join('') + '</div>' : '') + (r.obs ? '<p class="obs">' + esc(r.obs) + '</p>' : '') + fotos + '<div class="meta">' + nome + '<span>' + esc(r.autor) + ' · ' + esc(r.origem) + '</span></div></div></div>';
+    }).join('') + '</div>';
+  }
+
+  function verFoto(st, rid, i) {
+    const r = st.registros.find(x => x.id === rid); if (!r) return;
+    abrir({ titulo: esc(H.tituloRegistro(st, r)), corpo: '<img src="' + r.fotos[i] + '" alt="Foto do registro" style="border-radius:8px;width:100%"><p class="muted small">' + br(r.data) + ' · ' + esc(r.autor) + '</p>', largo: true });
+  }
+
+  /* ---------- fotos ---------- */
+  function comprimir(file, max, q) {
+    max = max || 1600; q = q || 0.8;
+    return new Promise((res, rej) => {
+      const fr = new FileReader();
+      fr.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const k = Math.min(1, max / Math.max(img.width, img.height));
+          const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          res(c.toDataURL('image/jpeg', q));
+        };
+        img.onerror = () => rej(new Error('Arquivo de imagem inválido'));
+        img.src = fr.result;
+      };
+      fr.onerror = () => rej(new Error('Não foi possível ler o arquivo'));
+      fr.readAsDataURL(file);
+    });
+  }
+
+  /* ---------- formulário de registro ---------- */
+  let fotosPend = [];
+  const OPC = (arr, sel) => arr.map(v => { const [val, lab] = Array.isArray(v) ? v : [v, v]; return '<option value="' + esc(val) + '"' + (String(val) === String(sel) ? ' selected' : '') + '>' + esc(lab) + '</option>'; }).join('');
+
+  function extras(st, tipo, p) {
+    p = p || {};
+    if (tipo === 'vacina') {
+      const vs = st.protocolos.filter(x => x.cat === 'vacina');
+      return '<div class="field full"><span class="lbl">Doenças cobertas (marque todas em vacinas multivalentes)</span><div class="checks">' + vs.map(v => '<label class="check"><input type="checkbox" name="prot" value="' + v.id + '"' + ((p.protocolos || []).includes(v.id) ? ' checked' : '') + '>' + esc(v.nome) + '</label>').join('') + '</div></div>' +
+        '<div class="field"><label for="f-dose">Dose</label><select id="f-dose" class="inp">' + OPC([[1, '1ª dose'], [2, '2ª dose'], [3, '3ª dose'], ['reforco', 'Reforço']], p.dose || 'reforco') + '</select></div>' +
+        '<div class="field"><label for="f-lote">Lote</label><input id="f-lote" class="inp" value="' + esc(p.lote || '') + '" placeholder="Ex.: RB2291"></div>' +
+        '<div class="field full"><label for="f-produto">Produto / marca</label><input id="f-produto" class="inp" value="' + esc(p.produto || '') + '" placeholder="Ex.: Trivalente tétano + encefalomielite + influenza"></div>';
+    }
+    if (tipo === 'vermifugacao') return '<div class="field full"><label for="f-produto">Vermífugo (princípio ativo)</label><input id="f-produto" class="inp" value="' + esc(p.produto || '') + '" placeholder="Ex.: Ivermectina + praziquantel"></div>';
+    if (tipo === 'odontologia') return '<div class="field full"><label for="f-proc">Procedimento</label><select id="f-proc" class="inp">' + OPC(['Avaliação', 'Avaliação e correção', 'Aparelho dentário instalado', 'Retorno de aparelho', 'Extração', 'Outro'], p.procedimento || ((p.protocolos || []).includes('aparelho') ? 'Retorno de aparelho' : 'Avaliação')) + '</select></div>';
+    if (tipo === 'ferrageamento') return '<div class="field full"><label for="f-ferrador">Ferrador</label><input id="f-ferrador" class="inp" value="' + esc(p.ferrador || '') + '"></div>';
+    if (tipo === 'exame') {
+      const sel = (p.protocolos || []).includes('aie') ? 'Anemia Infecciosa (AIE)' : (p.protocolos || []).includes('mormo') ? 'Mormo' : (p.exame || 'Anemia Infecciosa (AIE)');
+      return '<div class="field"><label for="f-exame">Exame</label><select id="f-exame" class="inp">' + OPC(['Anemia Infecciosa (AIE)', 'Mormo', 'Hemograma', 'Ultrassonografia', 'Raio-X', 'Outro'], sel) + '</select></div><div class="field"><label for="f-res">Resultado</label><input id="f-res" class="inp" value="' + esc(p.resultado || '') + '" placeholder="Ex.: Negativo"></div>';
+    }
+    if (tipo === 'reprodutivo') {
+      const machos = st.animais.filter(a => a.sexo === 'M').map(a => '<option value="' + esc(a.nome) + '">');
+      return '<div class="field"><label for="f-evento">Evento</label><select id="f-evento" class="inp">' + OPC(H.EVENTOS_REPRO, p.evento || 'Cobertura') + '</select></div><div class="field"><label for="f-garanhao">Garanhão</label><input id="f-garanhao" class="inp" list="dl-machos" value="' + esc(p.garanhao || '') + '"><datalist id="dl-machos">' + machos.join('') + '</datalist></div><div class="field"><label for="f-cob">Data da cobertura (diagnóstico positivo)</label><input id="f-cob" type="date" class="inp" value="' + esc(p.dataCobertura || '') + '"></div>';
+    }
+    if (tipo === 'ocorrencia') return '<div class="field"><label for="f-titulo">O que aconteceu</label><input id="f-titulo" class="inp" value="' + esc(p.titulo || '') + '" placeholder="Ex.: Mancando da pata traseira"></div><div class="field"><label for="f-grav">Gravidade</label><select id="f-grav" class="inp">' + OPC(['Leve', 'Moderada', 'Grave'], p.gravidade || 'Leve') + '</select></div>';
+    return '';
+  }
+
+  function formRegistro(st, pre, ctx) {
+    pre = pre || {}; fotosPend = [];
+    const tipos = Object.keys(H.CATS).filter(k => k !== 'documental');
+    const animais = st.animais.filter(a => a.vivo);
+    const tipo = pre.tipo || 'vacina';
+    const corpo = '<form id="fr" class="stack" novalidate><div class="fgrid">' +
+      '<div class="field"><label for="f-animal">Animal</label><select id="f-animal" class="inp">' + OPC(animais.map(a => [a.id, a.nome]), pre.animalId) + '</select></div>' +
+      '<div class="field"><label for="f-data">Data</label><input id="f-data" type="date" class="inp" value="' + (pre.data || H.iso(H.hoje())) + '" max="' + H.iso(H.hoje()) + '"></div>' +
+      '<div class="field full"><label for="f-tipo">Tipo de registro</label><select id="f-tipo" class="inp">' + OPC(tipos.map(k => [k, H.CATS[k].nome]), tipo) + '</select></div>' +
+      '</div><div id="f-extra" class="fgrid">' + extras(st, tipo, pre) + '</div>' +
+      '<div class="field"><label for="f-obs">Observações</label><textarea id="f-obs" class="inp" placeholder="Descreva o que foi feito ou observado">' + esc(pre.obs || '') + '</textarea></div>' +
+      '<div class="field"><span class="lbl">Fotos (até 4)</span><div class="row"><label class="btn" for="f-fotos">' + ICON.cam + 'Adicionar fotos</label><input id="f-fotos" type="file" accept="image/*" multiple hidden><span class="small muted" id="f-fstat">Nenhuma foto</span></div><div class="thumbs" id="f-thumbs"></div></div>' +
+      '<p class="note" id="f-erro" hidden></p></form>';
+    abrir({ titulo: pre.tituloModal || 'Novo registro no prontuário', corpo, rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-registro">' + ICON.check + 'Salvar registro</button>' });
+    $('#f-tipo').addEventListener('change', e => { $('#f-extra').innerHTML = extras(st, e.target.value, {}); });
+    $('#f-fotos').addEventListener('change', async e => {
+      const files = [...e.target.files].slice(0, 4 - fotosPend.length);
+      for (const f of files) { try { fotosPend.push(await comprimir(f)); } catch (err) { toast(err.message); } }
+      e.target.value = '';
+      desenharFotos();
+    });
+    formRegistro.ctx = ctx;
+  }
+  function desenharFotos() {
+    $('#f-thumbs').innerHTML = fotosPend.map((f, i) => '<button type="button" data-act="rem-foto" data-i="' + i + '" title="Remover foto" style="cursor:pointer"><img src="' + f + '" alt="Foto ' + (i + 1) + '"></button>').join('');
+    $('#f-fstat').textContent = fotosPend.length ? fotosPend.length + ' de 4 · toque para remover' : 'Nenhuma foto';
+  }
+  function remFoto(i) { fotosPend.splice(i, 1); desenharFotos(); }
+
+  function lerRegistro(st) {
+    const v = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+    const tipo = v('f-tipo');
+    const r = { id: H.uid(), animalId: v('f-animal'), data: v('f-data'), tipo, protocolos: [], dose: 'unica', obs: v('f-obs'), fotos: fotosPend.slice() };
+    const erro = m => { const e = $('#f-erro'); e.textContent = m; e.className = 'note bad'; e.hidden = false; return null; };
+    if (!r.animalId) return erro('Escolha o animal.');
+    if (!r.data) return erro('Informe a data do registro.');
+    if (r.data > H.iso(H.hoje())) return erro('A data não pode ser futura. Para agendar, o sistema calcula a próxima etapa automaticamente.');
+    if (tipo === 'vacina') {
+      r.protocolos = [...document.querySelectorAll('input[name=prot]:checked')].map(i => i.value);
+      if (!r.protocolos.length) return erro('Marque ao menos uma doença coberta pela vacina.');
+      const d = v('f-dose'); r.dose = d === 'reforco' ? 'reforco' : Number(d);
+      r.produto = v('f-produto'); r.lote = v('f-lote');
+    } else if (tipo === 'vermifugacao') { r.protocolos = ['vermi']; r.produto = v('f-produto'); }
+    else if (tipo === 'odontologia') { r.procedimento = v('f-proc'); r.protocolos = /aparelho/i.test(r.procedimento) ? ['aparelho'] : ['odonto']; }
+    else if (tipo === 'ferrageamento') { r.protocolos = ['ferrag']; r.ferrador = v('f-ferrador'); }
+    else if (tipo === 'exame') { r.exame = v('f-exame'); r.resultado = v('f-res'); if (/AIE/.test(r.exame)) r.protocolos = ['aie']; if (/Mormo/.test(r.exame)) r.protocolos = ['mormo']; }
+    else if (tipo === 'reprodutivo') {
+      r.evento = v('f-evento'); r.garanhao = v('f-garanhao').toUpperCase(); r.dataCobertura = v('f-cob');
+      const a = H.animal(st, r.animalId);
+      if (a && a.sexo !== 'F' && r.evento !== 'Cobertura') return erro('Eventos de gestação só se aplicam a fêmeas.');
+      if (r.evento === 'Diagnóstico positivo' && !r.dataCobertura) return erro('Informe a data da cobertura para calcular a previsão de parto.');
+    } else if (tipo === 'ocorrencia') { r.titulo = v('f-titulo'); r.gravidade = v('f-grav'); if (!r.titulo) return erro('Descreva a ocorrência em poucas palavras.'); }
+    return r;
+  }
+
+  /* pré-preenche o formulário a partir de uma tarefa do motor de regras */
+  function preDeTarefa(t) {
+    if (t.parto) return { animalId: t.animalId, tipo: 'reprodutivo', evento: 'Parto', tituloModal: 'Registrar parto' };
+    return { animalId: t.animalId, tipo: t.cat, protocolos: t.protocoloId ? [t.protocoloId] : [], dose: t.dose, tituloModal: 'Registrar ' + t.titulo.toLowerCase() };
+  }
+
+  /* ---------- assistente ---------- */
+  const SUGS = ['Quais procedimentos estão atrasados?', 'Quando é o parto da Diva?', 'O que muda na vacina de raiva em região endêmica?', 'Quais exames preciso para transportar um cavalo?', 'Como vacinar uma égua gestante?', 'Perdi o prazo do reforço, o que fazer?'];
+  function chatHTML(hist, titulo, sub) {
+    return '<div class="card flush chat"><div style="padding:16px 18px;border-bottom:1px solid var(--line)"><h2>' + titulo + '</h2><p class="small muted">' + sub + '</p></div><div class="msgs" id="msgs">' +
+      hist.map(m => '<div class="msg ' + m.de + '">' + esc(m.t) + (m.f ? '<span class="src">Base: ' + esc(m.f) + '</span>' : '') + '</div>').join('') +
+      '</div>' + (hist.length <= 1 ? '<div class="sugs">' + SUGS.map(s => '<button type="button" data-act="sug" data-q="' + esc(s) + '">' + esc(s) + '</button>').join('') + '</div>' : '') +
+      '<form id="chat-f"><input id="chat-q" class="inp" placeholder="Pergunte sobre vacinas, normas, gestação ou o plantel" autocomplete="off"><button class="btn pri" aria-label="Enviar">' + ICON.send + '</button></form></div>';
+  }
+
+  return { ICON, toast, abrir, fechar, chipStatus, chipCat, linhaTarefa, linhaTempo, verFoto, formRegistro, lerRegistro, remFoto, preDeTarefa, chatHTML, comprimir, TOM, set onClose(f) { onClose = f; } };
+})();
+
+</script>
+<script>
+(function () {
+  let S = null;
+  const $ = s => document.querySelector(s);
+  const esc = H.esc, br = H.br, IC = UI.ICON;
+  let view = 'hoje', param = null, notifFiltro = 'todas';
+  let chat = [{ de: 'bot', t: 'Olá. Posso dizer o que está pendente no plantel, explicar a vacinação e tirar dúvidas do dia a dia.', f: 'Haras360' }];
+  async function recarregar() { S = await API.get('/api/estado'); }
+  async function executar(el, fn, ok) {
+    if (el && el.disabled) return null;
+    const txt = el ? el.innerHTML : '';
+    if (el) { el.disabled = true; el.innerHTML = 'Enviando...'; }
+    try { const r = await fn(); await recarregar(); if (ok !== false) UI.toast(typeof ok === 'string' ? ok : (r && r.resumo) || 'Salvo.'); return r || true; }
+    catch (e) { UI.toast(e.message); return null; }
+    finally { if (el && el.isConnected) { el.disabled = false; el.innerHTML = txt; } }
+  }
+  const avisos = () => H.notificacoes(S).filter(n => n.tipo !== 'campo' && n.tipo !== 'documental');
+  const naoLidos = () => avisos().filter(n => !S.lidas.includes(n.id)).length;
+
+  const NAV = [['hoje', 'Hoje', IC.home], ['animais', 'Animais', IC.horse], ['registrar', 'Registrar', IC.plus], ['avisos', 'Avisos', IC.bell], ['assistente', 'Assistente', IC.chat]];
+  function go(v, p) { view = v; param = p || null; render(); window.scrollTo(0, 0); }
+  function render() {
+    const nl = naoLidos();
+    $('#haras-n').textContent = 'Campo · ' + S.haras.nome; $('#me-n').textContent = S.usuario.nome;
+    $('#av').textContent = S.usuario.nome.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
+    $('#tnav').innerHTML = NAV.map(([id, l, ic]) => '<button data-act="' + (id === 'registrar' ? 'registrar' : 'nav') + '" data-v="' + id + '"' + ((view === id || (view === 'ficha' && id === 'animais')) ? ' aria-current="page"' : '') + '>' + ic + '<span>' + l + '</span>' + (id === 'avisos' && nl ? '<span class="badge">' + nl + '</span>' : '') + '</button>').join('');
+    const v = $('#view'); v.classList.remove('view-in'); void v.offsetWidth; v.classList.add('view-in');
+    v.innerHTML = VIEWS[view](param);
+    if (AFTER[view]) AFTER[view](param);
+  }
+
+  function vHoje() {
+    const ts = H.tarefas(S).filter(t => !t.doc);
+    const at = ts.filter(t => t.status === 'atrasado'), hj = ts.filter(t => t.status === 'hoje'), sm = ts.filter(t => t.status === 'semana');
+    const d = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const bloco = (tit, arr, vazio) => '<div class="card flush"><div class="card-h" style="padding:14px 16px 0"><h3>' + tit + '</h3><span class="small muted">' + arr.length + '</span></div><div class="tasks" style="padding:2px 16px 6px 0">' + (arr.length ? arr.map(t => UI.linhaTarefa(t)).join('') : '<div class="empty">' + vazio + '</div>') + '</div></div>';
+    return '<div class="sec"><div class="daybar"><div><div class="eyebrow">Tarefas do dia</div><h1 style="text-transform:capitalize">' + d + '</h1></div></div>' +
+      '<div class="cnt"><div class="late"><b>' + at.length + '</b><span>Atrasadas</span></div><div class="soon"><b>' + hj.length + '</b><span>Para hoje</span></div><div><b>' + sm.length + '</b><span>Próximos 7 dias</span></div></div>' +
+      '<div class="quick"><button data-act="registrar">' + IC.check + '<span>Novo registro<small>Vacina, vermífugo, casco, exame</small></span></button><button data-act="ocorrencia">' + IC.alert + '<span>Registrar ocorrência<small>Algo diferente com um animal</small></span></button></div>' +
+      bloco('Atrasadas', at, 'Nada atrasado. Bom trabalho.') + bloco('Para hoje', hj, 'Nada marcado para hoje.') + bloco('Próximos 7 dias', sm, 'Nada previsto para a semana.') + '</div>';
+  }
+
+  function vAnimais() {
+    const ts = H.tarefas(S);
+    return '<div class="sec"><div><div class="eyebrow">Plantel</div><h1>Animais</h1></div><div class="acards">' + S.animais.filter(a => a.vivo).map(a => {
+      const t = ts.filter(x => x.animalId === a.id && !x.doc);
+      const at = t.filter(x => x.status === 'atrasado').length, sm = t.filter(x => ['hoje', 'semana'].includes(x.status)).length;
+      const g = H.gestacao(S, a);
+      return '<button class="acard" data-act="ver-animal" data-id="' + a.id + '"><b>' + esc(a.nome) + '</b><span class="small muted">' + (a.sexo === 'F' ? 'Fêmea' : 'Macho') + ' · ' + H.idadeTxt(a.nascimento) + '</span><div class="row" style="gap:4px">' + (at ? '<span class="chip c-late">' + at + ' atrasada' + (at > 1 ? 's' : '') + '</span>' : '') + (sm ? '<span class="chip c-soon">' + sm + ' na semana</span>' : '') + (g ? '<span class="chip c-accent">Gestante ' + g.mes + 'º mês</span>' : '') + (!at && !sm ? '<span class="chip c-ok">Em dia</span>' : '') + '</div></button>';
+    }).join('') + '</div></div>';
+  }
+
+  function vFicha(id) {
+    const a = H.animal(S, id); if (!a) return '<div class="empty">Animal não encontrado.</div>';
+    const g = H.gestacao(S, a);
+    const ts = H.tarefas(S, { animalId: a.id }).filter(t => !t.doc && t.status !== 'futuro');
+    const regs = S.registros.filter(r => r.animalId === a.id).sort((x, y) => x.data < y.data ? 1 : -1);
+    return '<div class="sec"><div class="spread"><button class="btn ghost" data-act="nav" data-v="animais">' + IC.back + 'Animais</button><button class="btn pri" data-act="registrar" data-id="' + a.id + '">' + IC.plus + 'Registrar</button></div>' +
+      '<div><div class="eyebrow">' + (a.sexo === 'F' ? 'Fêmea' : 'Macho') + ' · ' + H.idadeTxt(a.nascimento) + '</div><h1>' + esc(a.nome) + '</h1></div>' +
+      '<div class="card"><dl class="facts"><div><dt>Registro</dt><dd class="mono">' + esc(a.registro || 'Sem registro') + '</dd></div><div><dt>Microchip</dt><dd class="mono">' + esc(a.chip || '-') + '</dd></div><div><dt>Nascimento</dt><dd>' + br(a.nascimento) + '</dd></div></dl>' +
+      (g ? '<div class="gest" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line-2)"><div class="spread"><b>Gestação</b><span class="chip c-accent">' + g.mes + 'º mês · ' + g.dias + ' dias</span></div><div class="gbar"><i style="width:' + g.pct + '%"></i></div><p class="small muted">Parto previsto para ' + br(g.parto) + ', ' + H.relativo(g.parto) + '.</p></div>' : '') + '</div>' +
+      '<div class="card flush"><div class="card-h" style="padding:14px 16px 0"><h3>A fazer</h3></div><div class="tasks" style="padding:2px 16px 6px 0">' + (ts.length ? ts.map(t => UI.linhaTarefa(t, { semAnimal: true })).join('') : '<div class="empty">Nada pendente nos próximos 30 dias.</div>') + '</div></div>' +
+      '<div class="card"><h3 style="margin-bottom:4px">Histórico</h3>' + UI.linhaTempo(S, regs) + '</div></div>';
+  }
+
+  function vAvisos() {
+    let ns = avisos(); if (notifFiltro === 'naolidas') ns = ns.filter(n => !S.lidas.includes(n.id));
+    return '<div class="sec"><div class="spread"><div><div class="eyebrow">Notificações</div><h1>Avisos</h1></div><button class="btn ghost sm" data-act="ler-todas">Marcar todos como lidos</button></div>' +
+      '<div class="seg" role="group" aria-label="Filtro"><button data-act="notif-f" data-f="todas" aria-pressed="' + (notifFiltro === 'todas') + '">Todos</button><button data-act="notif-f" data-f="naolidas" aria-pressed="' + (notifFiltro === 'naolidas') + '">Não lidos</button></div>' +
+      '<div class="card flush"><div style="padding:4px 16px 6px 0">' + (ns.length ? ns.map(n => { const lida = S.lidas.includes(n.id); return '<div class="notif ' + n.sev + (lida ? ' lida' : '') + '"><span class="bar"></span><div class="stack" style="gap:6px"><div><b>' + esc(n.titulo) + '</b><p class="small muted">' + esc(n.texto) + '</p></div><div class="row" style="gap:6px">' + (n.tarefa ? '<button class="btn sm" data-act="registrar-tarefa" data-id="' + esc(n.tarefa.id) + '">' + IC.check + 'Registrar</button>' : '<button class="btn sm" data-act="ver-animal" data-id="' + n.animalId + '">Ver animal</button>') + (lida ? '' : '<button class="btn ghost sm" data-act="ler" data-id="' + esc(n.id) + '">Marcar como lido</button>') + '</div></div></div>'; }).join('') : '<div class="empty">Nenhum aviso.</div>') + '</div></div>' +
+      '<p class="small muted">Com o aplicativo, estes avisos também chegarão como notificação no celular.</p></div>';
+  }
+
+  function vAssistente() { return UI.chatHTML(chat, 'Assistente', 'Pergunte sobre o que precisa ser feito, vacinação e cuidados com éguas gestantes.'); }
+  function perguntar(q) { q = (q || '').trim(); if (!q) return; chat.push({ de: 'me', t: q }); const r = H.responder(S, q); chat.push({ de: 'bot', t: r.t, f: r.f }); render(); }
+
+  const VIEWS = { hoje: vHoje, animais: vAnimais, ficha: vFicha, avisos: vAvisos, assistente: vAssistente };
+  const AFTER = {
+    assistente() {
+      const m = $('#msgs'); m.scrollTop = m.scrollHeight;
+      $('#chat-f').addEventListener('submit', e => { e.preventDefault(); perguntar($('#chat-q').value); setTimeout(() => { const q = $('#chat-q'); if (q) q.focus(); }, 0); });
+    }
+  };
+  const ACT = {
+    nav: el => go(el.dataset.v),
+    'ver-animal': el => { UI.fechar(); go('ficha', el.dataset.id); },
+    registrar: el => UI.formRegistro(S, { animalId: el.dataset.id || (view === 'ficha' ? param : undefined) }),
+    ocorrencia: () => UI.formRegistro(S, { tipo: 'ocorrencia', tituloModal: 'Registrar ocorrência' }),
+    'registrar-tarefa': el => { const t = H.tarefas(S).find(x => x.id === el.dataset.id); if (t) UI.formRegistro(S, UI.preDeTarefa(t)); },
+    fechar: () => UI.fechar(),
+    'rem-foto': el => UI.remFoto(Number(el.dataset.i)),
+    'ver-foto': el => UI.verFoto(S, el.dataset.r, Number(el.dataset.i)),
+    'salvar-registro': async el => {
+      const r = UI.lerRegistro(S); if (!r) return;
+      if (await executar(el, () => API.post('/api/registros', r))) { UI.fechar(); render(); }
+    },
+    'notif-f': el => { notifFiltro = el.dataset.f; render(); },
+    ler: async el => { if (await executar(el, () => API.post('/api/notificacoes/lidas', { ids: [el.dataset.id] }), false)) render(); },
+    'ler-todas': async el => { const ids = avisos().map(n => n.id).filter(id => !S.lidas.includes(id)); if (!ids.length) return; if (await executar(el, () => API.post('/api/notificacoes/lidas', { ids }), 'Avisos marcados como lidos.')) render(); },
+    'minha-senha': () => UI.abrir({ titulo: 'Alterar minha senha', corpo: '<form class="stack" novalidate><div class="field"><label for="m-atual">Senha atual</label><input id="m-atual" type="password" class="inp" autocomplete="current-password"></div><div class="field"><label for="m-nova">Nova senha (mín. 8)</label><input id="m-nova" type="password" class="inp" autocomplete="new-password"></div></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-minha-senha">Alterar</button>' }),
+    'salvar-minha-senha': async el => {
+      const n = document.getElementById('m-nova').value; if (n.length < 8) { UI.toast('A nova senha precisa ter pelo menos 8 caracteres.'); return; }
+      if (await executar(el, () => API.post('/api/me/senha', { atual: document.getElementById('m-atual').value, nova: n }), 'Senha alterada.')) UI.fechar();
+    },
+    sair: async () => { try { await API.post('/api/logout'); } catch (e) { } location.href = '/entrar'; },
+    sug: el => perguntar(el.dataset.q)
+  };
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-act]'); if (!el) return;
+    const f = ACT[el.dataset.act]; if (!f) return;
+    if (el.tagName === 'A' || el.closest('form')) e.preventDefault();
+    f(el, e);
+  });
+  (async () => {
+    $('#view').innerHTML = '<div class="empty">Carregando...</div>';
+    try { await recarregar(); render(); } catch (e) { $('#view').innerHTML = '<div class="note bad">' + esc(e.message) + '</div>'; }
+  })();
+})();
+</script>
+
+</body>
+</html>
