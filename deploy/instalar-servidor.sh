@@ -7,7 +7,13 @@
 # Sem perguntas (testes automatizados), por variáveis de ambiente:
 #   H360_ADMIN_NOME, H360_ADMIN_EMAIL, H360_ADMIN_SENHA   primeiro administrador
 #   H360_PORTA=8090        porta pública (Caddy)
+#   H360_PORTA_APP=8001    porta interna da aplicação (padrão: a primeira livre a partir de 8000)
 #   H360_SEM_SWAP=1        não cria swap      H360_SEM_FIREWALL=1  não mexe no firewall
+#   H360_SEM_FUSO=1        não ajusta o fuso da VM para America/Sao_Paulo
+#
+# A VM pode já ter outras aplicações (v1.1.1): o instalador usa uma porta interna livre,
+# acrescenta o Haras360 a um Caddy existente sem apagar a configuração dele e só cria a base
+# haras360 no MariaDB.
 #   H360_RESTAURAR=<pasta> restauração a partir de um backup (usado por restaurar-servidor.sh)
 set -euo pipefail
 PACOTE="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
@@ -16,7 +22,20 @@ exige_root
 
 VERSAO="$(tr -d ' \r\n' < "$PACOTE/VERSION")"
 PORTA="${H360_PORTA:-8090}"
-PORTA_APP=8000
+porta_em_uso() { ss -ltn 2>/dev/null | awk '{print $4}' | grep -Eq "[:.]$1\$"; }
+escolher_porta_app() {  # a pedida, ou a primeira livre de 8000 a 8099 (sem a porta pública)
+  local p
+  if [ -n "${H360_PORTA_APP:-}" ]; then
+    porta_em_uso "$H360_PORTA_APP" && falha "A porta interna $H360_PORTA_APP já está em uso."
+    echo "$H360_PORTA_APP"; return
+  fi
+  for p in $(seq 8000 8099); do
+    [ "$p" = "$PORTA" ] && continue
+    porta_em_uso "$p" || { echo "$p"; return; }
+  done
+  falha "Nenhuma porta interna livre entre 8000 e 8099. Informe uma com H360_PORTA_APP=..."
+}
+PORTA_APP="$(escolher_porta_app)" || exit 1
 REST="${H360_RESTAURAR:-}"
 gerar() { head -c 64 /dev/urandom | od -An -tx1 | tr -d ' \n' | head -c "$1"; }
 
@@ -25,6 +44,13 @@ gerar() { head -c 64 /dev/urandom | od -An -tx1 | tr -d ' \n' | head -c "$1"; }
 [ -L "$H360_ATUAL" ] && falha "O Haras360 já está instalado ($(versao_atual)). Para atualizar use: sudo haras360-update <pacote> <assinatura>"
 if ss -ltn 2>/dev/null | awk '{print $4}' | grep -Eq "[:.]$PORTA\$"; then falha "A porta $PORTA já está em uso. Rode com outra: sudo H360_PORTA=8091 $0"; fi
 info "Instalando o Haras360 $VERSAO em $(hostname) (Ubuntu $VERSION_ID)"
+[ "$PORTA_APP" = "8000" ] || aviso "A porta 8000 já está em uso por outra aplicação: o Haras360 vai usar a porta interna $PORTA_APP."
+
+# ---------- 0. fuso horário ----------
+FUSO="$(timedatectl show -p Timezone --value 2>/dev/null || true)"
+if [ -z "${H360_SEM_FUSO:-}" ] && { [ "$FUSO" = "Etc/UTC" ] || [ "$FUSO" = "UTC" ]; }; then
+  timedatectl set-timezone America/Sao_Paulo && info "Fuso da VM ajustado de UTC para America/Sao_Paulo (backup diário às 02:30 de Brasília)"
+fi
 
 # ---------- 1. swap ----------
 if [ -z "${H360_SEM_SWAP:-}" ]; then
@@ -60,6 +86,8 @@ install -d -m 700 -o root -g root "$H360_VARLIB"
 install -d -m 750 -o root -g "$H360_USUARIO" "$H360_ETC"
 
 # ---------- 4. banco ----------
+OUTRAS_BASES="$(mysql -N -e 'SHOW DATABASES' 2>/dev/null | grep -vxE 'information_schema|performance_schema|mysql|sys|haras360' | paste -sd, - || true)"
+[ -n "$OUTRAS_BASES" ] && aviso "O MariaDB já atende outras bases ($OUTRAS_BASES). Elas não são alteradas, mas o ajuste de memória do Haras360 vale para o servidor inteiro."
 info "Configurando o MariaDB para 1 GB de memória"
 install -m 644 "$PACOTE/deploy/mariadb/90-haras360.cnf" /etc/mysql/mariadb.conf.d/90-haras360.cnf
 systemctl enable mariadb >/dev/null 2>&1; systemctl restart mariadb
@@ -97,6 +125,12 @@ ENV
 fi
 chown root:"$H360_USUARIO" "$H360_ETC/haras360.env"; chmod 640 "$H360_ETC/haras360.env"
 PORTA="$(grep -E '^H360_PORTA=' "$H360_ETC/haras360.env" | cut -d= -f2)"; PORTA="${PORTA:-8090}"
+if [ -n "$REST" ]; then  # a porta interna do backup pode estar ocupada nesta VM
+  ANT="$(grep -E '^H360_PORTA_APP=' "$H360_ETC/haras360.env" | cut -d= -f2)"
+  if [ -z "$ANT" ] || porta_em_uso "$ANT"; then
+    sed -i '/^H360_PORTA_APP=/d' "$H360_ETC/haras360.env"; echo "H360_PORTA_APP=$PORTA_APP" >> "$H360_ETC/haras360.env"
+  else PORTA_APP="$ANT"; fi
+fi
 if [ ! -f "$H360_ETC/chave-publica.pem" ] && [ -f "$PACOTE/deploy/chave-publica.pem" ]; then
   install -m 644 "$PACOTE/deploy/chave-publica.pem" "$H360_ETC/chave-publica.pem"
 fi
@@ -132,10 +166,9 @@ fi
 # ---------- 8. banco e serviços ----------
 info "Aplicando migrações"
 ( set -a; . "$H360_ETC/haras360.env"; set +a; cd "$DEST/backend" && runuser -u "$H360_USUARIO" -- "$DEST/venv/bin/python" -m app.migracoes )
-sed -e "s/__PORTA__/$PORTA/" -e "s/__PORTA_APP__/$PORTA_APP/" "$DEST/deploy/caddy/Caddyfile.modelo" > /etc/caddy/Caddyfile
-install -d -m 755 -o caddy -g caddy /var/log/caddy 2>/dev/null || install -d -m 755 /var/log/caddy
+configurar_caddy "$DEST" "$PORTA" "$PORTA_APP"
 systemctl enable --now haras360.service haras360-tarefa.path haras360-backup.timer >/dev/null 2>&1
-systemctl restart haras360 caddy
+systemctl restart haras360; systemctl reload caddy 2>/dev/null || systemctl restart caddy
 aguardar_saude "$VERSAO" 90 || { journalctl -u haras360 -n 40 --no-pager; falha "A aplicação não respondeu. Veja o registro acima."; }
 
 # ---------- 9. firewall ----------

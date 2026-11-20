@@ -53,3 +53,59 @@ jobs:
           sudo journalctl -u haras360 -u haras360-tarefa -u haras360-backup -n 200 --no-pager || true
           sudo cat /var/lib/haras360/tarefa.log || true
           sudo ls -la /opt/haras360/releases /opt/haras360/compartilhado/backups || true
+
+  vm-compartilhada:
+    # A VM real do Haras360 já roda outra aplicação: porta 8000 ocupada, Caddy com outro site,
+    # MariaDB com outra base e fuso em UTC. O instalador precisa conviver com tudo isso (v1.1.1).
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preparar a VM com outra aplicação
+        run: |
+          sudo systemctl stop mysql || true
+          sudo apt-get purge -y -qq 'mysql-*' > /dev/null || true
+          sudo rm -rf /etc/mysql /var/lib/mysql
+          sudo timedatectl set-timezone Etc/UTC
+          sudo apt-get update -qq && sudo apt-get install -y -qq mariadb-server debian-keyring debian-archive-keyring apt-transport-https > /dev/null
+          sudo mysql -e "CREATE DATABASE caixaplat; CREATE TABLE caixaplat.leituras (id INT); INSERT INTO caixaplat.leituras VALUES (42);"
+          curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor --yes -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+          curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list > /dev/null
+          sudo apt-get update -qq && sudo apt-get install -y -qq caddy > /dev/null
+          printf ':8080 {\n\trespond "outra aplicacao" 200\n}\n' | sudo tee /etc/caddy/Caddyfile > /dev/null
+          sudo systemctl restart caddy
+          mkdir -p /tmp/outra && echo "caixaplat" > /tmp/outra/index.html
+          nohup python3 -m http.server 8000 --bind 0.0.0.0 --directory /tmp/outra > /dev/null 2>&1 &
+          sleep 2; curl -fs localhost:8000/ && curl -fs localhost:8080/
+
+      - name: Instalar o Haras360 ao lado dela
+        run: |
+          bash deploy/gerar-pacote.sh HEAD "$RUNNER_TEMP/dist"
+          mkdir -p "$RUNNER_TEMP/inst" && cp "$RUNNER_TEMP"/dist/haras360-*.tar.gz "$RUNNER_TEMP/inst/"
+          cd "$RUNNER_TEMP/inst" && tar xzf haras360-*.tar.gz
+          sudo H360_ADMIN_NOME="Admin CI" H360_ADMIN_EMAIL=admin@teste.local H360_ADMIN_SENHA=senha-de-teste-123 \
+               H360_SEM_SWAP=1 H360_SEM_FIREWALL=1 bash haras360-*/deploy/instalar-servidor.sh | tee "$RUNNER_TEMP/instalacao.log"
+
+      - name: As duas aplicações funcionam
+        run: |
+          set -x
+          curl -fs localhost:8090/api/saude | grep -q '"ok":true'
+          [ "$(curl -fs localhost:8000/)" = "caixaplat" ]
+          [ "$(curl -fs localhost:8080/)" = "outra aplicacao" ]
+          PORTA_APP="$(sudo grep '^H360_PORTA_APP=' /etc/haras360/haras360.env | cut -d= -f2)"
+          [ "$PORTA_APP" != "8000" ]
+          sudo grep -q '^import /etc/caddy/haras360.caddy' /etc/caddy/Caddyfile
+          sudo grep -q 'respond "outra aplicacao"' /etc/caddy/Caddyfile
+          ls /etc/caddy/Caddyfile.antes-haras360-*
+          [ "$(timedatectl show -p Timezone --value)" = "America/Sao_Paulo" ]
+          [ "$(sudo mysql -N -e 'SELECT id FROM caixaplat.leituras')" = "42" ]
+          grep -q "porta 8000 já está em uso" "$RUNNER_TEMP/instalacao.log"
+          grep -q "outras bases (caixaplat)" "$RUNNER_TEMP/instalacao.log"
+          sudo systemctl restart haras360 && sleep 6 && curl -fs localhost:8090/api/saude | grep -q '"ok":true'
+
+      - name: Registros
+        if: failure()
+        run: |
+          sudo cat /etc/caddy/Caddyfile /etc/caddy/haras360.caddy || true
+          sudo journalctl -u haras360 -u caddy -n 80 --no-pager || true

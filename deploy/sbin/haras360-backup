@@ -24,7 +24,7 @@ info "Copiando configuração, chaves e serviços"
 install -d "$D/config/etc-haras360" "$D/config/systemd" "$D/config/caddy" "$D/config/mariadb"
 cp -a "$H360_ETC/." "$D/config/etc-haras360/"
 cp -a /etc/systemd/system/haras360* "$D/config/systemd/" 2>/dev/null || true
-cp -a /etc/caddy/Caddyfile "$D/config/caddy/" 2>/dev/null || true
+cp -a /etc/caddy/Caddyfile /etc/caddy/haras360.caddy "$D/config/caddy/" 2>/dev/null || true
 cp -a /etc/mysql/mariadb.conf.d/90-haras360.cnf "$D/config/mariadb/" 2>/dev/null || true
 if [ -n "$VERSAO" ] && [ -f "$H360_PACOTES/haras360-$VERSAO.tar.gz" ]; then
   cp "$H360_PACOTES/haras360-$VERSAO.tar.gz"* "$D/"

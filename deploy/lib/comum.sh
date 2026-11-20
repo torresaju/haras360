@@ -92,3 +92,25 @@ instalar_scripts_do_release() {  # copia os scripts confiáveis do release para 
   for u in "$rel"/deploy/systemd/*; do install -m 644 "$u" "/etc/systemd/system/$(basename "$u")"; done
   systemctl daemon-reload
 }
+
+# Caddy: o site do Haras360 fica em /etc/caddy/haras360.caddy. Um Caddyfile que não é do
+# Haras360 (outra aplicação na VM) é preservado: ganha só a linha "import" e uma cópia de segurança.
+configurar_caddy() {  # configurar_caddy <pasta-da-versão> <porta-pública> <porta-interna>
+  local dest="$1" porta="$2" porta_app="$3" cf=/etc/caddy/Caddyfile copia
+  install -d -m 755 /etc/caddy
+  install -d -m 755 -o caddy -g caddy /var/log/caddy 2>/dev/null || install -d -m 755 /var/log/caddy
+  sed -e "s/__PORTA__/$porta/" -e "s/__PORTA_APP__/$porta_app/" "$dest/deploy/caddy/haras360.caddy.modelo" > /etc/caddy/haras360.caddy
+  if [ ! -s "$cf" ] || grep -q "Haras360 · gerado pelo instalador" "$cf"; then
+    cp "$dest/deploy/caddy/Caddyfile.modelo" "$cf"
+  elif ! grep -qE '^\s*import\s+/etc/caddy/haras360\.caddy' "$cf"; then
+    copia="$cf.antes-haras360-$(date +%Y%m%d-%H%M%S)"
+    cp -a "$cf" "$copia"
+    printf '\n# Haras360 (acrescentado pelo instalador; cópia do original em %s)\nimport /etc/caddy/haras360.caddy\n' "$copia" >> "$cf"
+    aviso "O Caddy já tinha outra configuração: ela foi mantida e ganhou só a linha 'import /etc/caddy/haras360.caddy' (cópia em $copia)."
+  fi
+  if command -v caddy >/dev/null && ! caddy validate --config "$cf" --adapter caddyfile >/dev/null 2>&1; then
+    [ -n "${copia:-}" ] && cp -a "$copia" "$cf"
+    caddy validate --config "$cf" --adapter caddyfile || true
+    falha "A configuração do Caddy ficou inválida e foi desfeita. Veja a mensagem acima."
+  fi
+}
