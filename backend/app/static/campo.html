@@ -265,6 +265,9 @@ main.wrapm{padding-inline:clamp(16px,3vw,32px);padding-block:24px 72px;max-width
 /* QR Codes (vínculo do app e instalação) */
 .qr-box{display:flex;justify-content:center;padding:12px;background:#fff;border:1px solid var(--line);border-radius:10px}
 .qr-box svg{width:min(240px,70vw);height:auto;display:block}
+.qr-pequeno svg{width:min(160px,50vw)}
+details.instalar-app{border:1px dashed var(--line);border-radius:10px;padding:10px 12px}
+details.instalar-app[open]{display:flex;flex-direction:column;gap:8px}
 ol.passos{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
 
 :root{--forest-accent:#e3ab6c}
@@ -985,10 +988,11 @@ const UI = (function () {
     const d0 = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }); const d = d0.charAt(0).toUpperCase() + d0.slice(1);
     const bloco = (tit, arr, vazio) => '<div class="card flush"><div class="card-h" style="padding:14px 16px 0"><h3>' + tit + '</h3><span class="small muted">' + arr.length + '</span></div><div class="tasks" style="padding:2px 16px 6px 0">' + (arr.length ? arr.map(t => UI.linhaTarefa(t)).join('') : '<div class="empty">' + vazio + '</div>') + '</div></div>';
     return '<div class="sec"><div class="daybar"><div><div class="eyebrow">Tarefas do dia</div><h1>' + d + '</h1></div></div>' +
+      '<div class="card app-card"><div><h3>Trabalhe sem internet</h3><p class="small muted">Com o app Android, você registra no pasto e envia quando chegar ao Wi-Fi.</p></div><button class="btn pri" data-act="instalar-app">Instalar o app Android</button></div>' +
       '<div class="cnt"><div class="late"><b>' + at.length + '</b><span>Atrasadas</span></div><div class="soon"><b>' + hj.length + '</b><span>Para hoje</span></div><div><b>' + sm.length + '</b><span>Próximos 7 dias</span></div></div>' +
       '<div class="quick"><button data-act="registrar">' + IC.check + '<span>Novo registro<small>Vacina, vermífugo, casco, exame</small></span></button><button data-act="ocorrencia">' + IC.alert + '<span>Registrar ocorrência<small>Algo diferente com um animal</small></span></button></div>' +
       bloco('Atrasadas', at, 'Nada atrasado. Bom trabalho.') + bloco('Para hoje', hj, 'Nada marcado para hoje.') + bloco('Próximos 7 dias', sm, 'Nada previsto para a semana.') +
-      '<div class="card app-card"><div><h3>Trabalhe sem internet</h3><p class="small muted">Com o app Android, você registra no pasto e envia quando chegar ao Wi-Fi.</p></div><button class="btn" data-act="instalar-app">Instalar o app Android</button></div></div>';
+      '</div>';
   }
 
   function vAnimais() {

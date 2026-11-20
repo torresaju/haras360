@@ -177,7 +177,8 @@ def exige_2fa(u: Usuario):
 
 
 def qr_svg(uri):
-    return segno.make(uri, error="m").svg_inline(scale=5, dark="#1b231e", light="#ffffff", border=2)
+    # viewBox (omitsize) deixa o QR Code escalar com o CSS sem cortar as bordas.
+    return segno.make(uri, error="m").svg_inline(scale=5, dark="#1b231e", light="#ffffff", border=4, omitsize=True)
 
 
 def novo_segredo():
