@@ -9,6 +9,7 @@ from sqlalchemy import select
 from .config import FOTOS_DIR, VERSAO
 from .migracoes import migrar
 from .rotas_admin import r as rotas_admin
+from .imagens import r as rotas_imagens
 from .rotas_app import r as rotas_app
 from .rotas_auth import r as rotas_auth
 from .rotas_haras import r as rotas_haras
@@ -54,6 +55,7 @@ app.include_router(rotas_auth)
 app.include_router(rotas_haras)
 app.include_router(rotas_admin)
 app.include_router(rotas_app)
+app.include_router(rotas_imagens)
 
 
 def _pagina(nome):

@@ -194,3 +194,14 @@ class Audio(Base):
     arquivo: Mapped[str] = mapped_column(String(60))
     duracao: Mapped[int] = mapped_column(Integer, default=0)
     criado_em: Mapped[datetime] = mapped_column(DateTime, default=agora)
+
+
+class ImagemMarca(Base):
+    """Imagem de personalização (v1.3.0): da plataforma (haras_id nulo) ou de um haras."""
+    __tablename__ = "imagens_marca"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    haras_id: Mapped[int] = mapped_column(Integer, nullable=True, index=True)
+    tipo: Mapped[str] = mapped_column(String(20))
+    arquivo: Mapped[str] = mapped_column(String(80))
+    foco: Mapped[str] = mapped_column(String(10), default="centro")
+    atualizado_em: Mapped[datetime] = mapped_column(DateTime, default=agora)

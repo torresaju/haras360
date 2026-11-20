@@ -19,7 +19,7 @@ DB_NAME="$(grep -E '^H360_DB_NOME=' "$H360_ETC/haras360.env" | cut -d= -f2)"; DB
 info "Exportando o banco $DB_NAME"
 mysqldump --single-transaction --quick --routines --default-character-set=utf8mb4 "$DB_NAME" | gzip -6 > "$D/banco.sql.gz"
 info "Copiando fotos e logotipos"
-( cd "$H360_COMP" && tar -czf "$D/fotos.tar.gz" fotos $( [ -d logos ] && echo logos ) )
+( cd "$H360_COMP" && tar -czf "$D/fotos.tar.gz" fotos $( [ -d logos ] && echo logos ) $( [ -d imagens ] && echo imagens ) )
 info "Copiando configuração, chaves e serviços"
 install -d "$D/config/etc-haras360" "$D/config/systemd" "$D/config/caddy" "$D/config/mariadb"
 cp -a "$H360_ETC/." "$D/config/etc-haras360/"
