@@ -10,6 +10,7 @@ from .config import FOTOS_DIR, VERSAO
 from .migracoes import migrar
 from .rotas_admin import r as rotas_admin
 from .imagens import r as rotas_imagens
+from .relatorios import r as rotas_relatorios
 from .rotas_app import r as rotas_app
 from .rotas_auth import r as rotas_auth
 from .rotas_haras import r as rotas_haras
@@ -56,6 +57,7 @@ app.include_router(rotas_haras)
 app.include_router(rotas_admin)
 app.include_router(rotas_app)
 app.include_router(rotas_imagens)
+app.include_router(rotas_relatorios)
 
 
 def _pagina(nome):

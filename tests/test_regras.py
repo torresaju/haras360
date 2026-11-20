@@ -122,3 +122,49 @@ def test_multivalente_atualiza_todas_as_doencas():
     regs = [reg(d(-10), "vacina", ["tetano", "encefalo", "influenza"])]
     for pid in ("tetano", "encefalo", "influenza"):
         assert R.proxima_etapa(HARAS, a, prots(pid)[0], regs)["due"] == d(355)
+
+
+# ---------------- cio (v1.4.0) ----------------
+CIO = {"previsaoCio": True, "cicloDias": 21, "cioPotroDe": 7, "cioPotroAte": 12}
+
+
+def _cio(regs, haras=CIO):
+    return next((t for t in R.tarefas(haras, [animal("2015-01-01")], regs, []) if t.get("cio")), None)
+
+
+def test_previsao_do_proximo_cio_pelo_ciclo():
+    t = _cio([reg(d(-5), "reprodutivo", evento="Cio", sinais="Aceita o rufião")])
+    assert t["due"] == d(16) and t["titulo"] == "Observar cio"
+
+
+def test_previsao_atrasada_poucos_dias_e_depois_passa_ao_ciclo_seguinte():
+    assert _cio([reg(d(-22), "reprodutivo", evento="Cio")])["due"] == d(-1)
+    assert _cio([reg(d(-26), "reprodutivo", evento="Cio")])["due"] == d(16)
+
+
+def test_ciclo_parametrizado_e_previsao_desligada():
+    assert _cio([reg(d(-5), "reprodutivo", evento="Cio")], dict(CIO, cicloDias=24))["due"] == d(19)
+    assert _cio([reg(d(-5), "reprodutivo", evento="Cio")], dict(CIO, previsaoCio=False)) is None
+    assert _cio([reg(d(-5), "reprodutivo", evento="Cio")], HARAS) is None  # motor do protótipo: sem previsão
+
+
+def test_cobertura_mantem_previsao_ate_diagnostico_positivo():
+    assert _cio([reg(d(-10), "reprodutivo", evento="Cobertura")])["due"] == d(11)
+    regs = [reg(d(-30), "reprodutivo", evento="Cobertura"), reg(d(-5), "reprodutivo", evento="Diagnóstico positivo", dataCobertura=d(-30))]
+    assert _cio(regs) is None
+    regs.append(reg(d(-1), "reprodutivo", evento="Diagnóstico negativo"))
+    assert _cio(regs) is not None
+
+
+def test_cio_do_potro_e_ciclo_depois_da_janela():
+    t = _cio([reg(d(-3), "reprodutivo", evento="Parto")])
+    assert t["titulo"] == "Cio do potro" and t["due"] == d(4)
+    assert _cio([reg(d(-9), "reprodutivo", evento="Parto")])["due"] == d(0)  # dentro da janela: hoje
+    t = _cio([reg(d(-20), "reprodutivo", evento="Parto")])
+    assert t["titulo"] == "Observar cio" and t["due"] == d(8)  # 7º dia + 21
+
+
+def test_macho_e_animal_baixado_sem_previsao():
+    assert not [t for t in R.tarefas(CIO, [animal("2015-01-01", sexo="M")], [reg(d(-5), "reprodutivo", evento="Cobertura")], []) if t.get("cio")]
+    a = animal("2015-01-01", baixa={"data": d(-1), "motivo": "Venda"})
+    assert R.tarefas(CIO, [a], [reg(d(-5), "reprodutivo", evento="Cio")], prots()) == []

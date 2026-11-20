@@ -14,6 +14,7 @@ MODULOS = {
     "assistente": "Assistente ABCCMM",
     "caseiro": "Usuário caseiro (app e Portal Campo)",
     "audio": "Áudio nos registros do app",
+    "relatorios": "Relatórios e exportação",
 }
 
 PADRAO_GLOBAL = {
@@ -40,6 +41,11 @@ PADRAO_GLOBAL = {
 PADRAO_HARAS = {
     "gestacaoDias": 340,
     "toleranciaReinicio": 15,
+    # Reprodução (v1.4.0): previsão do cio e janela do cio do potro
+    "previsaoCio": True,
+    "cicloDias": 21,
+    "cioPotroDe": 7,
+    "cioPotroAte": 12,
 }
 
 LIMITES = {
@@ -50,6 +56,9 @@ LIMITES = {
     "audio_max_seg": (15, 300),
     "gestacaoDias": (300, 380),
     "toleranciaReinicio": (0, 90),
+    "cicloDias": (18, 25),
+    "cioPotroDe": (5, 15),
+    "cioPotroAte": (6, 20),
 }
 
 
@@ -176,9 +185,11 @@ def validar_global(body, atual):
 
 def validar_haras(body):
     novo = {}
-    for k in ("gestacaoDias", "toleranciaReinicio"):
+    for k in ("gestacaoDias", "toleranciaReinicio", "cicloDias", "cioPotroDe", "cioPotroAte"):
         if k in body:
             novo[k] = _int(k, body[k])
+    if "previsaoCio" in body:
+        novo["previsaoCio"] = bool(body["previsaoCio"])
     return novo
 
 

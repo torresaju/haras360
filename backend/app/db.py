@@ -117,6 +117,11 @@ class Animal(Base):
     origem: Mapped[str] = mapped_column(String(40), default="Cadastro manual")
     importado_em: Mapped[object] = mapped_column(Date, nullable=True)
     criado_em: Mapped[datetime] = mapped_column(DateTime, default=agora)
+    # Baixa do plantel (v1.4.0): venda, morte, doação ou transferência
+    baixa_data: Mapped[object] = mapped_column(Date, nullable=True)
+    baixa_motivo: Mapped[str] = mapped_column(String(20), nullable=True)
+    baixa_destino: Mapped[str] = mapped_column(String(160), nullable=True)
+    baixa_obs: Mapped[str] = mapped_column(Text, nullable=True)
 
 
 class Registro(Base):

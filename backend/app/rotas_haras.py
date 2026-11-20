@@ -51,7 +51,9 @@ def origem_de(request: Request):
 def animal_out(a: Animal):
     return {"id": a.id, "nome": a.nome, "livro": a.livro or "", "registro": a.registro or "", "sexo": a.sexo, "bloqueado": bool(a.bloqueado), "vivo": bool(a.vivo),
             "dna": a.dna or "", "nascimento": _iso(a.nascimento), "chip": a.chip or "", "pelagem": a.pelagem or "", "genealogia": a.genealogia or {},
-            "origem": a.origem or "", "importadoEm": _iso(a.importado_em)}
+            "origem": a.origem or "", "importadoEm": _iso(a.importado_em), "criadoEm": _iso(a.criado_em.date() if a.criado_em else None),
+            "baixa": ({"data": _iso(a.baixa_data), "motivo": a.baixa_motivo or "", "destino": a.baixa_destino or "", "obs": a.baixa_obs or ""}
+                      if a.baixa_data else None)}
 
 
 def _dose_out(v):
@@ -146,7 +148,7 @@ def _aplicar_animal(a: Animal, b: dict, db, haras_id, limite):
         dup = db.scalar(select(Animal).where(Animal.haras_id == haras_id, Animal.registro == registro, Animal.id != (a.id or "")))
         if dup:
             erro(409, f"O registro {registro} já pertence a {dup.nome}.")
-    vivo = bool(b.get("vivo", True))
+    vivo = bool(b.get("vivo", True)) and not a.baixa_data  # animal baixado continua fora do plantel ativo
     if vivo and (a.vivo is not True) and len(_ativos(db, haras_id, a.id)) >= limite:
         erro(400, f"O plano deste haras atende até {limite} animais ativos.")
     a.nome, a.sexo, a.nascimento, a.registro, a.vivo = nome, sexo, nasc, registro, vivo
@@ -196,6 +198,7 @@ def importar(request: Request, body: dict = Body(...), u: Usuario = Depends(gest
     norm = lambda s: re.sub(r"\s+", " ", (s or "").strip().upper())  # noqa: E731
     ativos = len([a for a in existentes if a.vivo])
     novos = atual = 0
+    baixados = []
     for n in lst:
         reg, chip, nome = _txt(n.get("registro"), 20), _txt(n.get("chip"), 30), norm(n.get("nome"))
         ex = next((a for a in existentes if (reg and a.registro == reg) or (chip and a.chip == chip) or norm(a.nome) == nome), None)
@@ -213,6 +216,8 @@ def importar(request: Request, body: dict = Body(...), u: Usuario = Depends(gest
             _aplicar_animal(ex, dict(n, genealogia=ex.genealogia or {}, pelagem=ex.pelagem), db, u.haras_id, limite)
             ex.importado_em = impresso
             atual += 1
+            if ex.baixa_data:
+                baixados.append(ex.nome)
     if body.get("associado"):
         h.associado_abccmm = _txt(body.get("associado"), 160)
     arquivo = _txt(body.get("arquivo"), 200)
@@ -220,12 +225,61 @@ def importar(request: Request, body: dict = Body(...), u: Usuario = Depends(gest
                       novos=novos, atualizados=atual))
     auditar(db, "importacao", usuario=u, alvo=arquivo, detalhe={"novos": novos, "atualizados": atual}, request=request)
     db.commit()
-    return {"novos": novos, "atualizados": atual, "resumo": f"{novos} animal(is) importado(s) e {atual} atualizado(s). A agenda sanitária foi recalculada."}
+    resumo = f"{novos} animal(is) importado(s) e {atual} atualizado(s). A agenda sanitária foi recalculada."
+    if baixados:
+        resumo += f" Continuam baixados (fora do plantel ativo): {', '.join(baixados)}."
+    return {"novos": novos, "atualizados": atual, "baixados": baixados, "resumo": resumo}
+
+
+# ---------------- baixa do plantel (v1.4.0) ----------------
+def _animal_do_haras(db, aid, u):
+    a = db.get(Animal, aid)
+    if not a or a.haras_id != u.haras_id:
+        erro(404, "Animal não encontrado.")
+    return a
+
+
+@r.post("/api/animais/{aid}/baixa")
+def dar_baixa(aid: str, request: Request, body: dict = Body(...), u: Usuario = Depends(gestor), db=Depends(get_db)):
+    a = _animal_do_haras(db, aid, u)
+    if a.baixa_data:
+        erro(400, f"{a.nome} já está baixado desde {R.br(a.baixa_data)}.")
+    data = _data(body.get("data"), "a data da baixa")
+    if data > R.hoje():
+        erro(400, "A data da baixa não pode ser futura.")
+    if a.nascimento and data < a.nascimento:
+        erro(400, "A data da baixa não pode ser anterior ao nascimento.")
+    motivo = _txt(body.get("motivo"), 20)
+    if motivo not in R.MOTIVOS_BAIXA:
+        erro(400, "Escolha o motivo: venda, morte, doação ou transferência.")
+    a.baixa_data, a.baixa_motivo = data, motivo
+    a.baixa_destino, a.baixa_obs = _txt(body.get("destino"), 160), _txt(body.get("obs"), 2000)
+    a.vivo = False
+    auditar(db, "animal_baixa", usuario=u, alvo=a.nome, detalhe={"data": _iso(data), "motivo": motivo, "destino": a.baixa_destino}, request=request)
+    db.commit()
+    return {"resumo": f"Baixa de {a.nome} registrada ({motivo.lower()} em {R.br(data)}). O animal saiu do plantel ativo e da agenda."}
+
+
+@r.delete("/api/animais/{aid}/baixa")
+def desfazer_baixa(aid: str, request: Request, u: Usuario = Depends(gestor), db=Depends(get_db)):
+    a = _animal_do_haras(db, aid, u)
+    if not a.baixa_data:
+        erro(400, f"{a.nome} não está baixado.")
+    limite = _limite(db, u.haras_id)
+    if len(_ativos(db, u.haras_id, a.id)) >= limite:
+        erro(400, f"O plano deste haras atende até {limite} animais ativos.")
+    detalhe = {"data": _iso(a.baixa_data), "motivo": a.baixa_motivo, "destino": a.baixa_destino}
+    a.baixa_data = a.baixa_motivo = a.baixa_destino = a.baixa_obs = None
+    a.vivo = True
+    auditar(db, "animal_baixa_desfeita", usuario=u, alvo=a.nome, detalhe=detalhe, request=request)
+    db.commit()
+    return {"resumo": f"{a.nome} voltou ao plantel ativo. A agenda foi recalculada."}
 
 
 # ---------------- registros e fotos ----------------
 CAMPOS_DADOS = {"produto": 160, "lote": 40, "ferrador": 120, "resultado": 120, "exame": 80, "procedimento": 80, "evento": 40, "garanhao": 160,
-                "dataCobertura": 10, "titulo": 160, "gravidade": 20}
+                "dataCobertura": 10, "titulo": 160, "gravidade": 20, "sinais": 200, "ovario": 10, "foliculo": 3, "edema": 1}
+OVARIOS = ("Esquerdo", "Direito")
 ASSINATURAS = {b"\xff\xd8\xff": "jpg", b"\x89PNG": "png", b"RIFF": "webp"}
 ID_CLIENTE = re.compile(r"^[A-Za-z0-9-]{8,40}$")
 
@@ -279,7 +333,7 @@ def criar_registro(request: Request, body: dict = Body(...), u: Usuario = Depend
     dose = str(body.get("dose") or "unica")
     if dose not in ("1", "2", "3", "reforco", "unica"):
         erro(400, "Dose inválida.")
-    dados = {k: _txt(body.get(k), n) for k, n in CAMPOS_DADOS.items() if body.get(k)}
+    dados = {k: _txt(body.get(k), n) for k, n in CAMPOS_DADOS.items() if body.get(k) not in (None, "")}
     if tipo == "reprodutivo":
         if dados.get("evento") not in R.EVENTOS_REPRO:
             erro(400, "Evento reprodutivo inválido.")
@@ -289,6 +343,16 @@ def criar_registro(request: Request, body: dict = Body(...), u: Usuario = Depend
             cob = _data(dados.get("dataCobertura"), "a data da cobertura")
             if cob > data:
                 erro(400, "A cobertura deve ser anterior ao diagnóstico.")
+        if dados["evento"] == "Cio":
+            if dados.get("ovario") and dados["ovario"] not in OVARIOS:
+                erro(400, "Ovário deve ser esquerdo ou direito.")
+            if dados.get("foliculo") and not (dados["foliculo"].isdigit() and 5 <= int(dados["foliculo"]) <= 80):
+                erro(400, "Tamanho do folículo deve ficar entre 5 e 80 mm.")
+            if dados.get("edema") and dados["edema"] not in ("0", "1", "2", "3"):
+                erro(400, "Edema uterino deve ser de 0 a 3.")
+        else:
+            for k in ("sinais", "ovario", "foliculo", "edema"):
+                dados.pop(k, None)
         dados["garanhao"] = dados.get("garanhao", "").upper()
     if tipo == "ocorrencia" and not dados.get("titulo"):
         erro(400, "Descreva a ocorrência em poucas palavras.")
@@ -418,7 +482,11 @@ def editar_haras(request: Request, body: dict = Body(...), u: Usuario = Depends(
         if k in body and _txt(body[k], 120):
             setattr(h, k, _txt(body[k], 120))
     try:
-        for k, v in P.validar_haras(body).items():
+        novos = P.validar_haras(body)
+        de, ate = novos.get("cioPotroDe", antes["cioPotroDe"]), novos.get("cioPotroAte", antes["cioPotroAte"])
+        if de > ate:
+            raise ValueError("A janela do cio do potro precisa começar antes de terminar.")
+        for k, v in novos.items():
             P.gravar(db, k, v, h.id)
     except ValueError as e:
         erro(400, str(e))

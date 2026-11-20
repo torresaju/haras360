@@ -15,7 +15,7 @@ NOME_HARAS = "Haras Demonstração"
 
 def _r(db, hid, aid, data, tipo, autor, origem, n, **kw):
     dados = {k: kw.pop(k) for k in list(kw) if k in ("produto", "lote", "ferrador", "resultado", "exame", "procedimento", "evento", "garanhao",
-                                                      "dataCobertura", "titulo", "gravidade")}
+                                                      "dataCobertura", "titulo", "gravidade", "sinais", "ovario", "foliculo", "edema")}
     db.add(Registro(id=f"demo{n:04d}", haras_id=hid, animal_id=aid, data=R.d(data), tipo=tipo, protocolos=kw.get("protocolos", []),
                     dose=str(kw.get("dose", "unica")), obs=kw.get("obs", ""), dados=dados, autor=autor, origem=origem))
 
@@ -34,11 +34,14 @@ def criar(db, gestor_email, gestor_senha, caseiro_email, caseiro_senha):
         ("d3", "CANELA DO RIACHO", "MM6 - DEFINITIVO FECHADO FÊMEA", "0900103", "F", "DNA - VP", "2022-05-18", "900000000000103"),
         ("d4", "DOURADO DA CAATINGA", "", "", "M", "Sem exame", "2026-02-20", "900000000000104"),
         ("d5", "ESTRELO DO SERTÃO", "MM5 - DEFINITIVO FECHADO MACHO", "090105", "M", "DNA - VP", "2021-11-30", "900000000000105"),
+        ("d6", "FAROL DA VEREDA", "MM5 - DEFINITIVO FECHADO MACHO", "090106", "M", "DNA - VP", "2019-08-14", "900000000000106"),
     ]
     ids = {}
     for k, nome, livro, reg, sexo, dna, nasc, chip in animais:
         an = Animal(id=f"{k}-{h.id}", haras_id=h.id, nome=nome, livro=livro, registro=reg, sexo=sexo, dna=dna, nascimento=R.d(nasc), chip=chip,
-                    vivo=True, bloqueado=False, genealogia={}, origem="Demonstração")
+                    vivo=True, bloqueado=False, genealogia={"mae": "AURORA DO VALE VERDE"} if k == "d4" else {}, origem="Demonstração")
+        if k == "d6":  # v1.4.0: animal vendido, para o relatório do plantel
+            an.vivo, an.baixa_data, an.baixa_motivo, an.baixa_destino = False, T - timedelta(days=45), "Venda", "Haras Boa Esperança"
         db.add(an)
         ids[k] = an.id
     db.flush()
@@ -85,6 +88,13 @@ def criar(db, gestor_email, gestor_senha, caseiro_email, caseiro_senha):
     reg("d5", a(58), "exame", protocolos=["aie"], exame="Anemia Infecciosa (AIE)", resultado="Negativo")
     reg("d5", a(58), "exame", protocolos=["mormo"], exame="Mormo", resultado="Negativo")
     reg("d5", a(3), "ocorrencia", C, titulo="Corte superficial no boleto", gravidade="Leve", obs="Limpeza e spray cicatrizante.")
+    # v1.4.0: histórico reprodutivo da Aurora (dois partos, cio com exame e cobertura) e cio da Canela
+    reg("d1", "2025-01-25", "reprodutivo", evento="Parto", obs="Potra saudável")
+    reg("d1", "2026-02-20", "reprodutivo", evento="Parto", obs="Nasceu o Dourado")
+    reg("d1", a(12), "reprodutivo", C, evento="Cio", sinais="Aceita o rufião, urina frequente")
+    reg("d1", a(11), "reprodutivo", evento="Cio", ovario="Esquerdo", foliculo="38", edema="2", obs="Exame do veterinário")
+    reg("d1", a(10), "reprodutivo", evento="Cobertura", garanhao="ESTRELO DO SERTÃO")
+    reg("d3", a(25), "reprodutivo", ("Caseiro Demonstração", "App"), evento="Cio", sinais="Inquieta, cauda levantada")
     nasc4 = R.d("2026-02-20")
     reg("d4", R.iso(R.add_meses(nasc4, 3)), "vacina", protocolos=tri, dose=1, produto="Trivalente", lote="LT0401")
     reg("d4", R.iso(R.add_meses(nasc4, 4)), "vacina", protocolos=tri, dose=2, produto="Trivalente", lote="LT0401")

@@ -8,7 +8,7 @@ Uso: python -m app.migracoes
 """
 import time
 
-from sqlalchemy import inspect, select
+from sqlalchemy import inspect, select, text
 from sqlalchemy.exc import OperationalError
 
 from .db import Audio, Base, ImagemMarca, SchemaVersao, SessionLocal, VinculoApp, engine
@@ -34,12 +34,21 @@ def _m004_imagens(conn):
     ImagemMarca.__table__.create(conn, checkfirst=True)
 
 
+def _m005_baixa(conn):
+    """v1.4.0: baixa de animais do plantel (data, motivo, destino e observação)."""
+    existentes = {c["name"] for c in inspect(conn).get_columns("animais")}
+    for nome, tipo in (("baixa_data", "DATE"), ("baixa_motivo", "VARCHAR(20)"), ("baixa_destino", "VARCHAR(160)"), ("baixa_obs", "TEXT")):
+        if nome not in existentes:
+            conn.execute(text(f"ALTER TABLE animais ADD COLUMN {nome} {tipo} NULL"))
+
+
 # (número, descrição, função). Acrescente novas migrações ao final.
 MIGRACOES = [
     (1, "Esquema inicial da v1.0.0", _m001_base),
     (2, "Vínculo do app Android por QR Code (v1.1.0)", _m002_vinculo_app),
     (3, "Áudios dos registros (v1.2.0)", _m003_audios),
     (4, "Logotipo e imagens da plataforma e dos haras (v1.3.0)", _m004_imagens),
+    (5, "Baixa de animais do plantel (v1.4.0)", _m005_baixa),
 ]
 
 
