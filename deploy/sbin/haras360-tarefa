@@ -27,7 +27,12 @@ export H360_LOG_TAREFA="$H360_VARLIB/tarefa.log"
 case "$ACAO" in
   atualizar)
     [ "$VERSAO" != "-" ] || { status_tarefa falhou atualizar "Pedido sem versão válida."; exit 1; }
+    status_tarefa executando atualizar "Pacote $VERSAO recebido."
     H360_NOME_PACOTE="haras360-$VERSAO.tar.gz" /usr/local/sbin/haras360-update "$H360_FILA/entrada/pacote.tar.gz" "$H360_FILA/entrada/pacote.sig" || true
+    # Se o script parou antes de registrar o resultado, a última linha do registro vai para a tela.
+    if grep -q '"estado": *"executando"' "$H360_STATUS" 2>/dev/null; then
+      status_tarefa falhou atualizar "$(tail -1 "$H360_LOG_TAREFA" | sed 's/^[0-9:]* //; s/^erro: //')"
+    fi
     rm -f "$H360_FILA/entrada/pacote.tar.gz" "$H360_FILA/entrada/pacote.sig"
     ;;
   rollback)

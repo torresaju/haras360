@@ -11,7 +11,7 @@ import time
 from sqlalchemy import inspect, select
 from sqlalchemy.exc import OperationalError
 
-from .db import Base, SchemaVersao, SessionLocal, VinculoApp, engine
+from .db import Audio, Base, SchemaVersao, SessionLocal, VinculoApp, engine
 
 
 def _m001_base(conn):
@@ -24,10 +24,16 @@ def _m002_vinculo_app(conn):
     VinculoApp.__table__.create(conn, checkfirst=True)
 
 
+def _m003_audios(conn):
+    """v1.2.0: áudios dos registros do caseiro."""
+    Audio.__table__.create(conn, checkfirst=True)
+
+
 # (número, descrição, função). Acrescente novas migrações ao final.
 MIGRACOES = [
     (1, "Esquema inicial da v1.0.0", _m001_base),
     (2, "Vínculo do app Android por QR Code (v1.1.0)", _m002_vinculo_app),
+    (3, "Áudios dos registros (v1.2.0)", _m003_audios),
 ]
 
 

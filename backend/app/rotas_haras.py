@@ -13,7 +13,7 @@ from . import logos as L
 from . import parametros as P
 from . import regras as R
 from .config import FOTOS_DIR, LOGOS_DIR, VERSAO
-from .db import Animal, Auditoria, Foto, Haras, Importacao, NotifLida, Protocolo, Registro, Usuario
+from .db import Animal, Audio, Auditoria, Foto, Haras, Importacao, NotifLida, Protocolo, Registro, Usuario
 from .seguranca import auditar, do_haras, erro, gestor, get_db, hash_senha, revogar_sessoes, usuario_atual, validar_senha_nova
 
 r = APIRouter()
@@ -57,9 +57,12 @@ def _dose_out(v):
     return int(v) if v and str(v).isdigit() else (v or "unica")
 
 
-def registro_out(rg: Registro, fotos):
+def registro_out(rg: Registro, fotos, audios=None):
     o = {"id": rg.id, "animalId": rg.animal_id, "data": _iso(rg.data), "tipo": rg.tipo, "protocolos": rg.protocolos or [], "dose": _dose_out(rg.dose),
          "obs": rg.obs or "", "autor": rg.autor, "origem": rg.origem, "fotos": [f"/fotos/{f}" for f in fotos.get(rg.id, [])]}
+    au = (audios or {}).get(rg.id)
+    if au:
+        o["audio"] = {"url": f"/audios/{au.id}", "duracao": au.duracao}
     o.update(rg.dados or {})
     return o
 
@@ -87,7 +90,8 @@ def carregar_base(db, haras_id):
     fmap = {}
     for f in db.scalars(select(Foto).where(Foto.haras_id == haras_id).order_by(Foto.ordem)):
         fmap.setdefault(f.registro_id, []).append(f.id)
-    regs = [registro_out(x, fmap) for x in db.scalars(select(Registro).where(Registro.haras_id == haras_id).order_by(Registro.data, Registro.criado_em))]
+    amap = {a.registro_id: a for a in db.scalars(select(Audio).where(Audio.haras_id == haras_id))}
+    regs = [registro_out(x, fmap, amap) for x in db.scalars(select(Registro).where(Registro.haras_id == haras_id).order_by(Registro.data, Registro.criado_em))]
     return h, animais, regs, protocolos_haras(db, haras_id)
 
 
@@ -319,6 +323,9 @@ def excluir_registro(rid: str, request: Request, u: Usuario = Depends(gestor), d
     for f in db.scalars(select(Foto).where(Foto.registro_id == rid)):
         (Path(FOTOS_DIR) / str(f.haras_id) / f.arquivo).unlink(missing_ok=True)
         db.delete(f)
+    for au in db.scalars(select(Audio).where(Audio.registro_id == rid)):
+        (Path(FOTOS_DIR) / str(au.haras_id) / au.arquivo).unlink(missing_ok=True)
+        db.delete(au)
     auditar(db, "registro_excluido", usuario=u, alvo=f"{a.nome if a else ''} · {rg.tipo} de {_iso(rg.data)}",
             detalhe={"autor": rg.autor, "origem": rg.origem, "tipo": rg.tipo, "dados": rg.dados, "obs": rg.obs}, request=request)
     db.delete(rg)
@@ -335,6 +342,17 @@ def foto(fid: str, u: Usuario = Depends(do_haras), db=Depends(get_db)):
     if not p.exists():
         erro(404, "Arquivo da foto não encontrado.")
     return FileResponse(p, headers={"Cache-Control": "private, max-age=86400"})
+
+
+@r.get("/audios/{aid}")
+def audio(aid: str, u: Usuario = Depends(do_haras), db=Depends(get_db)):
+    a = db.get(Audio, aid)
+    if not a or a.haras_id != u.haras_id:
+        erro(404, "Áudio não encontrado.")
+    p = Path(FOTOS_DIR) / str(a.haras_id) / a.arquivo
+    if not p.exists():
+        erro(404, "Arquivo do áudio não encontrado.")
+    return FileResponse(p, media_type="audio/mp4", headers={"Cache-Control": "private, max-age=86400"})
 
 
 # ---------------- protocolos e parâmetros do haras ----------------

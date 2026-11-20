@@ -984,6 +984,7 @@ const UI = (function () {
       '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><div><h2>Planos e módulos</h2><p class="small muted">Defina o que cada plano inclui. Módulo fora do plano aparece esmaecido para o haras, e a API recusa o uso.</p></div><button class="btn sm" data-act="add-plano">' + IC.plus + 'Novo plano</button></div><div class="tbl-wrap" id="planos-t"></div></div>' +
       '<div class="card flush"><div class="card-h" style="padding:16px 18px 0"><div><h2>Faixas de preço</h2><p class="small muted">Valor por animal ativo ao mês, progressivo por faixa. Deixe em branco o que ainda não foi definido.</p></div><button class="btn sm" data-act="add-faixa">' + IC.plus + 'Nova faixa</button></div><div class="tbl-wrap" id="faixas-t"></div></div>' +
       '<div class="card stack"><h2>Login e sessões</h2><div class="fgrid">' + num('g-tent', 'Tentativas de login antes do bloqueio', p.login_tentativas, 3, 50) + num('g-jan', 'Janela de bloqueio (minutos)', p.login_janela_min, 1, 1440) + num('g-sess', 'Duração da sessão no navegador (dias)', p.sessao_dias, 1, 90) + num('g-app', 'Duração da sessão no app (dias)', p.sessao_app_dias, 7, 365, 'O caseiro fica conectado no campo sem precisar de internet para entrar.') + '</div></div>' +
+      '<div class="card stack"><h2>App do caseiro</h2><div class="fgrid">' + num('g-audio', 'Duração máxima do áudio nos registros (segundos)', p.audio_max_seg, 15, 300, 'Cerca de 250 KB por minuto. O módulo de áudio é ligado por plano na grade acima.') + '</div></div>' +
       '<div class="card stack"><h2>E-mail</h2><p class="small muted">Gravado para o envio de alertas por e-mail, que entra em uma próxima versão.</p><div class="fgrid">' +
       '<div class="field"><label for="s-host">Servidor SMTP</label><input id="s-host" class="inp" value="' + esc(p.smtp.host) + '" placeholder="smtp.zoho.com"></div>' + num('s-porta', 'Porta', p.smtp.porta, 1, 65535) +
       '<div class="field"><label for="s-user">Usuário</label><input id="s-user" class="inp" value="' + esc(p.smtp.usuario) + '" autocomplete="off"></div><div class="field"><label for="s-senha">Senha</label><input id="s-senha" type="password" class="inp" autocomplete="new-password" placeholder="' + (p.smtp.senhaDefinida ? 'definida; deixe em branco para manter' : '') + '"></div>' +
@@ -1086,7 +1087,8 @@ const UI = (function () {
         btn.disabled = true; btn.textContent = 'Conferindo...';
         try {
           const sha = $('#up-sha').value.trim().toLowerCase();
-          if (sha && sha !== await sha256Arquivo(pac)) throw new Error('O SHA-256 do arquivo não confere com o publicado na Release. Baixe o pacote de novo.');
+          // No navegador, a conta só existe em HTTPS; em HTTP a conferência fica com o servidor, que também compara o SHA-256 informado.
+          if (sha && window.crypto && crypto.subtle && sha !== await sha256Arquivo(pac)) throw new Error('O SHA-256 do arquivo não confere com o publicado na Release. Baixe o pacote de novo.');
           btn.textContent = 'Enviando...';
           const fd = new FormData(); fd.append('pacote', pac); fd.append('assinatura', sig); if (sha) fd.append('sha256', sha);
           const r = await API.upload('/api/admin/atualizacao', fd);
@@ -1120,7 +1122,7 @@ const UI = (function () {
     'rem-faixa': el => { faixasEd = lerFaixasDaTela(); faixasEd.splice(+el.dataset.i, 1); desenharFaixas(); },
     'salvar-globais': async el => {
       const n = id => Number(document.getElementById(id).value);
-      const corpo = { planos: lerPlanosDaTela(), faixas: lerFaixasDaTela(), login_tentativas: n('g-tent'), login_janela_min: n('g-jan'), sessao_dias: n('g-sess'), sessao_app_dias: n('g-app'), email_contato: $('#g-contato').value.trim(),
+      const corpo = { planos: lerPlanosDaTela(), faixas: lerFaixasDaTela(), login_tentativas: n('g-tent'), login_janela_min: n('g-jan'), sessao_dias: n('g-sess'), sessao_app_dias: n('g-app'), audio_max_seg: n('g-audio'), email_contato: $('#g-contato').value.trim(),
         smtp: { host: $('#s-host').value.trim(), porta: n('s-porta'), usuario: $('#s-user').value.trim(), senha: $('#s-senha').value, remetente: $('#s-rem').value.trim(), tls: $('#s-tls').value === '1' } };
       if (Object.keys(corpo.planos).some(k => !k)) { UI.toast('Todo plano precisa de nome.'); return; }
       if (await executar(el, () => API.put('/api/admin/parametros', corpo))) render();
