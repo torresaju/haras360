@@ -116,6 +116,25 @@ void main() {
     await aba(t, 'Agenda');
     await esperar(t, find.text('Próximos 30 dias'));
     await captura(t, 'app-agenda');
+
+    // cio (v1.4.0): a previsão aparece na Agenda e o registro sai com os dados do exame, ainda sem Wi-Fi
+    final cio = find.text('Observar cio · AURORA DO VALE VERDE');
+    await t.scrollUntilVisible(cio, 250, scrollable: find.byType(Scrollable).first, maxScrolls: 60);
+    await t.tap(cio);
+    await esperar(t, find.widgetWithText(TextField, 'Sinais observados'));
+    await t.enterText(find.widgetWithText(TextField, 'Sinais observados'), 'Aceita o rufião');
+    await t.enterText(find.widgetWithText(TextField, 'Folículo (mm)'), '34');
+    FocusManager.instance.primaryFocus?.unfocus();
+    await t.pump(const Duration(milliseconds: 600));
+    await captura(t, 'app-cio');
+    await t.ensureVisible(find.text('Salvar registro'));
+    await t.tap(find.text('Salvar registro'));
+    await esperar(t, find.textContaining('Vai para o servidor quando houver Wi-Fi'));
+    for (final m in t.stateList<ScaffoldMessengerState>(find.byType(ScaffoldMessenger))) {
+      m.clearSnackBars();
+    }
+    await t.pump(const Duration(milliseconds: 400));
+    expect(find.text('Observar cio · AURORA DO VALE VERDE'), findsNothing);
     await aba(t, 'Mais');
     await esperar(t, find.text('Envio'));
     await captura(t, 'app-mais');
@@ -126,7 +145,7 @@ void main() {
     // de volta ao Wi-Fi da sede
     Sincronizador.redeForcada = true;
     await t.tap(find.text('Sincronizar agora'));
-    await esperar(t, find.textContaining('Enviado: 1 registro(s) e 1 áudio(s)'), segundos: 90);
+    await esperar(t, find.textContaining('Enviado: 2 registro(s) e 1 áudio(s)'), segundos: 90);
     await t.pump(const Duration(seconds: 2));
     // a tela de envio acompanha o resultado: fila zerada
     expect(find.text('Registros aguardando envio'), findsOneWidget);
