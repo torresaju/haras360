@@ -175,6 +175,22 @@ jobs:
           assert "app_vinculado" in acoes, acoes
           PY
 
+      - name: Capturas no log (para o manual de Ajuda)
+        if: always()
+        run: |
+          pip install -q pillow
+          python3 - <<'PY'
+          import base64, io, pathlib
+          from PIL import Image
+          for p in sorted(pathlib.Path("mobile/capturas-app").glob("*.png")):
+              im = Image.open(p).convert("RGB")
+              im.thumbnail((540, 1200))
+              b = io.BytesIO(); im.save(b, "PNG", optimize=True)
+              t = base64.b64encode(b.getvalue()).decode()
+              for i in range(0, len(t), 3000):
+                  print(f"CAPTURA {p.stem} {i // 3000:04d} {t[i:i + 3000]}")
+          PY
+
       - name: Log do servidor
         if: failure()
         run: tail -100 /tmp/uvicorn.log

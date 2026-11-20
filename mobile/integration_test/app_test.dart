@@ -73,7 +73,7 @@ void main() {
     await esperar(t, find.text('AURORA DO VALE VERDE'));
     await captura(t, 'app-animais');
     await t.tap(find.text('AURORA DO VALE VERDE'));
-    await esperar(t, find.text('Histórico'));
+    await esperar(t, find.text('Próximas etapas'));
     await captura(t, 'app-ficha');
     await t.pageBack();
     await t.pump(const Duration(milliseconds: 500));
