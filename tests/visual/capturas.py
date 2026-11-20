@@ -81,6 +81,10 @@ with sync_playwright() as pw:
     entrar(g, "gestor@demonstracao.local", captura_2fa="2fa")
     g.wait_for_selector(".kpi")
     foto(g, "painel")
+    # v1.2.0: áudio do caseiro com player nos últimos registros do campo
+    assert g.locator(".audio-reg audio").count() > 0, "falta o player de áudio nos registros do campo"
+    g.locator(".audio-reg").first.scroll_into_view_if_needed()
+    g.locator(".audio-reg").first.locator("xpath=ancestor::div[contains(@class,'card')][1]").screenshot(path=str(SAIDA / "audio-painel.png"))
     for v in ("animais", "importar", "agenda", "protocolos", "equipe", "parametros", "auditoria", "plano", "notificacoes", "assistente", "sobre", "glossario"):
         ir(g, v)
         assert g.inner_text("#view").strip(), f"tela vazia: {v}"
