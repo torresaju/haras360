@@ -88,7 +88,6 @@ void main() {
     await t.tap(find.text('BRISA DA SERRA AZUL').last);
     await t.pump(const Duration(milliseconds: 600));
     await t.enterText(find.widgetWithText(TextField, 'O que aconteceu'), 'Pisou em prego no piquete');
-    await t.enterText(find.widgetWithText(TextField, 'Observações'), 'Limpei e passei iodo. Teste automático do app.');
     FocusManager.instance.primaryFocus?.unfocus();
     await t.pump(const Duration(milliseconds: 600));
     await captura(t, 'app-registro');
@@ -106,6 +105,9 @@ void main() {
     await t.tap(find.text('Sincronizar agora'));
     await esperar(t, find.textContaining('Enviado: 1 registro'), segundos: 90);
     await t.pump(const Duration(seconds: 2));
+    // a tela de envio acompanha o resultado: fila zerada
+    expect(find.text('Registros aguardando envio'), findsOneWidget);
+    expect(find.descendant(of: find.ancestor(of: find.text('Registros aguardando envio'), matching: find.byType(Row)), matching: find.text('0')), findsOneWidget);
     await captura(t, 'app-envio-ok');
 
     await aba(t, 'Avisos');

@@ -83,7 +83,7 @@ class _TelaVincularState extends State<TelaVincular> {
             padding: const EdgeInsets.all(24),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               const Spacer(),
-              const Icon(Icons.agriculture_outlined, size: 56, color: Cores.florestaTinta),
+              Center(child: ClipRRect(borderRadius: BorderRadius.circular(18), child: Image.asset('recursos/icone/mipmap-xxxhdpi/ic_launcher.png', width: 88, height: 88))),
               const SizedBox(height: 16),
               const Text('Haras360 Campo', textAlign: TextAlign.center, style: TextStyle(color: Cores.florestaTinta, fontSize: 28, fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),

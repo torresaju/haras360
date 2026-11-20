@@ -24,7 +24,9 @@ class TelaEnvio extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(listenable: dados, builder: (context, _) => _corpo(context));
+
+  Widget _corpo(BuildContext context) {
     final c = dados.contagem;
     final locais = dados.locais.where((r) => r['_erro'] != null).toList();
     return ListView(padding: const EdgeInsets.all(16), children: [

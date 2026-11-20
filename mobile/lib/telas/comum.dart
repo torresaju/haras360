@@ -35,7 +35,6 @@ class LinhaTarefa extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dose = doseTxt(t['dose']);
     return InkWell(
       onTap: onRegistrar,
       child: Padding(
@@ -45,7 +44,7 @@ class LinhaTarefa extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(mostrarAnimal ? '${t['titulo']} · ${t['animal']}' : '${t['titulo']}', style: const TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 2),
-              Text([t['etapa'], if (dose.isNotEmpty) dose, br(t['due'] as String?)].whereType<String>().join(' · '), style: const TextStyle(color: Cores.apagado, fontSize: 13)),
+              Text([t['etapa'], br(t['due'] as String?)].whereType<String>().join(' · '), style: const TextStyle(color: Cores.apagado, fontSize: 13)),
               const SizedBox(height: 4),
               Etiqueta.status(t['status'] as String? ?? 'futuro', relativo(t['due'] as String?)),
             ]),

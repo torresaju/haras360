@@ -23,7 +23,7 @@ class TelaHoje extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: dados.sincronizar,
       child: ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, 96), children: [
-        Text('${dias[h.weekday - 1]}, ${h.day} de ${const ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'][h.month - 1]}',
+        Text('${dias[h.weekday - 1][0].toUpperCase()}${dias[h.weekday - 1].substring(1)}, ${h.day} de ${const ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'][h.month - 1]}',
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
         const SizedBox(height: 4),
         Text(
