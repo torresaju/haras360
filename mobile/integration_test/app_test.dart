@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:haras360/main.dart' as app;
 import 'package:haras360/sincronizacao.dart';
+import 'package:haras360/telas/agenda.dart';
 import 'package:haras360/telas/audio.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:workmanager/workmanager.dart';
@@ -119,7 +120,11 @@ void main() {
 
     // cio (v1.4.0): a previsão aparece na Agenda e o registro sai com os dados do exame, ainda sem Wi-Fi
     final cio = find.text('Observar cio · AURORA DO VALE VERDE');
-    await t.scrollUntilVisible(cio, 250, scrollable: find.byType(Scrollable).first, maxScrolls: 60);
+    // a lista certa é a da Agenda (as outras abas continuam montadas fora da tela)
+    final lista = find.descendant(of: find.byType(TelaAgenda), matching: find.byType(Scrollable)).first;
+    await t.scrollUntilVisible(cio, 250, scrollable: lista, maxScrolls: 60);
+    await t.ensureVisible(cio);
+    await t.pump(const Duration(milliseconds: 500));
     await t.tap(cio);
     await esperar(t, find.widgetWithText(TextField, 'Sinais observados'));
     await t.enterText(find.widgetWithText(TextField, 'Sinais observados'), 'Aceita o rufião');
