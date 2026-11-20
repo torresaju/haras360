@@ -1,0 +1,104 @@
+name: App Android
+
+# Compila e testa o app do caseiro (Flutter). Com os segredos ANDROID_* cadastrados,
+# assina o APK com a chave do Ricardo; sem eles, usa a chave de depuração e o APK
+# serve só para teste (não é publicado). Também é chamado pelo workflow Versão.
+
+on:
+  push:
+    branches: [main, "etapa/**"]
+    paths: ["mobile/**", ".github/workflows/android.yml", "VERSION"]
+  pull_request:
+    paths: ["mobile/**", ".github/workflows/android.yml"]
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      assinado:
+        description: "1 se o APK foi assinado com a chave de produção"
+        value: ${{ jobs.apk.outputs.assinado }}
+
+env:
+  FLUTTER_VERSAO: "3.27.4"
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    outputs:
+      assinado: ${{ steps.build.outputs.assinado }}
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSAO }}
+          channel: stable
+          cache: true
+
+      - name: Gerar a pasta android/ e aplicar as configurações do Haras360
+        run: |
+          flutter create --platforms=android --org br.com.haras360 --project-name haras360 .
+          rm -f test/widget_test.dart
+          python3 ferramentas/preparar_android.py
+          echo "--- android/app/build.gradle ---"; cat android/app/build.gradle* ; echo "--- AndroidManifest ---"; cat android/app/src/main/AndroidManifest.xml
+
+      - name: Dependências, análise e testes de unidade
+        run: |
+          flutter pub get
+          flutter analyze --no-fatal-infos
+          flutter test
+
+      - name: Compilar o APK
+        id: build
+        env:
+          KS_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          H360_KEYSTORE_SENHA: ${{ secrets.ANDROID_KEYSTORE_SENHA }}
+          H360_CHAVE_ALIAS: ${{ secrets.ANDROID_CHAVE_ALIAS }}
+          H360_CHAVE_SENHA: ${{ secrets.ANDROID_CHAVE_SENHA }}
+        run: |
+          VERSAO="$(tr -d ' \r\n' < ../VERSION)"
+          IFS=. read -r MA MI PA <<< "$VERSAO"
+          CODIGO=$((MA * 10000 + MI * 100 + PA))
+          if [ -n "$KS_BASE64" ]; then
+            echo "$KS_BASE64" | base64 -d > "$RUNNER_TEMP/haras360-android.p12"
+            export H360_KEYSTORE="$RUNNER_TEMP/haras360-android.p12"
+            echo "assinado=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Segredos ANDROID_* ausentes: APK assinado com a chave de depuração, somente para teste."
+            echo "assinado=0" >> "$GITHUB_OUTPUT"
+          fi
+          flutter build apk --release --build-name="$VERSAO" --build-number="$CODIGO" \
+            --dart-define=APP_VERSAO="$VERSAO" --dart-define=APP_CODIGO="$CODIGO"
+          rm -f "$RUNNER_TEMP/haras360-android.p12"
+          mkdir -p ../dist-apk
+          cp build/app/outputs/flutter-apk/app-release.apk ../dist-apk/haras360.apk
+          SHA="$(sha256sum ../dist-apk/haras360.apk | cut -d' ' -f1)"
+          printf '{"versao": "%s", "codigo": %s, "sha256": "%s"}\n' "$VERSAO" "$CODIGO" "$SHA" > ../dist-apk/versao.json
+          cat ../dist-apk/versao.json
+
+      - name: Conferir a assinatura do APK
+        env:
+          ESPERADA: ${{ vars.ANDROID_CERT_SHA256 }}
+          ASSINADO: ${{ steps.build.outputs.assinado }}
+        run: |
+          APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner"
+          "$APKSIGNER" verify --print-certs ../dist-apk/haras360.apk | tee ../dist-apk/certificado.txt
+          OBTIDA="$(grep -m1 'certificate SHA-256 digest' ../dist-apk/certificado.txt | awk '{print $NF}' | tr 'a-f' 'A-F')"
+          echo "Impressão digital do certificado: $OBTIDA"
+          # Variável opcional do repositório: a impressão mostrada pelo gerar-chave-android.py (com ou sem dois-pontos).
+          if [ "$ASSINADO" = "1" ] && [ -n "$ESPERADA" ]; then
+            [ "$(echo "$ESPERADA" | tr -d ':' | tr 'a-f' 'A-F')" = "$OBTIDA" ] || { echo "::error::O APK foi assinado com outra chave."; exit 1; }
+            echo "Confere com ANDROID_CERT_SHA256."
+          fi
+          ls -la ../dist-apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: haras360-apk
+          path: dist-apk/
+          retention-days: 30

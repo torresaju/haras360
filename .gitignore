@@ -22,3 +22,6 @@ mobile/build/
 mobile/android/key.properties
 *.p12
 *.jks
+mobile/android/
+mobile/.metadata
+mobile/pubspec.lock
