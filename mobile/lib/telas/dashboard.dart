@@ -15,7 +15,7 @@ class TelaDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ts = dados.tarefas;
     final vac = ts.where((t) => t['cat'] == 'vacina');
-    final gest = ((dados.estado?['gestacoes'] as Map?) ?? const {}).values.cast<Map>().toList();
+    final gest = ((dados.estado?['gestacoes'] as Map?) ?? const {}).values.whereType<Map>().toList();
     final h = hoje();
     final partos30 = gest.where((g) {
       final p = DateTime.tryParse('${g['parto']}');

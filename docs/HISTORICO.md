@@ -2,6 +2,18 @@
 
 Uma nota por versão, da mais recente para a mais antiga.
 
+## v1.5.0 · 21/11/2026 · App do gestor (Android)
+* **Um app só, por perfil:** a abertura tem "Sou caseiro" (QR Code, como antes) e "Sou gestor" (e-mail, senha e 2FA). Um perfil por celular; Mais › Sair encerra a sessão e apaga os dados do haras do celular (só com tudo enviado).
+* **Segurança:**
+  * login do gestor no app com 2FA obrigatório (código do autenticador ou de recuperação), bloqueio por tentativas e auditoria (`app_gestor_entrou`, `app_saiu`);
+  * exige o servidor em HTTPS; o administrador tem a chave "App do gestor sem HTTPS (somente teste)", desligada por padrão, com aviso em vermelho e auditoria;
+  * digital ou bloqueio de tela do Android ao abrir e ao voltar depois de 5 minutos;
+  * sessão do app do gestor expira após 30 dias sem uso (parametrizável de 7 a 90); troca de senha e redefinição do 2FA encerram o app.
+* **Telas do gestor:** Dashboard (indicadores, Atenção agora, próximos 7 dias, campo), Animais (ativos, baixados ou todos; ficha com fotos e áudios; Dar baixa e Desfazer baixa), Agenda, Relatórios (quatro abas, gráficos e tabelas, envio da planilha Excel ou CSV pelo compartilhar do Android) e Mais.
+* **Sincronização:** o gestor usa Wi-Fi e dados móveis, inclusive para fotos e áudios, e também trabalha offline. O caseiro continua só no Wi-Fi. Registros do app do gestor têm a origem "App do gestor" e não entram na atividade do campo.
+* **Avisos no celular (sem Firebase):** consulta a cada 15 minutos e notificação do Android para procedimentos atrasados, parto em até 7 dias, cio de hoje, pendências da ABCCMM e ocorrência grave do caseiro (novo tipo de aviso crítico, também no portal). Preferências por tipo e horário de silêncio (21h às 6h); tocar abre a ficha.
+* **Testes:** 7 testes novos da API (86 no total), testes de unidade dos avisos, e um segundo teste no emulador com o gestor (2FA, Dashboard, baixados, registro sem internet, envio, relatórios), conferido no servidor.
+
 ## v1.4.0 · 20/11/2026 · Relatórios, registro de cio e baixa de animais
 * **Relatórios (Portal do Gestor):**
   * menu Relatórios com quatro abas: Sanitário, Reprodutivo, Plantel e Atividade do campo;
