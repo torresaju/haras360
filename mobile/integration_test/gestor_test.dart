@@ -151,6 +151,6 @@ void main() {
     await captura(t, 'app-gestor-relatorios');
     await t.tap(find.text('Reprodutivo'));
     await esperar(t, find.text('Taxa de prenhez'), segundos: 60);
-    expect(find.text('Situação das éguas'), findsWidgets);
+    expect(find.text('Cios registrados'), findsOneWidget);
   });
 }
