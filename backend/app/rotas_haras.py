@@ -116,7 +116,7 @@ def estado(u: Usuario = Depends(do_haras), db=Depends(get_db)):
         "plano": dict(plano, faixas=faixas, mensalidade=P.mensalidade(faixas, ativos), modulosNomes=P.MODULOS),
         "haras": hd, "usuario": {"id": u.id, "nome": u.nome, "email": u.email, "perfil": u.perfil},
         "usuarios": usuarios, "animais": animais, "registros": regs, "protocolos": prots,
-        "notifPrefs": h.notif_prefs or R.notif_prefs_padrao(), "lidas": lidas,
+        "notifPrefs": {**R.notif_prefs_padrao(), **(h.notif_prefs or {})}, "lidas": lidas,
         "tarefas": ts, "gestacoes": {a["id"]: R.gestacao(a, regs, hd["gestacaoDias"]) for a in animais},
         "notificacoes": R.notificacoes(hd, animais, regs, prots, ts),
         "imagens": IMG.descrever(db, u.haras_id),

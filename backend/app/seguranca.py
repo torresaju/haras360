@@ -121,8 +121,8 @@ def token_da_requisicao(request: Request):
     return request.cookies.get(COOKIE)
 
 
-def sessao_da_requisicao(db, request: Request, etapas=("ok",)):
-    tok = token_da_requisicao(request)
+def sessao_da_requisicao(db, request: Request, etapas=("ok",), token=None):
+    tok = token or token_da_requisicao(request)
     if not tok:
         erro(401, "Faça login para continuar.")
     s = db.get(Sessao, _hash_token(tok))

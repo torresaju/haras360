@@ -58,6 +58,7 @@ def notif_prefs_padrao():
         "parto": {"push": True, "email": True, "web": True},
         "documental": {"push": False, "email": True, "web": True},
         "campo": {"push": False, "email": False, "web": True},
+        "ocorrencia": {"push": True, "email": True, "web": True},
     }
 
 
@@ -348,6 +349,10 @@ def notificacoes(haras, animais, registros, prots, ts=None):
     nomes = {a["id"]: a["nome"] for a in animais}
     campo = [r for r in registros if r.get("origem") != "Portal Gestor" and r["data"] >= limite]
     for r in reversed(_por_data(campo)):
+        if haras.get("avisoOcorrenciaGrave") and r["tipo"] == "ocorrencia" and r.get("gravidade") == "Grave":
+            n.append({"id": f"n:ocorrencia:{r['id']}", "tipo": "ocorrencia", "sev": "critico", "titulo": f"Ocorrência grave · {nomes.get(r['animalId'], '')}",
+                      "texto": f"{r.get('autor', '')} registrou {(r.get('titulo') or 'uma ocorrência').lower()} em {br(r['data'])}.", "animalId": r["animalId"], "registroId": r["id"]})
+            continue
         sev = "alerta" if r["tipo"] == "ocorrencia" and r.get("gravidade") != "Leve" else "info"
         n.append({"id": f"n:campo:{r['id']}", "tipo": "campo", "sev": sev, "titulo": f"Registro do campo · {nomes.get(r['animalId'], '')}", "texto": f"{r.get('autor', '')} registrou {titulo_registro(prots, r).lower()} em {br(r['data'])}.", "animalId": r["animalId"]})
     ordem = {"critico": 0, "alerta": 1, "info": 2}
