@@ -2,6 +2,13 @@
 
 Uma nota por versão, da mais recente para a mais antiga.
 
+## v1.5.1 · 21/11/2026 · Links para as normas da ABCCMM
+* O assistente com IA ficou para depois (card no Backlog). Para facilitar as consultas, o gestor tem links diretos para o Estatuto e o Regulamento do Registro Genealógico no site da ABCCMM:
+  * Administração › Assistente (quadro acima do chat), Ajuda › Normas da ABCCMM, atalho em Importar ABCCMM e Mais › Normas da ABCCMM no app do gestor;
+  * os links abrem em nova aba ou no navegador do celular.
+* O administrador mantém os links em Parametrizações › Normas da ABCCMM (até 8, título e endereço http ou https), para atualizar quando a ABCCMM publicar versões novas.
+* Testes: 1 teste novo da API (87 no total) e verificação visual dos links.
+
 ## v1.5.0 · 21/11/2026 · App do gestor (Android)
 * **Um app só, por perfil:** a abertura tem "Sou caseiro" (QR Code, como antes) e "Sou gestor" (e-mail, senha e 2FA). Um perfil por celular; Mais › Sair encerra a sessão e apaga os dados do haras do celular (só com tudo enviado).
 * **Segurança:**

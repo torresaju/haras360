@@ -103,9 +103,14 @@ with sync_playwright() as pw:
     assert g.locator(".audio-reg audio").count() > 0, "falta o player de áudio nos registros do campo"
     g.locator(".audio-reg").first.scroll_into_view_if_needed()
     g.locator(".audio-reg").first.locator("xpath=ancestor::div[contains(@class,'card')][1]").screenshot(path=str(SAIDA / "audio-painel.png"))
-    for v in ("sanidade", "reproducao", "animais", "importar", "agenda", "protocolos", "equipe", "parametros", "auditoria", "plano", "notificacoes", "assistente", "sobre", "glossario"):
+    for v in ("sanidade", "reproducao", "animais", "importar", "agenda", "protocolos", "equipe", "parametros", "auditoria", "plano", "notificacoes", "assistente", "sobre", "glossario", "normas"):
         ir(g, v)
         assert g.inner_text("#view").strip(), f"tela vazia: {v}"
+        if v in ("assistente", "normas"):  # v1.5.1: links para as normas da ABCCMM
+            assert g.locator("a.norma").count() == 3, f"faltam os links das normas em {v}"
+            assert g.get_attribute("a.norma", "target") == "_blank"
+        if v == "normas":
+            foto(g, "normas")
         if v in ("sanidade", "reproducao", "importar", "agenda", "equipe", "parametros", "auditoria"):
             if v in ("equipe", "auditoria"):
                 g.wait_for_selector("#sessoes table, #aud-t table", timeout=5000)
