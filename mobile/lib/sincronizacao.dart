@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'api.dart';
+import 'avisos_celular.dart';
 import 'banco.dart';
 import 'config.dart';
 import 'marca.dart';
@@ -19,7 +20,8 @@ class ResultadoSinc {
   ResultadoSinc(this.ok, this.mensagem, {this.enviados = 0, this.fotos = 0, this.desvinculado = false});
 }
 
-/// Envia a fila e baixa o estado do haras. Só roda no Wi-Fi (rede sem medição).
+/// Envia a fila e baixa o estado do haras. Caseiro: só no Wi-Fi (rede sem medição).
+/// Gestor (v1.5.0): Wi-Fi ou dados móveis, e avisos no celular depois de cada sincronização.
 class Sincronizador {
   static bool _rodando = false;
 
@@ -33,6 +35,15 @@ class Sincronizador {
     return r.contains(ConnectivityResult.wifi) || r.contains(ConnectivityResult.ethernet);
   }
 
+  /// A rede atual serve para sincronizar este perfil? (gestor: qualquer conexão; caseiro: Wi-Fi)
+  static Future<bool> redeLiberada({bool? gestor}) async {
+    if (redeForcada != null) return redeForcada!;
+    final g = gestor ?? (await Credenciais.perfilSalvo()) == 'gestor';
+    if (!g) return noWifi();
+    final r = await Connectivity().checkConnectivity();
+    return r.any((c) => c != ConnectivityResult.none);
+  }
+
   static Future<ResultadoSinc> executar() async {
     if (_rodando) return ResultadoSinc(false, 'A sincronização já está em andamento.');
     // Trava entre o app aberto e o envio em segundo plano (processos diferentes).
@@ -40,9 +51,13 @@ class Sincronizador {
     if (trava != null && DateTime.now().difference(trava).inMinutes < 10) {
       return ResultadoSinc(false, 'A sincronização já está em andamento.');
     }
-    if (!await noWifi()) return ResultadoSinc(false, 'Sem Wi-Fi. Os registros ficam guardados no celular e vão quando houver Wi-Fi.');
     final cred = await Credenciais.ler();
     if (cred == null) return ResultadoSinc(false, 'Celular não vinculado.', desvinculado: true);
+    if (!await redeLiberada(gestor: cred.gestor)) {
+      return ResultadoSinc(false, cred.gestor
+          ? 'Sem internet. Os registros ficam guardados no celular e vão quando a conexão voltar.'
+          : 'Sem Wi-Fi. Os registros ficam guardados no celular e vão quando houver Wi-Fi.');
+    }
     _rodando = true;
     await Banco.gravar('travaSinc', DateTime.now().toIso8601String());
     final api = Api(cred.servidor, token: cred.token);
@@ -105,6 +120,11 @@ class Sincronizador {
       try {
         await Marca.atualizar(api, estado); // imagens do haras: falha aqui não impede o envio dos registros
       } catch (_) {}
+      if (cred.gestor) {
+        try {
+          await AvisosCelular.processar(estado); // v1.5.0: notificações do sistema para o gestor
+        } catch (_) {}
+      }
       await Banco.limparEnviados();
       await Banco.gravar('ultimoErro', '');
       final partes = [if (enviados > 0) '$enviados registro(s)', if (fotos > 0) '$fotos foto(s)', if (audios > 0) '$audios áudio(s)'];
@@ -122,16 +142,20 @@ class Sincronizador {
     }
   }
 
-  /// Agenda o envio em segundo plano: a cada hora, somente em rede sem medição (Wi-Fi).
-  static Future<void> agendar() => Workmanager().registerPeriodicTask(
-        tarefaSincronizacao,
-        tarefaSincronizacao,
-        frequency: intervaloSincronizacao,
-        constraints: Constraints(networkType: NetworkType.unmetered),
-        existingWorkPolicy: ExistingWorkPolicy.keep,
-        backoffPolicy: BackoffPolicy.exponential,
-        backoffPolicyDelay: const Duration(minutes: 5),
-      );
+  /// Agenda o envio em segundo plano. Caseiro: a cada hora, só no Wi-Fi.
+  /// Gestor (v1.5.0): a cada 15 minutos (mínimo do Android), em qualquer rede, com os avisos no celular.
+  static Future<void> agendar() async {
+    final gestor = (await Credenciais.perfilSalvo()) == 'gestor';
+    await Workmanager().registerPeriodicTask(
+      tarefaSincronizacao,
+      tarefaSincronizacao,
+      frequency: gestor ? intervaloGestor : intervaloSincronizacao,
+      constraints: Constraints(networkType: gestor ? NetworkType.connected : NetworkType.unmetered),
+      existingWorkPolicy: ExistingWorkPolicy.replace,
+      backoffPolicy: BackoffPolicy.exponential,
+      backoffPolicyDelay: const Duration(minutes: 5),
+    );
+  }
 }
 
 @pragma('vm:entry-point')
@@ -139,7 +163,7 @@ void callbackDispatcher() {
   Workmanager().executeTask((tarefa, _) async {
     try {
       final r = await Sincronizador.executar();
-      return r.ok || r.desvinculado || r.mensagem.startsWith('Sem Wi-Fi') || r.mensagem.contains('andamento');
+      return r.ok || r.desvinculado || r.mensagem.startsWith('Sem Wi-Fi') || r.mensagem.startsWith('Sem internet') || r.mensagem.contains('andamento');
     } catch (_) {
       return false; // o WorkManager tenta de novo mais tarde
     }

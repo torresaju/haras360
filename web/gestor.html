@@ -145,7 +145,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     const lim30 = H.iso(H.addDias(H.hoje(), 30)), hojeIso = H.iso(H.hoje());
     const partos = gest.filter(([, g]) => g.parto >= hojeIso && g.parto <= lim30);
     const proximos = ts.filter(t => !t.doc && t.status !== 'atrasado').slice(0, 6);
-    const campo = S.registros.filter(r => r.origem !== 'Portal Gestor').sort((a, b) => a.data < b.data ? 1 : -1).slice(0, 4);
+    const campo = S.registros.filter(r => r.origem !== 'Portal Gestor' && r.origem !== 'App do gestor').sort((a, b) => a.data < b.data ? 1 : -1).slice(0, 4);
     const mes = hojeIso.slice(0, 7);
     const repMes = S.registros.filter(r => r.tipo === 'reprodutivo' && (r.data || '').startsWith(mes));
     const conta = ev => repMes.filter(r => r.evento === ev).length;

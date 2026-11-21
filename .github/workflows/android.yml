@@ -137,6 +137,19 @@ jobs:
           for i in $(seq 1 30); do curl -fs localhost:8090/api/saude && break; sleep 1; done
           python -m app.cli vincular-celular --email caseiro@demonstracao.local | tee /tmp/vinculo.txt
           awk '{print $NF}' /tmp/vinculo.txt | head -1 > /tmp/codigo-vinculo
+          # App do gestor (v1.5.0): 2FA com segredo conhecido e liberação de teste sem HTTPS (servidor de CI em HTTP)
+          python - <<'PY'
+          import pyotp
+          from sqlalchemy import select
+          from app import parametros as P
+          from app.db import SessionLocal, Usuario
+          with SessionLocal() as db:
+              g = db.scalar(select(Usuario).where(Usuario.email == "gestor@demonstracao.local"))
+              g.totp_segredo, g.totp_ativo = pyotp.random_base32(), True
+              P.gravar(db, "app_gestor_sem_https", True)
+              db.commit()
+              open("/tmp/segredo-gestor", "w").write(g.totp_segredo)
+          PY
 
       - name: Preparar o projeto Android
         working-directory: mobile
@@ -177,8 +190,12 @@ jobs:
           cio = db.execute("select count(*) from registros where origem = 'App' and dados like '%\"evento\": \"Cio\"%' and dados like '%\"foliculo\": \"34\"%'").fetchone()[0]
           print("Cios do app no servidor:", cio)
           assert cio == 1, "o cio registrado no app não chegou ao servidor"
+          gest = db.execute("select count(*) from registros where origem = 'App do gestor' and dados like '%piquete 3%'").fetchone()[0]
+          print("Registros do app do gestor no servidor:", gest)
+          assert gest == 1, "o registro feito no app do gestor não chegou ao servidor"
           acoes = [r[0] for r in db.execute("select acao from auditoria")]
           assert "app_vinculado" in acoes, acoes
+          assert "app_gestor_entrou" in acoes, acoes
           PY
 
       - name: Capturas no log (para o manual de Ajuda)

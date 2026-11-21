@@ -30,7 +30,7 @@ TIPOS = OrderedDict([
 ])
 SANITARIOS = ["vacina", "vermifugacao", "exame", "odontologia", "ferrageamento"]
 CATEGORIAS = OrderedDict([("eguas", "Éguas"), ("machos", "Machos"), ("potros", "Potros"), ("outros", "Outros")])
-ORIGENS = {"App": "App Android", "Portal Cliente": "Portal Campo", "Portal Gestor": "Portal do Gestor"}
+ORIGENS = {"App": "App Android", "Portal Cliente": "Portal Campo", "Portal Gestor": "Portal do Gestor", "App do gestor": "App do gestor"}
 MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 
 
@@ -271,7 +271,7 @@ def plantel(ctx):
 def campo(ctx):
     animais, regs, prots, de, ate = ctx["animais"], ctx["registros"], ctx["protocolos"], ctx["de"], ctx["ate"]
     _alvo, _ids, per = filtrar(animais, regs, de, ate, ctx["animal"], ctx["categoria"])
-    lst = [x for x in per if x.get("origem") != "Portal Gestor"]
+    lst = [x for x in per if x.get("origem") not in ("Portal Gestor", "App do gestor")]
     nomes = {a["id"]: a["nome"] for a in animais}
     pessoa, tipo, origem = Counter(x.get("autor") or "-" for x in lst), Counter(x["tipo"] for x in lst), Counter(ORIGENS.get(x.get("origem"), x.get("origem")) for x in lst)
     fotos = sum(len(x.get("fotos") or []) for x in lst)

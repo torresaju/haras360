@@ -209,6 +209,11 @@ with sync_playwright() as pw:
             a.wait_for_selector("#aud-t table")
         if nome:
             foto(a, nome)
+        if v == "parametros":  # v1.5.0: liberação de teste do app do gestor sem HTTPS (bloqueada por padrão)
+            kv = a.locator('.kv:has([data-act="g-semhttps"])')
+            assert kv.locator('[data-act="g-semhttps"][data-v="0"][aria-pressed="true"]').count() == 1, "app do gestor sem HTTPS deveria vir bloqueado"
+            kv.scroll_into_view_if_needed()
+            kv.screenshot(path=str(SAIDA / "admin-app-gestor.png"))
     nav.close()
 
 if ERROS:

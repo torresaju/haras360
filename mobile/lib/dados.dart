@@ -15,7 +15,17 @@ class Dados extends ChangeNotifier {
   bool sincronizando = false;
   bool desvinculado = false;
 
+  /// Perfil deste celular (v1.5.0): "operador" (caseiro) ou "gestor".
+  String perfil = 'operador';
+  /// Servidor e token deste celular (para baixar fotos e áudios do prontuário).
+  Credenciais? cred;
+  bool get gestor => perfil == 'gestor';
+
   List get animais => (estado?['animais'] as List?)?.where((a) => a['vivo'] == true).toList() ?? const [];
+  /// Todos os animais, inclusive inativos e baixados (filtro do gestor).
+  List get todosAnimais => (estado?['animais'] as List?) ?? const [];
+  bool get relatoriosLiberado => estado?['relatorios'] == true;
+  List get registros => (estado?['registros'] as List?) ?? const [];
   List get protocolos => (estado?['protocolos'] as List?) ?? const [];
   /// Avisos da última sincronização, sem os de campo e documentação e sem os já atendidos neste celular.
   List get avisos => ((estado?['notificacoes'] as List?) ?? const [])
@@ -32,7 +42,7 @@ class Dados extends ChangeNotifier {
 
   List<Map<String, dynamic>> get tarefas => tarefasPendentes((estado?['tarefas'] as List?) ?? const [], locais.where((r) => r['_erro'] == null).toList());
 
-  Map? animal(String? id) => animais.cast<Map?>().firstWhere((a) => a?['id'] == id, orElse: () => null);
+  Map? animal(String? id) => todosAnimais.cast<Map?>().firstWhere((a) => a?['id'] == id, orElse: () => null);
 
   /// Histórico do animal: registros do servidor e os feitos neste celular, mais recentes primeiro.
   List<Map> historico(String id) {
@@ -47,6 +57,8 @@ class Dados extends ChangeNotifier {
   Map? gestacao(String id) => (estado?['gestacoes'] as Map?)?[id] as Map?;
 
   Future<void> carregar() async {
+    perfil = await Credenciais.perfilSalvo();
+    cred = await Credenciais.ler();
     estado = await Banco.estado();
     locais = await Banco.registrosLocais();
     contagem = await Banco.contagem();

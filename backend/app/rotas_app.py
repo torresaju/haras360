@@ -1,4 +1,5 @@
-"""Rotas do app Android do caseiro (v1.1.0): vínculo por QR Code, sincronização, fotos e versão do APK."""
+"""Rotas do app Android: caseiro por QR Code (v1.1.0) e gestor por e-mail, senha e 2FA (v1.5.0);
+sincronização, fotos, áudios e versão do APK."""
 import hashlib
 import json
 import re
@@ -15,7 +16,8 @@ from . import parametros as P
 from .config import APP_DIR, FOTOS_DIR
 from .db import Audio, Foto, Haras, Registro, Sessao, Usuario, VinculoApp
 from .rotas_haras import ASSINATURAS, estado
-from .seguranca import (auditar, checar_limite, criar_sessao, do_haras, erro, gestor, get_db, ip_de, limpar_falhas, qr_svg, registrar_falha)
+from .seguranca import (auditar, checar_limite, confere_senha, confere_totp, criar_sessao, do_haras, erro, exige_2fa, gestor, get_db, ip_de,
+                        limpar_falhas, qr_svg, registrar_falha, sessao_da_requisicao, usar_codigo_recuperacao)
 
 r = APIRouter()
 
@@ -112,22 +114,111 @@ def vincular(request: Request, body: dict = Body(...), db=Depends(get_db)):
     return {"token": token, "sessao": s.publico, "nome": u.nome, "email": u.email, "haras": h.nome}
 
 
+# ---------------- login do gestor no app (v1.5.0) ----------------
+def https(request: Request):
+    return request.url.scheme == "https"
+
+
+def _exigir_https(db, request):
+    if not https(request) and not P.ler(db, "app_gestor_sem_https"):
+        erro(403, "O app do gestor só funciona com o servidor em HTTPS. Use o portal no navegador até o administrador ativar o HTTPS.")
+
+
+def _aparelho(body):
+    return re.sub(r"[\x00-\x1f]", "", str(body.get("aparelho") or "Celular Android"))[:120]
+
+
+@r.post("/api/app/entrar")
+def entrar_gestor(request: Request, body: dict = Body(...), db=Depends(get_db)):
+    _exigir_https(db, request)
+    email = str(body.get("email") or "").strip().lower()[:160]
+    chave = ip_de(request) + "|" + email
+    checar_limite(db, chave)
+    u = db.scalar(select(Usuario).where(Usuario.email == email))
+    if not u or not u.ativo or not confere_senha(str(body.get("senha") or ""), u.senha_hash):
+        registrar_falha(chave)
+        auditar(db, "login_falha", usuario=u, alvo=f"app · {email}", resultado="falha", request=request, nome=email)
+        db.commit()
+        erro(401, "E-mail ou senha incorretos.")
+    if u.perfil == "operador":
+        erro(403, "O caseiro entra no app pelo QR Code que o gestor gera em Equipe.")
+    if u.perfil != "gestor":
+        erro(403, "O app é para gestores e caseiros dos haras. Administradores usam o portal.")
+    h = db.get(Haras, u.haras_id)
+    if not h or not h.ativo:
+        erro(403, "Este haras está desativado. Fale com o administrador.")
+    if exige_2fa(u) and not u.totp_ativo:
+        erro(403, "Ative a verificação em duas etapas (2FA) no portal antes de usar o app.")
+    limpar_falhas(chave)
+    token, _s = criar_sessao(db, u, request, etapa="2fa", tipo="app")
+    _s.agente = f"App Android · {_aparelho(body)}"[:200]
+    db.commit()
+    return {"etapa": "2fa", "desafio": token, "nome": u.nome}
+
+
+@r.post("/api/app/entrar/2fa")
+def entrar_gestor_2fa(request: Request, body: dict = Body(...), db=Depends(get_db)):
+    _exigir_https(db, request)
+    tok = str(body.get("desafio") or "")
+    if not tok:
+        erro(401, "Sessão expirada. Faça login novamente.")
+    s, u = sessao_da_requisicao(db, request, etapas=("2fa",), token=tok)
+    chave = "2fa|" + str(u.id)
+    checar_limite(db, chave)
+    codigo = str(body.get("codigo") or "")
+    recuperacao = False
+    if confere_totp(u.totp_segredo, codigo):
+        pass
+    elif usar_codigo_recuperacao(u, codigo):
+        recuperacao = True
+    else:
+        registrar_falha(chave)
+        auditar(db, "2fa_falha", usuario=u, alvo="app", resultado="falha", request=request)
+        db.commit()
+        erro(400, "Código incorreto. Confira a hora do celular e digite o código atual do autenticador.")
+    s.revogada = True
+    token, novo = criar_sessao(db, u, request, tipo="app")
+    novo.agente = s.agente
+    novo.expira_em = datetime.now() + timedelta(days=int(P.ler(db, "sessao_app_gestor_dias")))
+    h = db.get(Haras, u.haras_id)
+    auditar(db, "app_gestor_entrou", usuario=u, alvo=s.agente.replace("App Android · ", "") + (" (código de recuperação)" if recuperacao else ""), request=request)
+    db.commit()
+    limpar_falhas(chave)
+    return {"token": token, "sessao": novo.publico, "nome": u.nome, "email": u.email, "haras": h.nome, "perfil": "gestor",
+            "restantes": len(u.recuperacao or []) if recuperacao else None}
+
+
+@r.post("/api/app/sair")
+def sair_app(request: Request, u: Usuario = Depends(do_haras), db=Depends(get_db)):
+    s: Sessao = db.get(Sessao, request.state.sessao.token_hash)
+    s.revogada = True
+    auditar(db, "app_saiu", usuario=u, alvo=s.agente.replace("App Android · ", ""), request=request)
+    db.commit()
+    return {"ok": True}
+
+
 # ---------------- sincronização ----------------
 @r.get("/api/app/sincronizar")
 def sincronizar(request: Request, u: Usuario = Depends(do_haras), db=Depends(get_db)):
-    if u.perfil != "operador":
-        erro(403, "A sincronização é do app do caseiro.")
     s: Sessao = db.get(Sessao, request.state.sessao.token_hash)
+    if u.perfil == "gestor":
+        if s.tipo != "app":
+            erro(403, "Entre pelo app com e-mail, senha e 2FA.")
+        _exigir_https(db, request)
     if s.tipo == "app":
-        # Cada sincronização renova a validade do aparelho.
-        s.expira_em = datetime.now() + timedelta(days=int(P.ler(db, "sessao_app_dias")))
+        # Cada sincronização renova a validade do aparelho (gestor: 30 dias sem uso, por padrão).
+        dias = "sessao_app_gestor_dias" if u.perfil == "gestor" else "sessao_app_dias"
+        s.expira_em = datetime.now() + timedelta(days=int(P.ler(db, dias)))
         s.ultimo_uso = datetime.now()
         db.commit()
     e = estado(u, db)
-    for k in ("usuarios", "plano", "notifPrefs"):
+    for k in ("usuarios", "notifPrefs") + (("plano",) if u.perfil != "gestor" else ()):
         e.pop(k, None)
+    h = db.get(Haras, u.haras_id)
+    e["perfil"] = u.perfil
+    e["relatorios"] = u.perfil == "gestor" and P.modulo_liberado(db, h, "relatorios")
     e["app"] = info_apk()
-    e["audio"] = {"liberado": P.modulo_liberado(db, db.get(Haras, u.haras_id), "audio"), "maxSeg": int(P.ler(db, "audio_max_seg"))}
+    e["audio"] = {"liberado": P.modulo_liberado(db, h, "audio"), "maxSeg": int(P.ler(db, "audio_max_seg"))}
     e["sincronizadoEm"] = datetime.now().isoformat(timespec="seconds")
     return e
 

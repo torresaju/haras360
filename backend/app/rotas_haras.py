@@ -43,8 +43,14 @@ def _txt(v, n=200):
     return str(v or "").strip()[:n]
 
 
-def origem_de(request: Request):
-    return {"gestor": "Portal Gestor", "campo": "Portal Cliente", "app": "App"}.get(request.headers.get("x-portal", ""), "Portal Cliente")
+DO_GESTOR = ("Portal Gestor", "App do gestor")  # origens que não são registros do campo
+
+
+def origem_de(request: Request, u: Usuario = None):
+    o = {"gestor": "Portal Gestor", "campo": "Portal Cliente", "app": "App"}.get(request.headers.get("x-portal", ""), "Portal Cliente")
+    if o == "App" and u is not None and u.perfil == "gestor":
+        return "App do gestor"  # v1.5.0
+    return o
 
 
 # ---------------- leitura do estado ----------------
@@ -116,7 +122,7 @@ def estado(u: Usuario = Depends(do_haras), db=Depends(get_db)):
         "plano": dict(plano, faixas=faixas, mensalidade=P.mensalidade(faixas, ativos), modulosNomes=P.MODULOS),
         "haras": hd, "usuario": {"id": u.id, "nome": u.nome, "email": u.email, "perfil": u.perfil},
         "usuarios": usuarios, "animais": animais, "registros": regs, "protocolos": prots,
-        "notifPrefs": h.notif_prefs or R.notif_prefs_padrao(), "lidas": lidas,
+        "notifPrefs": {**R.notif_prefs_padrao(), **(h.notif_prefs or {})}, "lidas": lidas,
         "tarefas": ts, "gestacoes": {a["id"]: R.gestacao(a, regs, hd["gestacaoDias"]) for a in animais},
         "notificacoes": R.notificacoes(hd, animais, regs, prots, ts),
         "imagens": IMG.descrever(db, u.haras_id),
@@ -360,7 +366,7 @@ def criar_registro(request: Request, body: dict = Body(...), u: Usuario = Depend
     if len(fotos) > 4:
         erro(400, "Envie no máximo 4 fotos por registro.")
     rg = Registro(id=rid or "r" + nid(), haras_id=u.haras_id, animal_id=a.id, data=data, tipo=tipo, protocolos=pl, dose=dose, obs=_txt(body.get("obs"), 4000),
-                  dados=dados, autor=u.nome, autor_id=u.id, origem=origem_de(request))
+                  dados=dados, autor=u.nome, autor_id=u.id, origem=origem_de(request, u))
     db.add(rg)
     db.flush()
     salvos = []

@@ -12,6 +12,8 @@ O que muda:
 * Permissões: internet, câmera, microfone (áudio nos registros) e estado da rede. HTTP liberado porque o servidor ainda é
   acessado por IP sem HTTPS (risco registrado na especificação).
 * Leitor de QR Code pelo Google Play Services (APK menor) e ícone do app.
+* App do gestor (v1.5.0): avisos no celular (POST_NOTIFICATIONS, desugaring exigido pelo
+  flutter_local_notifications) e digital ou PIN (USE_BIOMETRIC e FlutterFragmentActivity, exigida pelo local_auth).
 """
 import re
 import shutil
@@ -63,6 +65,8 @@ def gradle():
     s = trocar(s, r"^\s*buildTypes\s*\{", assinatura, "buildTypes")
     s = trocar(s, r"signingConfig\s*=?\s*signingConfigs\.debug",
                'signingConfig = System.getenv("H360_KEYSTORE") ? signingConfigs.release : signingConfigs.debug', "signingConfig")
+    s = trocar(s, r"^(\s*)compileOptions\s*\{", r"\1compileOptions {\n\1    coreLibraryDesugaringEnabled true", "compileOptions")
+    s = s.rstrip() + "\n\ndependencies {\n    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'\n}\n"
     p.write_text(s, encoding="utf-8")
 
 
@@ -91,6 +95,8 @@ def gradle_kts(p):
     s = trocar(s, r'signingConfig\s*=\s*signingConfigs\.getByName\("debug"\)',
                'signingConfig = if (System.getenv("H360_KEYSTORE").isNullOrEmpty()) signingConfigs.getByName("debug") else signingConfigs.getByName("release")',
                "signingConfig")
+    s = trocar(s, r"^(\s*)compileOptions\s*\{", r"\1compileOptions {\n\1    isCoreLibraryDesugaringEnabled = true", "compileOptions")
+    s = s.rstrip() + '\n\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n}\n'
     p.write_text(s, encoding="utf-8")
 
 
@@ -99,11 +105,27 @@ def manifesto():
     s = p.read_text(encoding="utf-8")
     if "usesCleartextTraffic" in s:
         return
-    perms = "\n".join(f'    <uses-permission android:name="android.permission.{x}"/>' for x in ("INTERNET", "CAMERA", "ACCESS_NETWORK_STATE", "RECORD_AUDIO"))
+    perms = "\n".join(f'    <uses-permission android:name="android.permission.{x}"/>'
+                      for x in ("INTERNET", "CAMERA", "ACCESS_NETWORK_STATE", "RECORD_AUDIO", "POST_NOTIFICATIONS", "USE_BIOMETRIC"))
     s = re.sub(r"(<manifest[^>]*>)", r"\1\n" + perms, s, count=1)
     s = re.sub(r'android:label="[^"]*"', 'android:label="Haras360"', s, count=1)
     s = s.replace("<application", '<application\n        android:usesCleartextTraffic="true"', 1)
     p.write_text(s, encoding="utf-8")
+
+
+def atividade():
+    # local_auth (digital ou PIN do app do gestor) exige FlutterFragmentActivity.
+    for p in (ANDROID / "app" / "src" / "main").rglob("MainActivity.*"):
+        s = p.read_text(encoding="utf-8")
+        if "FlutterFragmentActivity" not in s:
+            s = s.replace("io.flutter.embedding.android.FlutterActivity", "io.flutter.embedding.android.FlutterFragmentActivity")
+            s = re.sub(r"\bFlutterActivity\(\)", "FlutterFragmentActivity()", s)
+            s = re.sub(r"extends FlutterActivity\b", "extends FlutterFragmentActivity", s)
+            if "FlutterFragmentActivity" not in s:
+                falhar(f"não consegui trocar a atividade em {p.name}")
+            p.write_text(s, encoding="utf-8")
+        return
+    falhar("MainActivity não encontrada")
 
 
 def propriedades():
@@ -126,6 +148,7 @@ def icone():
 if __name__ == "__main__":
     gradle()
     manifesto()
+    atividade()
     propriedades()
     icone()
     print("android/ preparado: br.com.haras360.campo, API 26+, assinatura por variáveis de ambiente, permissões e ícone.")
