@@ -153,7 +153,7 @@ class _TelaRegistroState extends State<TelaRegistro> {
               child: TextField(
                   controller: _txt['foliculo'],
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Folículo (mm)', hintText: 'Ex.: 35')),
+                  decoration: const InputDecoration(labelText: 'Folículo (mm)')),
             ),
             _lista('edema', 'Edema uterino (0 a 3)', edemas),
           ] else

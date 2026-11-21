@@ -131,6 +131,7 @@ void main() {
     await t.enterText(find.widgetWithText(TextField, 'Folículo (mm)'), '34');
     FocusManager.instance.primaryFocus?.unfocus();
     await t.pump(const Duration(milliseconds: 600));
+    await t.pump(const Duration(milliseconds: 600));
     await captura(t, 'app-cio');
     await t.ensureVisible(find.text('Salvar registro'));
     await t.tap(find.text('Salvar registro'));
