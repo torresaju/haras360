@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:workmanager/workmanager.dart';
 
+import 'avisos_celular.dart';
 import 'banco.dart';
 import 'dados.dart';
 import 'marca.dart';
 import 'sincronizacao.dart';
 import 'tema.dart';
-import 'telas/inicio.dart';
-import 'telas/vincular.dart';
+import 'telas/inicio_gestor.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,13 +17,14 @@ Future<void> main() async {
   await Marca.carregar();
   if (cred != null) {
     await Sincronizador.agendar();
+    if (cred.gestor) await AvisosCelular.iniciar(); // toque numa notificação abre a ficha
   }
-  runApp(Haras360App(vinculado: cred != null));
+  runApp(Haras360App(inicial: await telaInicial()));
 }
 
 class Haras360App extends StatelessWidget {
-  final bool vinculado;
-  const Haras360App({super.key, required this.vinculado});
+  final Widget inicial;
+  const Haras360App({super.key, required this.inicial});
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -31,6 +32,6 @@ class Haras360App extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: tema(),
         locale: const Locale('pt', 'BR'),
-        home: vinculado ? const TelaInicio() : const TelaVincular(),
+        home: inicial,
       );
 }

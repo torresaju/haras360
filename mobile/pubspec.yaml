@@ -1,5 +1,5 @@
 name: haras360
-description: App Android do caseiro do Haras360, com trabalho offline e envio no Wi-Fi.
+description: App Android do Haras360 para o caseiro (offline, envio no Wi-Fi) e o gestor (v1.5.0).
 publish_to: none
 # A versão vem do arquivo VERSION do repositório (o build usa --build-name e --build-number).
 version: 1.1.0+10100
@@ -23,6 +23,9 @@ dependencies:
   url_launcher: 6.3.1
   record: 6.0.0
   audioplayers: 6.1.0
+  flutter_local_notifications: 18.0.1
+  local_auth: 2.3.0
+  share_plus: 10.1.4
 
 dev_dependencies:
   flutter_test:
@@ -30,6 +33,7 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   flutter_lints: 5.0.0
+  crypto: 3.0.6
 
 flutter:
   uses-material-design: true

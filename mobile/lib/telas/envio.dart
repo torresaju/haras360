@@ -36,7 +36,7 @@ class TelaEnvio extends StatelessWidget {
           child: ListTile(
             leading: const Icon(Icons.system_update, color: Cores.acento),
             title: Text('Nova versão do app: ${dados.app?['versao']}'),
-            subtitle: const Text('Baixe no Wi-Fi e instale por cima. Seus registros guardados não se perdem.'),
+            subtitle: const Text('Baixe e instale por cima. Seus registros guardados não se perdem.'),
             trailing: FilledButton(onPressed: () => _atualizar(context), child: const Text('Baixar')),
           ),
         ),
@@ -54,7 +54,11 @@ class TelaEnvio extends StatelessWidget {
             _linha('Última sincronização', dados.ultimaSinc == null ? 'nunca' : quando(dados.ultimaSinc!)),
             if (dados.ultimoErro.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: Text('Último problema: ${dados.ultimoErro}', style: const TextStyle(color: Cores.atrasado))),
             const SizedBox(height: 12),
-            const Text('O envio acontece sozinho, a cada hora, quando o celular está no Wi-Fi. Dados móveis (3G/4G) não são usados.', style: TextStyle(color: Cores.apagado)),
+            Text(
+                dados.gestor
+                    ? 'O envio acontece sozinho, a cada 15 minutos, no Wi-Fi ou nos dados móveis.'
+                    : 'O envio acontece sozinho, a cada hora, quando o celular está no Wi-Fi. Dados móveis (3G/4G) não são usados.',
+                style: const TextStyle(color: Cores.apagado)),
             const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: dados.sincronizando ? null : () => _sincronizar(context),

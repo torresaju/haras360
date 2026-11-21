@@ -44,6 +44,8 @@ class Api {
   Future<Map<String, dynamic>> post(String caminho, Map<String, dynamic> corpo) =>
       _exec(() => _c.post(_u(caminho), headers: {..._cab, 'Content-Type': 'application/json'}, body: jsonEncode(corpo)));
 
+  Future<Map<String, dynamic>> delete(String caminho) => _exec(() => _c.delete(_u(caminho), headers: _cab));
+
   Future<Map<String, dynamic>> enviarFoto(String registroId, String fotoId, int ordem, File arquivo) => _exec(() async {
         final req = http.MultipartRequest('POST', _u('/api/app/fotos'))
           ..headers.addAll(_cab)

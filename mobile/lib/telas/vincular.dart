@@ -8,9 +8,11 @@ import '../regras_app.dart';
 import '../sincronizacao.dart';
 import '../marca.dart';
 import '../tema.dart';
+import 'entrar_gestor.dart';
 import 'inicio.dart';
 
-/// Primeiro acesso: vínculo do celular pelo QR Code do gestor (ou e-mail e senha). Exige conexão.
+/// Primeiro acesso: caseiro vincula pelo QR Code do gestor (ou código, ou e-mail e senha);
+/// gestor entra com e-mail, senha e 2FA (v1.5.0). Exige conexão.
 class TelaVincular extends StatefulWidget {
   const TelaVincular({super.key});
   @override
@@ -98,7 +100,7 @@ class _TelaVincularState extends State<TelaVincular> {
               const Text('GESTÃO DE HARAS', textAlign: TextAlign.center, style: TextStyle(color: Cores.florestaApagado, fontSize: 12, letterSpacing: 4)),
               const Spacer(),
               const SizedBox(height: 8),
-              const Text('Peça ao gestor o QR Code em Equipe › Vincular celular. Faça o vínculo no Wi-Fi do haras; depois o app funciona sem internet.',
+              const Text('Sou caseiro: peça ao gestor o QR Code em Equipe › Vincular celular. Faça o vínculo no Wi-Fi do haras; depois o app funciona sem internet.',
                   textAlign: TextAlign.center, style: TextStyle(color: Cores.florestaApagado)),
               const Spacer(),
               if (_erro != null)
@@ -118,6 +120,13 @@ class _TelaVincularState extends State<TelaVincular> {
               TextButton(
                 onPressed: _ocupado ? null : _digitar,
                 child: const Text('Sem câmera? Digitar código ou entrar com e-mail', style: TextStyle(color: Cores.florestaTinta)),
+              ),
+              const SizedBox(height: 4),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(foregroundColor: Cores.florestaTinta, side: const BorderSide(color: Cores.florestaApagado), minimumSize: const Size(48, 50)),
+                onPressed: _ocupado ? null : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TelaEntrarGestor())),
+                icon: const Icon(Icons.manage_accounts_outlined),
+                label: const Text('Sou gestor: entrar com e-mail e 2FA'),
               ),
             ]),
           ),

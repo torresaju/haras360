@@ -7,25 +7,36 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
-/// Endereço do servidor e token do aparelho, no armazenamento seguro do Android.
+/// Endereço do servidor, token e perfil do aparelho, no armazenamento seguro do Android.
+/// Perfil: "operador" (caseiro, por QR Code) ou "gestor" (e-mail, senha e 2FA, v1.5.0). Um perfil por celular.
 class Credenciais {
   static const _s = FlutterSecureStorage(aOptions: AndroidOptions(encryptedSharedPreferences: true));
   final String servidor;
   final String token;
   final String nome;
-  Credenciais(this.servidor, this.token, this.nome);
+  final String perfil;
+  Credenciais(this.servidor, this.token, this.nome, {this.perfil = 'operador'});
+
+  bool get gestor => perfil == 'gestor';
+
+  /// Último perfil gravado, mesmo sem token (para o app saber qual tela abrir depois de um desvínculo).
+  static Future<String> perfilSalvo() async => (await _s.read(key: 'perfil')) ?? 'operador';
 
   static Future<Credenciais?> ler() async {
     final v = await _s.readAll();
     if ((v['servidor'] ?? '').isEmpty || (v['token'] ?? '').isEmpty) return null;
-    return Credenciais(v['servidor']!, v['token']!, v['nome'] ?? '');
+    return Credenciais(v['servidor']!, v['token']!, v['nome'] ?? '', perfil: v['perfil'] ?? 'operador');
   }
 
   Future<void> gravar() async {
     await _s.write(key: 'servidor', value: servidor);
     await _s.write(key: 'token', value: token);
     await _s.write(key: 'nome', value: nome);
+    await _s.write(key: 'perfil', value: perfil);
   }
+
+  /// Sair (v1.5.0): apaga a sessão e o perfil deste celular.
+  static Future<void> apagar() => _s.deleteAll();
 
   /// Esquece só o token: a fila de envio continua guardada para o próximo vínculo.
   static Future<void> esquecerToken() => _s.delete(key: 'token');
@@ -71,6 +82,19 @@ class Banco {
   static Future<void> gravarEstado(Map<String, dynamic> e) async {
     await gravar('snapshot', jsonEncode(e));
     await gravar('ultimaSincronizacao', DateTime.now().toIso8601String());
+  }
+
+  /// Sair (v1.5.0): apaga o estado, as filas e os arquivos deste celular. Só depois de tudo enviado.
+  static Future<void> limparTudo() async {
+    final db = await abrir();
+    for (final t in ['estado', 'fila', 'fotos', 'audios']) {
+      await db.delete(t);
+    }
+    final docs = await getApplicationDocumentsDirectory();
+    for (final nome in ['fotos', 'marca']) {
+      final d = Directory(p.join(docs.path, nome));
+      if (await d.exists()) await d.delete(recursive: true);
+    }
   }
 
   // ---------- fila de registros ----------
