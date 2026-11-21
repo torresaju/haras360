@@ -51,6 +51,12 @@ def test_login_com_2fa_e_uso_das_rotas_do_gestor(portal):
     assert s["perfil"] == "gestor" and s["relatorios"] is True and "plano" in s and "usuarios" not in s
     assert c.get("/api/relatorios/plantel", headers=T).status_code == 200
     assert c.get("/api/relatorios/campo/exportar?formato=csv", headers=T).status_code == 200
+    aid = c.post("/api/animais", json={"nome": "Do App do Gestor", "sexo": "F", "nascimento": "2017-03-03"}, headers=T).json()["id"]
+    rg = c.post("/api/registros", json={"animalId": aid, "data": R.iso(R.hoje()), "tipo": "reprodutivo", "evento": "Cio", "sinais": "Inquieta"}, headers=T)
+    assert rg.status_code == 200, rg.text
+    est = c.get("/api/app/sincronizar", headers=T).json()
+    assert next(x for x in est["registros"] if x["id"] == rg.json()["id"])["origem"] == "App do gestor"
+    assert not any(n.get("animalId") == aid and n["tipo"] == "campo" for n in est["notificacoes"])
     # a sessão aparece para o gestor no portal como celular
     sess = portal.get("/api/sessoes").json()
     assert any("Moto G Teste" in x.get("agente", "") for x in sess)

@@ -347,7 +347,7 @@ def notificacoes(haras, animais, registros, prots, ts=None):
             n.append({"id": f"n:{t['id']}", "tipo": "documental", "sev": "critico" if t.get("critico") else "info", "titulo": f"{t['titulo']} · {t['animal']}", "texto": t["nota"] + ".", "animalId": t["animalId"]})
     limite = iso(add_dias(hoje(), -7))
     nomes = {a["id"]: a["nome"] for a in animais}
-    campo = [r for r in registros if r.get("origem") != "Portal Gestor" and r["data"] >= limite]
+    campo = [r for r in registros if r.get("origem") not in ("Portal Gestor", "App do gestor") and r["data"] >= limite]
     for r in reversed(_por_data(campo)):
         if haras.get("avisoOcorrenciaGrave") and r["tipo"] == "ocorrencia" and r.get("gravidade") == "Grave":
             n.append({"id": f"n:ocorrencia:{r['id']}", "tipo": "ocorrencia", "sev": "critico", "titulo": f"Ocorrência grave · {nomes.get(r['animalId'], '')}",
