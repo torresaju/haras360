@@ -4,6 +4,7 @@ Nada que o negócio possa querer mudar fica fixo no código. Cada chave tem um
 valor padrão aqui; o banco guarda apenas o que foi alterado.
 """
 import copy
+import re
 
 from sqlalchemy import select
 
@@ -36,6 +37,12 @@ PADRAO_GLOBAL = {
     # App do gestor (v1.5.0): sessão expira após N dias sem uso; exige HTTPS, salvo a chave de teste
     "sessao_app_gestor_dias": 30,
     "app_gestor_sem_https": False,
+    # v1.5.1: links para as normas oficiais da ABCCMM (Portal do Gestor e app do gestor)
+    "normas_abccmm": [
+        {"titulo": "Estatuto e Regulamentos (site da ABCCMM)", "url": "https://www.abccmm.org.br/estatutos.aspx"},
+        {"titulo": "Regulamento do Serviço de Registro Genealógico (PDF)", "url": "http://leia.abccmm.org.br/portal/regulamentos/regulamentosrg.pdf"},
+        {"titulo": "Estatuto da ABCCMM (PDF)", "url": "http://leia.abccmm.org.br/portal/estatuto.pdf"},
+    ],
     "audio_max_seg": 120,
     "smtp": {"host": "", "porta": 587, "usuario": "", "senha": "", "remetente": "", "tls": True},
     "email_contato": "",
@@ -161,6 +168,16 @@ def validar_global(body, atual):
         if s.get("senha"):  # senha só muda quando informada
             smtp["senha"] = str(s["senha"])[:200]
         novo["smtp"] = smtp
+    if "normas_abccmm" in body:
+        nl = []
+        for n in (body["normas_abccmm"] or [])[:8]:
+            titulo, url = str(n.get("titulo") or "").strip()[:120], str(n.get("url") or "").strip()[:500]
+            if not titulo and not url:
+                continue
+            if not titulo or not re.match(r"^https?://[^\s<>\"']+$", url):
+                raise ValueError("Cada link de norma precisa de um título e de um endereço começando com http:// ou https://.")
+            nl.append({"titulo": titulo, "url": url})
+        novo["normas_abccmm"] = nl
     if "faixas" in body:
         fx = []
         for f in body["faixas"]:

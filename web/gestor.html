@@ -92,14 +92,14 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       { id: 'agenda', rotulo: 'Agenda', ic: 'agenda' },
       { id: 'relatorios', rotulo: 'Relatórios', ic: 'graf', off: !modOn('relatorios') },
       { grupo: 'Administração', ic: 'engr', itens: [{ id: 'equipe', rotulo: 'Equipe' }, { id: 'parametros', rotulo: 'Parametrizações', tambem: ['imagens'] }, { id: 'auditoria', rotulo: 'Auditoria' }, { id: 'assistente', rotulo: 'Assistente', off: !modOn('assistente') }, { id: 'plano', rotulo: 'Plano' }] },
-      { grupo: 'Ajuda', ic: 'ajuda', itens: [{ id: 'sobre', rotulo: 'Sobre' }, { href: '/ajuda', rotulo: 'Manual' }, { id: 'glossario', rotulo: 'Glossário' }] }
+      { grupo: 'Ajuda', ic: 'ajuda', itens: [{ id: 'sobre', rotulo: 'Sobre' }, { href: '/ajuda', rotulo: 'Manual' }, { id: 'glossario', rotulo: 'Glossário' }, { id: 'normas', rotulo: 'Normas da ABCCMM' }] }
     ];
   }
   const TITULOS = {
     painel: ['Visão geral do rebanho, sanidade e reprodução', 'Dashboard'], animais: ['Animais', 'Plantel'], sanidade: ['Sanidade', 'Vacinas e manejos'], reproducao: ['Reprodução', 'Gestações, cios e coberturas'], relatorios: ['Desempenho do haras', 'Relatórios'], imagens: ['Parametrizações', 'Imagens do haras'], ficha: ['Ficha do animal', ''], importar: ['Plantel', 'Importar Relatório de Plantel'],
     agenda: ['Agenda', 'Próximos eventos e prazos'], protocolos: ['Sanidade', 'Protocolos e intervalos'], notificacoes: ['Alertas', 'Notificações'],
     equipe: ['Usuários, perfis e sessões', 'Equipe do haras'], assistente: ['Inteligência artificial', 'Assistente ABCCMM'], plano: ['Administração', 'Plano e cobrança'],
-    parametros: ['Administração', 'Parametrizações do haras'], auditoria: ['Administração', 'Auditoria'], sobre: ['Ajuda', 'Sobre o Haras360'], glossario: ['Ajuda', 'Glossário']
+    parametros: ['Administração', 'Parametrizações do haras'], auditoria: ['Administração', 'Auditoria'], sobre: ['Ajuda', 'Sobre o Haras360'], glossario: ['Ajuda', 'Glossário'], normas: ['Ajuda', 'Normas da ABCCMM']
   };
 
   function go(v, p) {
@@ -115,7 +115,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     const ti = ti0;
     $('#v-eyebrow').textContent = eb;
     $('#v-title').textContent = view === 'ficha' ? ((H.animal(S, param) || {}).nome || 'Animal') : ti;
-    $('#v-acts').hidden = ['parametros', 'auditoria', 'sobre', 'glossario', 'plano', 'equipe', 'relatorios'].includes(view);
+    $('#v-acts').hidden = ['parametros', 'auditoria', 'sobre', 'glossario', 'plano', 'equipe', 'relatorios', 'normas'].includes(view);
     document.title = 'Haras360 · ' + ($('#v-title').textContent || 'Gestor');
     const v = $('#view');
     v.classList.remove('view-in'); void v.offsetWidth; v.classList.add('view-in');
@@ -338,6 +338,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     if (!importacao) {
       return '<div class="sec"><div class="steps"><span class="on">1. Enviar PDF</span><span>2. Conferir</span><span>3. Importar</span></div>' +
         '<div class="grid2"><div class="card stack"><h2>Relatório de Plantel da ABCCMM</h2><p class="muted">Envie o PDF gerado no Sistema de Gestão ABCCMM. O Haras360 lê nome, livro, registro, sexo, bloqueio, situação, DNA, nascimento e microchip de cada animal e confere com o resumo do relatório antes de gravar.</p>' +
+        ((S.normas || []).length ? '<p class="small">Dúvidas sobre registro, livros ou prazos? <a href="#" data-act="nav" data-v="normas">Consulte as normas da ABCCMM</a>.</p>' : '') +
         '<label class="drop" id="drop" for="pdf">' + IC.upload + '<b>Arraste o PDF aqui ou clique para escolher</b><span class="small muted">Arquivo .pdf · o conteúdo é lido no seu navegador</span></label><input id="pdf" type="file" accept="application/pdf,.pdf" hidden>' +
         '<p id="imp-st" class="note" hidden></p></div>' +
         '<div class="card stack"><h3>Como funciona</h3><ol class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px"><li>Animais já cadastrados são reconhecidos pelo registro, chip ou nome, e não são duplicados.</li><li>Animais sem registro ou sem exame de DNA geram pendências documentais.</li><li>A data de nascimento alimenta o motor de regras, que calcula a agenda de vacinas e manejos.</li><li>A genealogia é completada depois, na ficha, à mão ou pelo certificado.</li></ol>' +
@@ -540,7 +541,17 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   }
 
   /* ================= ASSISTENTE ================= */
-  function vAssistente() { return UI.chatHTML(chat, 'Pergunte ao assistente', 'Respostas com base no plantel, na agenda e no protocolo de vacinação. A próxima versão será treinada com as normas e regulamentos da ABCCMM.'); }
+  /* v1.5.1: links para as normas oficiais da ABCCMM (parametrizados pelo administrador) */
+  const linksNormas = () => (S.normas || []).map(n => '<a class="norma" href="' + esc(n.url) + '" target="_blank" rel="noopener noreferrer">' + IC.file + '<span>' + esc(n.titulo) + '</span></a>').join('');
+  function cartaoNormas(compacto) {
+    if (!(S.normas || []).length) return '';
+    return '<div class="card stack normas"><div><h2>Normas oficiais da ABCCMM</h2>' + (compacto ? '' : '<p class="small muted">Estatuto e Regulamento do Registro Genealógico, direto no site da ABCCMM. Abre em uma nova aba.</p>') + '</div><div class="normas-l">' + linksNormas() + '</div></div>';
+  }
+  function vNormas() {
+    return '<div class="sec">' + (cartaoNormas() || '<div class="card empty">Nenhum link cadastrado pelo administrador.</div>') +
+      '<p class="small muted">Os documentos são publicados e mantidos pela ABCCMM. Em caso de dúvida sobre a versão vigente, confirme com a associação.</p></div>';
+  }
+  function vAssistente() { return '<div class="sec">' + cartaoNormas(true) + UI.chatHTML(chat, 'Pergunte ao assistente', 'Respostas com base no plantel, na agenda e no protocolo de vacinação. Para dúvidas sobre normas da ABCCMM, use os links acima.') + '</div>'; }
   function perguntar(q) {
     q = (q || '').trim(); if (!q) return;
     chat.push({ de: 'me', t: q });
@@ -575,7 +586,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     $('#sim-out').innerHTML = '<b style="font-family:var(--f-display);font-size:2rem">' + (m === null ? 'A definir' : H.moeda(m)) + '</b>' + (m === null ? '' : '<span class="muted"> por mês</span>') + '<p class="small muted mono">' + parts.join(' + ') + '</p>';
   }
 
-  const VIEWS = { relatorios: vRelatorios, painel: vPainel, sanidade: vSanidade, reproducao: vReproducao, animais: vAnimais, ficha: vFicha, importar: vImportar, agenda: vAgenda, protocolos: vProtocolos, notificacoes: vNotificacoes, equipe: vEquipe, assistente: vAssistente, plano: vPlano, parametros: vParametros, auditoria: vAuditoria, sobre: vSobre, glossario: vGlossario };
+  const VIEWS = { relatorios: vRelatorios, painel: vPainel, sanidade: vSanidade, reproducao: vReproducao, animais: vAnimais, ficha: vFicha, importar: vImportar, agenda: vAgenda, protocolos: vProtocolos, notificacoes: vNotificacoes, equipe: vEquipe, assistente: vAssistente, plano: vPlano, parametros: vParametros, auditoria: vAuditoria, sobre: vSobre, glossario: vGlossario, normas: vNormas };
   const AFTER = {
     relatorios() { carregarRel(); },
     animais() {

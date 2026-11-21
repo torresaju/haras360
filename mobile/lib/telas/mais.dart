@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../api.dart';
@@ -50,6 +51,10 @@ class TelaMais extends StatelessWidget {
                 const Divider(height: 1),
                 item(Icons.notifications_active_outlined, 'Avisos no celular', 'Tipos de aviso e horário de silêncio',
                     () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TelaPrefsAvisos()))),
+                if (((dados.estado?['normas'] as List?) ?? const []).isNotEmpty) ...[
+                  const Divider(height: 1),
+                  item(Icons.menu_book_outlined, 'Normas da ABCCMM', 'Estatuto e Regulamento do Registro Genealógico', () => normas(context)),
+                ],
               ],
             ]),
           ),
@@ -204,3 +209,32 @@ class _TelaPrefsAvisosState extends State<TelaPrefsAvisos> {
     );
   }
 }
+
+
+/// Normas oficiais da ABCCMM (v1.5.1): links do administrador, abertos no navegador do celular.
+void normas(BuildContext context) => showModalBottomSheet(
+      context: context,
+      builder: (c) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 18, 20, 4),
+            child: Text('Normas oficiais da ABCCMM', style: TextStyle(fontFamily: fonteTitulo, fontWeight: FontWeight.w800, fontSize: 18)),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+            child: Text('Abre no navegador. Os documentos são mantidos pela ABCCMM.', style: TextStyle(color: Cores.apagado)),
+          ),
+          for (final n in ((dados.estado?['normas'] as List?) ?? const []).cast<Map>())
+            ListTile(
+              leading: const Icon(Icons.description_outlined, color: Cores.floresta),
+              title: Text('${n['titulo']}'),
+              trailing: const Icon(Icons.open_in_new, size: 18),
+              onTap: () {
+                Navigator.pop(c);
+                launchUrl(Uri.parse('${n['url']}'), mode: LaunchMode.externalApplication);
+              },
+            ),
+          const SizedBox(height: 8),
+        ]),
+      ),
+    );

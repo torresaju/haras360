@@ -120,6 +120,7 @@ def estado(u: Usuario = Depends(do_haras), db=Depends(get_db)):
     return {
         "versao": VERSAO, "hoje": R.iso(R.hoje()), "limiteAnimais": plano["limite"],
         "plano": dict(plano, faixas=faixas, mensalidade=P.mensalidade(faixas, ativos), modulosNomes=P.MODULOS),
+        "normas": P.ler(db, "normas_abccmm") if u.perfil == "gestor" else [],
         "haras": hd, "usuario": {"id": u.id, "nome": u.nome, "email": u.email, "perfil": u.perfil},
         "usuarios": usuarios, "animais": animais, "registros": regs, "protocolos": prots,
         "notifPrefs": {**R.notif_prefs_padrao(), **(h.notif_prefs or {})}, "lidas": lidas,

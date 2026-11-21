@@ -105,3 +105,20 @@ def test_troca_de_senha_encerra_o_app(portal):
     finally:
         g = entrar("gestor@teste.com", "senha1234novo")
         g.post("/api/me/senha", json={"atual": "senha1234novo", "nova": "senha1234"}, headers=H)
+
+
+def test_links_das_normas_abccmm(base):
+    portal = entrar("gestor@teste.com", "senha1234")  # a troca de senha do teste anterior encerrou a sessão do módulo
+    est = portal.get("/api/estado").json()
+    assert [n["url"] for n in est["normas"]][0] == "https://www.abccmm.org.br/estatutos.aspx" and len(est["normas"]) == 3
+    adm = entrar("admin@teste.com", "admin1234")
+    ruim = adm.put("/api/admin/parametros", json={"normas_abccmm": [{"titulo": "X", "url": "javascript:alert(1)"}]}, headers=H)
+    assert ruim.status_code == 400
+    novo = [{"titulo": "Regulamento", "url": "https://exemplo.org/r.pdf"}]
+    assert adm.put("/api/admin/parametros", json={"normas_abccmm": novo}, headers=H).status_code == 200
+    try:
+        assert portal.get("/api/estado").json()["normas"] == novo
+        c = entrar("caseiro@teste.com", "campo1234", HC)
+        assert c.get("/api/estado").json()["normas"] == []
+    finally:
+        adm.put("/api/admin/parametros", json={"normas_abccmm": __import__("app.parametros", fromlist=["x"]).PADRAO_GLOBAL["normas_abccmm"]}, headers=H)

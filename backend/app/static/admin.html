@@ -382,6 +382,12 @@ hr.div{border:0;border-top:1px solid var(--line-2);margin:14px 0}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .rel-kpi b{color:var(--accent)}}
 @media (max-width:760px){.rel-filtros{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
+/* ---------- normas da ABCCMM (v1.5.1) ---------- */
+.normas-l{display:flex;flex-direction:column;gap:8px}
+.norma{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;color:var(--ink);text-decoration:none;font-weight:600}
+.norma:hover{border-color:var(--forest);background:var(--surface-2)}
+.norma svg{width:18px;height:18px;flex:none;color:var(--forest)}
+
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px 20px;margin:0}
 .facts div{display:flex;flex-direction:column;gap:2px;min-width:0}
 .facts dt{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
@@ -1267,6 +1273,8 @@ const UI = (function () {
       '<div class="field"><label for="s-user">Usuário</label><input id="s-user" class="inp" value="' + esc(p.smtp.usuario) + '" autocomplete="off"></div><div class="field"><label for="s-senha">Senha</label><input id="s-senha" type="password" class="inp" autocomplete="new-password" placeholder="' + (p.smtp.senhaDefinida ? 'definida; deixe em branco para manter' : '') + '"></div>' +
       '<div class="field"><label for="s-rem">Remetente</label><input id="s-rem" class="inp" value="' + esc(p.smtp.remetente) + '" placeholder="Haras360 <alertas@seudominio>"></div><div class="field"><label for="s-tls">Segurança</label><select id="s-tls" class="inp"><option value="1"' + (p.smtp.tls ? ' selected' : '') + '>STARTTLS</option><option value="0"' + (!p.smtp.tls ? ' selected' : '') + '>Nenhuma</option></select></div>' +
       '<div class="field full"><label for="g-contato">E-mail de contato do administrador</label><input id="g-contato" class="inp" value="' + esc(p.email_contato) + '"></div></div></div>' +
+      '<div class="card stack"><h2>Normas da ABCCMM</h2><p class="small muted">Links que o gestor vê no Assistente, em Ajuda, em Importar ABCCMM e no app. Um por linha, no formato <b>Título | endereço</b>. Atualize quando a ABCCMM publicar versões novas.</p>' +
+      '<div class="field"><label for="g-normas">Links (até 8)</label><textarea id="g-normas" class="inp mono" rows="4">' + esc((p.normas_abccmm || []).map(n => n.titulo + ' | ' + n.url).join('\n')) + '</textarea></div></div>' +
       '<div class="row" style="justify-content:flex-end"><button class="btn pri" data-act="salvar-globais">' + IC.check + 'Salvar parametrizações</button></div></div>';
   }
   function desenharPlanos() {
@@ -1409,6 +1417,7 @@ const UI = (function () {
       const n = id => Number(document.getElementById(id).value);
       const corpo = { planos: lerPlanosDaTela(), faixas: lerFaixasDaTela(), login_tentativas: n('g-tent'), login_janela_min: n('g-jan'), sessao_dias: n('g-sess'), sessao_app_dias: n('g-app'), sessao_app_gestor_dias: n('g-appg'),
         app_gestor_sem_https: document.querySelector('[data-act="g-semhttps"][aria-pressed="true"]').dataset.v === '1', audio_max_seg: n('g-audio'), email_contato: $('#g-contato').value.trim(),
+        normas_abccmm: $('#g-normas').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const i = l.lastIndexOf('|'); return i < 0 ? { titulo: l, url: '' } : { titulo: l.slice(0, i).trim(), url: l.slice(i + 1).trim() }; }),
         smtp: { host: $('#s-host').value.trim(), porta: n('s-porta'), usuario: $('#s-user').value.trim(), senha: $('#s-senha').value, remetente: $('#s-rem').value.trim(), tls: $('#s-tls').value === '1' } };
       if (Object.keys(corpo.planos).some(k => !k)) { UI.toast('Todo plano precisa de nome.'); return; }
       if (await executar(el, () => API.put('/api/admin/parametros', corpo))) render();

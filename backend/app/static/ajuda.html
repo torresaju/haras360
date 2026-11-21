@@ -382,6 +382,12 @@ hr.div{border:0;border-top:1px solid var(--line-2);margin:14px 0}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .rel-kpi b{color:var(--accent)}}
 @media (max-width:760px){.rel-filtros{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
+/* ---------- normas da ABCCMM (v1.5.1) ---------- */
+.normas-l{display:flex;flex-direction:column;gap:8px}
+.norma{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;color:var(--ink);text-decoration:none;font-weight:600}
+.norma:hover{border-color:var(--forest);background:var(--surface-2)}
+.norma svg{width:18px;height:18px;flex:none;color:var(--forest)}
+
 .acab{position:relative;background:var(--forest);color:var(--forest-ink);padding-inline:clamp(16px,4vw,48px);padding-block:36px 30px}
 .acab-in{max-width:1100px;margin:0 auto}
 .acab h1{font-size:clamp(1.8rem,1.3rem + 2vw,2.6rem)}
@@ -411,7 +417,7 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
 <header class="acab"><div class="acab-in"><div class="row" style="gap:10px;margin-bottom:12px"><span id="marca-ajuda" class="row" style="gap:10px"><svg class="logo-sim" viewBox="0 0 120 120" aria-hidden="true"><path d="M18 94 A50 50 0 0 1 94 20" fill="none" stroke="#D5A064" stroke-width="6" stroke-linecap="round"/><path d="M34 106 C31 84 34 64 43 49 C48 39 53 31 58 26 L60 16 L65 23 L69 15 L71 25 C78 30 84 38 89 48 C93 56 98 63 100 69 C101 74 97 78 92 77 C87 76 83 73 79 71 C74 69 70 70 68 74 C66 82 67 94 71 106" fill="none" stroke="#F3F1E9" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M57 32 C50 44 46 58 46 76" fill="none" stroke="#F3F1E9" stroke-width="3.2" stroke-linecap="round"/><circle cx="76" cy="41" r="2.8" fill="#F3F1E9"/></svg><span class="marca-txt"><b>Haras<i>360</i></b><small>Gestão de haras</small></span></span></div><div class="eyebrow" style="color:var(--forest-muted)">Ajuda</div><h1>Manual do Haras360</h1><p>Como usar o portal do gestor, o Portal Campo e a administração da plataforma. As telas mostram o Haras Demonstração, com dados fictícios.</p></div></header>
 <div class="corpo">
   <nav class="sumario" aria-label="Sumário">
-    <a href="#acesso">Primeiro acesso e 2FA</a><a href="#painel">Dashboard e menus</a><a href="#importar">Importar ABCCMM</a><a href="#animais">Animais e prontuário</a><a href="#baixa">Baixa de animais</a><a href="#agenda">Agenda e protocolos</a><a href="#cio">Cio e reprodução</a><a href="#relatorios">Relatórios</a><a href="#campo">Portal Campo</a><a href="#app">App Android do caseiro</a><a href="#app-gestor">App do gestor</a><a href="#equipe">Equipe e sessões</a><a href="#parametros">Parametrizações</a><a href="#imagens">Imagens do haras</a><a href="#auditoria">Auditoria</a><a href="#admin">Administração da plataforma</a><a href="#marca">Marca e imagens da plataforma</a><a href="#atualizacao">Atualização e backup</a>
+    <a href="#acesso">Primeiro acesso e 2FA</a><a href="#painel">Dashboard e menus</a><a href="#normas">Normas da ABCCMM</a><a href="#importar">Importar ABCCMM</a><a href="#animais">Animais e prontuário</a><a href="#baixa">Baixa de animais</a><a href="#agenda">Agenda e protocolos</a><a href="#cio">Cio e reprodução</a><a href="#relatorios">Relatórios</a><a href="#campo">Portal Campo</a><a href="#app">App Android do caseiro</a><a href="#app-gestor">App do gestor</a><a href="#equipe">Equipe e sessões</a><a href="#parametros">Parametrizações</a><a href="#imagens">Imagens do haras</a><a href="#auditoria">Auditoria</a><a href="#admin">Administração da plataforma</a><a href="#marca">Marca e imagens da plataforma</a><a href="#atualizacao">Atualização e backup</a>
   </nav>
   <article>
     <section id="acesso"><h2>Primeiro acesso e verificação em duas etapas</h2>
@@ -433,6 +439,10 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       <ol><li>No Sistema de Gestão ABCCMM, gere o Relatório de Plantel em PDF.</li><li>Em Plantel › Importar ABCCMM, envie o PDF. A leitura acontece no seu navegador.</li><li>Confira a lista: o sistema compara com o total informado no relatório e marca animais novos, a atualizar e já cadastrados.</li><li>Clique em Importar. A agenda sanitária é calculada na hora.</li></ol>
       <figure><img src="/ajuda/img/importar.png" alt="Tela de importação do Relatório de Plantel" loading="lazy"><figcaption>Envio do PDF da ABCCMM.</figcaption></figure>
       <p>Animais sem registro ou sem exame de DNA geram pendências documentais. O CPF do associado não é gravado.</p>
+    </section>
+    <section id="normas"><h2>Normas da ABCCMM</h2><span class="perfil">Gestor</span>
+      <p>Em Ajuda › <b>Normas da ABCCMM</b> (e também acima do chat do Assistente, na tela Importar ABCCMM e, no app do gestor, em Mais) ficam os links para o Estatuto e o Regulamento do Serviço de Registro Genealógico no site da ABCCMM. Eles abrem em uma nova aba. Os documentos são mantidos pela ABCCMM: em caso de dúvida sobre a versão vigente, confirme com a associação. O administrador atualiza os links em Parametrizações › Normas da ABCCMM.</p>
+      <figure><img src="/ajuda/img/normas.png" alt="Links para as normas da ABCCMM" loading="lazy"><figcaption>Ajuda › Normas da ABCCMM.</figcaption></figure>
     </section>
     <section id="animais"><h2>Animais e prontuário</h2><span class="perfil">Gestor</span>
       <p>A ficha do animal tem três abas: Prontuário (histórico com fotos), Agenda (próximas etapas calculadas) e Dados e genealogia (cadastro, pai, mãe e avós, com importação do certificado em PDF quando houver).</p>
