@@ -27,13 +27,15 @@ class _TelaRegistroState extends State<TelaRegistro> {
   late String _dose = _doseInicial(widget.pre['dose']);
   final _obs = TextEditingController();
   late final Map<String, TextEditingController> _txt = {
-    for (final k in ['produto', 'lote', 'ferrador', 'resultado', 'garanhao', 'titulo']) k: TextEditingController(),
+    for (final k in ['produto', 'lote', 'ferrador', 'resultado', 'garanhao', 'titulo', 'sinais', 'foliculo']) k: TextEditingController(),
   };
   late final Map<String, String> _sel = {
     'procedimento': (widget.pre['procedimento'] as String?) ?? procedimentosOdonto.first,
     'exame': (widget.pre['exame'] as String?) ?? exames.first,
     'evento': (widget.pre['evento'] as String?) ?? eventosRepro.first,
     'gravidade': gravidades.first,
+    'ovario': ovarios.first,
+    'edema': edemas.first,
   };
   DateTime? _cobertura;
   final List<File> _fotos = [];
@@ -143,7 +145,19 @@ class _TelaRegistroState extends State<TelaRegistro> {
       case 'reprodutivo':
         return [
           _lista('evento', 'Evento', eventosRepro),
-          _campo('garanhao', 'Garanhão'),
+          if (_sel['evento'] == 'Cio') ...[
+            _campo('sinais', 'Sinais observados', dica: 'Ex.: aceita o rufião, urina com frequência'),
+            _lista('ovario', 'Ovário (exame)', ovarios),
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: TextField(
+                  controller: _txt['foliculo'],
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Folículo (mm)')),
+            ),
+            _lista('edema', 'Edema uterino (0 a 3)', edemas),
+          ] else
+            _campo('garanhao', 'Garanhão'),
           if (_sel['evento'] == 'Diagnóstico positivo')
             Padding(
               padding: const EdgeInsets.only(top: 12),

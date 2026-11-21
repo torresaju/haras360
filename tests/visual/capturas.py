@@ -110,6 +110,39 @@ with sync_playwright() as pw:
             if v in ("equipe", "auditoria"):
                 g.wait_for_selector("#sessoes table, #aud-t table", timeout=5000)
             foto(g, v)
+    # relatórios (v1.4.0): quatro abas com indicadores, gráficos e tabelas; exportação Excel e CSV
+    ir(g, "relatorios")
+    for aba in ("sanitario", "reprodutivo", "plantel", "campo"):
+        g.click(f'[data-act="rel-tab"][data-t="{aba}"]')
+        g.wait_for_selector(".rel-kpi")
+        assert g.locator("#rel-corpo table").count() > 0, f"relatório sem tabela: {aba}"
+        if aba in ("sanitario", "reprodutivo"):
+            foto(g, "relatorios" if aba == "sanitario" else "relatorio-reprodutivo")
+        for fmt in ("xlsx", "csv"):
+            resp = g.request.get(BASE + g.get_attribute(f"#rel-{fmt}", "href"))
+            assert resp.ok and len(resp.body()) > 200, f"exportação {fmt} falhou em {aba}"
+    # cio (v1.4.0): formulário com os dados do exame
+    ir(g, "reproducao")
+    g.click('[data-act="registrar"]')
+    g.select_option("#f-tipo", "reprodutivo")
+    g.select_option("#f-evento", "Cio")
+    g.wait_for_selector("#f-foliculo", state="visible")
+    g.fill("#f-sinais", "Aceita o rufião")
+    g.fill("#f-foliculo", "36")
+    g.select_option("#f-ovario", "Direito")
+    foto(g, "cio")
+    g.click('[data-act="salvar-registro"]')
+    g.wait_for_selector("#modal", state="hidden")
+    # baixa (v1.4.0): filtro Baixados e janela de baixa
+    ir(g, "animais")
+    g.select_option("#sitF", "baixados")
+    g.wait_for_selector("tr:has-text('FAROL DA VEREDA')")
+    g.select_option("#sitF", "ativos")
+    g.click("tr:has-text('CANELA DO RIACHO')")
+    g.click('[data-act="dar-baixa"]')
+    g.wait_for_selector("#b-motivo")
+    foto(g, "baixa")
+    g.click('#modal [data-act="fechar"]')
     # personalização (v1.3.0): o gestor envia o próprio banner e o Dashboard passa a usá-lo
     ir(g, "parametros")
     g.set_input_files("#img-banner", files=[{"name": "banner.png", "mimeType": "image/png", "buffer": IMG_TESTE}])

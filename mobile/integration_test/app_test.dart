@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:haras360/main.dart' as app;
 import 'package:haras360/sincronizacao.dart';
+import 'package:haras360/telas/agenda.dart';
 import 'package:haras360/telas/audio.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:workmanager/workmanager.dart';
@@ -116,6 +117,30 @@ void main() {
     await aba(t, 'Agenda');
     await esperar(t, find.text('Próximos 30 dias'));
     await captura(t, 'app-agenda');
+
+    // cio (v1.4.0): a previsão aparece na Agenda e o registro sai com os dados do exame, ainda sem Wi-Fi
+    final cio = find.text('Observar cio · AURORA DO VALE VERDE');
+    // a lista certa é a da Agenda (as outras abas continuam montadas fora da tela)
+    final lista = find.descendant(of: find.byType(TelaAgenda), matching: find.byType(Scrollable)).first;
+    await t.scrollUntilVisible(cio, 250, scrollable: lista, maxScrolls: 60);
+    await t.ensureVisible(cio);
+    await t.pump(const Duration(milliseconds: 500));
+    await t.tap(cio);
+    await esperar(t, find.widgetWithText(TextField, 'Sinais observados'));
+    await t.enterText(find.widgetWithText(TextField, 'Sinais observados'), 'Aceita o rufião');
+    await t.enterText(find.widgetWithText(TextField, 'Folículo (mm)'), '34');
+    FocusManager.instance.primaryFocus?.unfocus();
+    await t.pump(const Duration(milliseconds: 600));
+    await t.pump(const Duration(milliseconds: 600));
+    await captura(t, 'app-cio');
+    await t.ensureVisible(find.text('Salvar registro'));
+    await t.tap(find.text('Salvar registro'));
+    await esperar(t, find.textContaining('Vai para o servidor quando houver Wi-Fi'));
+    for (final m in t.stateList<ScaffoldMessengerState>(find.byType(ScaffoldMessenger))) {
+      m.clearSnackBars();
+    }
+    await t.pump(const Duration(milliseconds: 400));
+    expect(find.text('Observar cio · AURORA DO VALE VERDE'), findsNothing);
     await aba(t, 'Mais');
     await esperar(t, find.text('Envio'));
     await captura(t, 'app-mais');
@@ -126,7 +151,7 @@ void main() {
     // de volta ao Wi-Fi da sede
     Sincronizador.redeForcada = true;
     await t.tap(find.text('Sincronizar agora'));
-    await esperar(t, find.textContaining('Enviado: 1 registro(s) e 1 áudio(s)'), segundos: 90);
+    await esperar(t, find.textContaining('Enviado: 2 registro(s) e 1 áudio(s)'), segundos: 90);
     await t.pump(const Duration(seconds: 2));
     // a tela de envio acompanha o resultado: fila zerada
     expect(find.text('Registros aguardando envio'), findsOneWidget);

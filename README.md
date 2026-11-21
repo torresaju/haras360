@@ -17,7 +17,8 @@ A especificação aprovada está em [`docs/ESPECIFICACAO.md`](docs/ESPECIFICACAO
 | v1.1.0 | 20/11/2026 | etapa/1.1-app-android | App Android do caseiro: offline, envio só no Wi-Fi, vínculo por QR Code, APK assinado servido pelo próprio servidor | Publicada |
 | v1.1.1 | 20/11/2026 | etapa/1.1.1-instalador | Instalador em VM compartilhada (porta livre, Caddy preservado, fuso), QR Code do 2FA, botão do app, tela de Administradores | Publicada |
 | v1.2.0 | 20/11/2026 | etapa/1.2-audio | Áudio nos registros do caseiro; chave pública no pacote; erro de atualização visível; SHA-256 em HTTP | Publicada |
-| v1.3.0 | 20/11/2026 | etapa/1.3-identidade-visual | Nova identidade visual (logotipo, paleta, Manrope e Inter), menu lateral por módulos, novo Dashboard, app com Hoje, Animais, Agenda e Mais; imagens próprias da plataforma e de cada haras | Em teste (PR) |
+| v1.3.0 | 20/11/2026 | etapa/1.3-identidade-visual | Nova identidade visual (logotipo, paleta, Manrope e Inter), menu lateral por módulos, novo Dashboard, app com Hoje, Animais, Agenda e Mais; imagens próprias da plataforma e de cada haras | Publicada |
+| v1.4.0 | 20/11/2026 | etapa/1.4-relatorios-cio | Relatórios sanitário, reprodutivo, plantel e campo com gráficos, Excel e CSV; registro e previsão de cio (cio do potro); baixa de animais | Em teste (PR) |
 
 Notas de cada versão: [`docs/HISTORICO.md`](docs/HISTORICO.md).
 

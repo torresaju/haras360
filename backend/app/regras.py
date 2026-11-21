@@ -20,7 +20,11 @@ CATS = {
     "ocorrencia": "Ocorrência",
     "documental": "Documentação",
 }
-EVENTOS_REPRO = ["Cobertura", "Inseminação", "Diagnóstico positivo", "Diagnóstico negativo", "Parto", "Aborto"]
+EVENTOS_REPRO = ["Cio", "Cobertura", "Inseminação", "Diagnóstico positivo", "Diagnóstico negativo", "Parto", "Aborto"]
+CICLO_DIAS = 21
+CIO_POTRO = (7, 12)
+CIO_TOLERANCIA = 3  # dias em que a previsão atrasada ainda aparece antes de passar ao ciclo seguinte
+MOTIVOS_BAIXA = ["Venda", "Morte", "Doação", "Transferência"]
 TIPOS_NOTIF = ["atrasado", "semana", "parto", "documental", "campo"]
 
 
@@ -156,6 +160,47 @@ def gestacao(animal, registros, dias_gestacao=GESTACAO_DIAS):
     return g
 
 
+def previsao_cio(haras, animal, registros, gest=None):
+    """Próximo cio de uma égua (v1.4.0).
+
+    Base: último cio, cobertura, inseminação ou aborto. Depois de um parto sem cio registrado,
+    vale a janela do cio do potro. Égua gestante (diagnóstico positivo) não entra na previsão.
+    """
+    if not haras.get("previsaoCio") or not animal or animal.get("sexo") != "F":
+        return None
+    if gest:
+        return None
+    ciclo = int(haras.get("cicloDias") or CICLO_DIAS)
+    de, ate = int(haras.get("cioPotroDe") or CIO_POTRO[0]), int(haras.get("cioPotroAte") or CIO_POTRO[1])
+    ev = _por_data([r for r in registros if r["animalId"] == animal["id"] and r["tipo"] == "reprodutivo" and r.get("evento")])
+    base = parto = None
+    for r in ev:
+        if r["evento"] in ("Cio", "Cobertura", "Inseminação", "Aborto"):
+            base = r["data"]
+        elif r["evento"] == "Parto":
+            parto, base = r["data"], None
+    t = hoje()
+
+    def projetar(inicio):
+        n = max(1, math.ceil((dias(inicio, t) - CIO_TOLERANCIA) / ciclo))
+        return add_dias(inicio, n * ciclo)
+
+    if base is None and parto:
+        ini, fim = add_dias(parto, de), add_dias(parto, ate)
+        if t <= fim:
+            due = ini if t < ini else t
+            return {"due": iso(due), "titulo": "Cio do potro", "etapa": "Observar cio do potro",
+                    "nota": f"Janela do {de}º ao {ate}º dia após o parto de {br(parto)}"}
+        due = projetar(ini)
+        return {"due": iso(due), "titulo": "Observar cio", "etapa": "Previsão do cio",
+                "nota": f"Ciclo de {ciclo} dias contado do cio do potro ({br(ini)})"}
+    if base is None:
+        return None
+    due = projetar(d(base))
+    return {"due": iso(due), "titulo": "Observar cio", "etapa": "Previsão do cio",
+            "nota": f"Ciclo de {ciclo} dias a partir de {br(base)}"}
+
+
 def _dose_num(v):
     try:
         return int(v)
@@ -220,7 +265,7 @@ def tarefas(haras, animais, registros, prots, animal_id=None):
     dg = haras.get("gestacaoDias", GESTACAO_DIAS)
     out = []
     for a in animais:
-        if not a.get("vivo"):
+        if not a.get("vivo") or a.get("baixa"):
             continue
         if animal_id and a["id"] != animal_id:
             continue
@@ -245,6 +290,10 @@ def tarefas(haras, animais, registros, prots, animal_id=None):
                     out.append({"id": f"{a['id']}:rino-g{m}", "animalId": a["id"], "animal": a["nome"], "protocoloId": "rino", "cat": "vacina", "titulo": "Rinopneumonite", "etapa": f"Gestante, {m}º mês", "nota": "Protocolo de éguas gestantes (5º, 7º e 9º mês)", "dose": "reforco", "due": iso(dt)})
             nota = f"Cobertura em {br(g['cobertura'])}" + (f" com {g['garanhao']}" if g["garanhao"] else "") + f". Estimativa de {dg} dias"
             out.append({"id": f"{a['id']}:parto", "animalId": a["id"], "animal": a["nome"], "protocoloId": None, "cat": "reprodutivo", "titulo": "Previsão de parto", "etapa": f"{g['mes']}º mês de gestação", "nota": nota, "dose": None, "due": g["parto"], "parto": True})
+        c = previsao_cio(haras, a, registros, g)
+        if c:
+            out.append({"id": f"{a['id']}:cio", "animalId": a["id"], "animal": a["nome"], "protocoloId": None, "cat": "reprodutivo", "titulo": c["titulo"],
+                        "etapa": c["etapa"], "nota": c["nota"], "dose": None, "due": c["due"], "cio": True})
         t = iso(hoje())
         base = {"animalId": a["id"], "animal": a["nome"], "cat": "documental", "etapa": "Documentação", "due": t, "doc": True}
         if not a.get("registro"):
@@ -283,7 +332,11 @@ def notificacoes(haras, animais, registros, prots, ts=None):
     ts = ts if ts is not None else tarefas(haras, animais, registros, prots)
     n = []
     for t in ts:
-        if t["status"] == "atrasado":
+        if t.get("cio"):
+            if t["status"] in ("atrasado", "hoje", "semana") and dias(hoje(), t["due"]) <= 3:
+                n.append({"id": f"n:{t['id']}:{t['due']}", "tipo": "semana", "sev": "info", "titulo": f"{t['titulo']} · {t['animal']}",
+                          "texto": f"{t['etapa']} {relativo(t['due'])}, em {br(t['due'])}.", "animalId": t["animalId"], "tarefa": t})
+        elif t["status"] == "atrasado":
             n.append({"id": f"n:{t['id']}:{t['due']}", "tipo": "atrasado", "sev": "critico", "titulo": f"{t['titulo']} · {t['animal']}", "texto": f"{t['etapa']} prevista para {br(t['due'])} ({relativo(t['due'])}).", "animalId": t["animalId"], "tarefa": t})
         elif t.get("parto") and dias(hoje(), t["due"]) <= 45:
             n.append({"id": f"n:{t['id']}", "tipo": "parto", "sev": "alerta", "titulo": f"Parto previsto · {t['animal']}", "texto": f"Previsão para {br(t['due'])} ({relativo(t['due'])}). Prepare a baia de maternidade.", "animalId": t["animalId"]})

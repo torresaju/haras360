@@ -11,10 +11,12 @@ const cats = <String, String>{
   'documental': 'Documentação',
 };
 
-const eventosRepro = ['Cobertura', 'Inseminação', 'Diagnóstico positivo', 'Diagnóstico negativo', 'Parto', 'Aborto'];
+const eventosRepro = ['Cio', 'Cobertura', 'Inseminação', 'Diagnóstico positivo', 'Diagnóstico negativo', 'Parto', 'Aborto'];
 const procedimentosOdonto = ['Avaliação', 'Avaliação e correção', 'Aparelho dentário instalado', 'Retorno de aparelho', 'Extração', 'Outro'];
 const exames = ['Anemia Infecciosa (AIE)', 'Mormo', 'Hemograma', 'Ultrassonografia', 'Raio-X', 'Outro'];
 const gravidades = ['Leve', 'Moderada', 'Grave'];
+const ovarios = ['Não examinado', 'Esquerdo', 'Direito'];
+const edemas = ['Não avaliado', '0', '1', '2', '3'];
 const mesesCurtos = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
 // ---------------- datas ----------------
@@ -86,6 +88,9 @@ String statusTarefa(Map t, [DateTime? agora]) {
 bool registroAtende(Map tarefa, Map registro) {
   if (registro['animalId'] != tarefa['animalId']) return false;
   if (tarefa['parto'] == true) return registro['tipo'] == 'reprodutivo' && (registro['evento'] == 'Parto' || registro['evento'] == 'Aborto');
+  if (tarefa['cio'] == true) {
+    return registro['tipo'] == 'reprodutivo' && const ['Cio', 'Cobertura', 'Inseminação', 'Diagnóstico positivo'].contains(registro['evento']);
+  }
   final pid = tarefa['protocoloId'];
   final prots = (registro['protocolos'] as List?) ?? const [];
   if (pid != null) return prots.contains(pid);
@@ -109,6 +114,7 @@ List<Map<String, dynamic>> tarefasPendentes(List tarefas, List locais, [DateTime
 /// Pré-preenchimento do formulário a partir de uma tarefa (mesma regra do Portal Campo).
 Map<String, dynamic> preDeTarefa(Map t) {
   if (t['parto'] == true) return {'animalId': t['animalId'], 'tipo': 'reprodutivo', 'evento': 'Parto', 'titulo': 'Registrar parto'};
+  if (t['cio'] == true) return {'animalId': t['animalId'], 'tipo': 'reprodutivo', 'evento': 'Cio', 'titulo': 'Registrar cio'};
   final pid = t['protocoloId'];
   return {
     'animalId': t['animalId'],
@@ -197,8 +203,23 @@ Map<String, dynamic> montarRegistro({
       if (e.contains('Mormo')) r['protocolos'] = ['mormo'];
     case 'reprodutivo':
       final ev = c('evento').isEmpty ? 'Cobertura' : c('evento');
-      if (sexoAnimal != 'F' && ev != 'Cobertura') throw ErroValidacao('Eventos de gestação só se aplicam a fêmeas.');
+      if (sexoAnimal != 'F' && ev != 'Cobertura') {
+        throw ErroValidacao(ev == 'Cio' ? 'O cio só se aplica a fêmeas.' : 'Eventos de gestação só se aplicam a fêmeas.');
+      }
       r['evento'] = ev;
+      if (ev == 'Cio') {
+        // v1.4.0: sinais observados e dados do exame (opcionais)
+        r['sinais'] = c('sinais');
+        if (const ['Esquerdo', 'Direito'].contains(c('ovario'))) r['ovario'] = c('ovario');
+        if (const ['0', '1', '2', '3'].contains(c('edema'))) r['edema'] = c('edema');
+        final f = c('foliculo');
+        if (f.isNotEmpty) {
+          final n = int.tryParse(f);
+          if (n == null || n < 5 || n > 80) throw ErroValidacao('O folículo deve ficar entre 5 e 80 mm.');
+          r['foliculo'] = '$n';
+        }
+        break;
+      }
       r['garanhao'] = c('garanhao').toUpperCase();
       if (ev == 'Diagnóstico positivo') {
         final cob = data(c('dataCobertura'));

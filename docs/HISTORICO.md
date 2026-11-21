@@ -2,6 +2,22 @@
 
 Uma nota por versão, da mais recente para a mais antiga.
 
+## v1.4.0 · 20/11/2026 · Relatórios, registro de cio e baixa de animais
+* **Relatórios (Portal do Gestor):**
+  * menu Relatórios com quatro abas: Sanitário, Reprodutivo, Plantel e Atividade do campo;
+  * filtros de período (padrão: últimos 12 meses), animal e categoria; indicadores, gráficos (linha, barras e rosca) e tabelas; linha clicável abre a ficha;
+  * indicadores principais: animais em dia, taxa de prenhez, éguas prenhes, intervalo médio entre partos, entradas e saídas, registros do caseiro por pessoa e origem;
+  * exportação Excel (.xlsx, aba Resumo e uma aba por tabela, com link para a ficha) e CSV (ponto e vírgula, acentos para o Excel), registrada na auditoria;
+  * só para o gestor; novo módulo "Relatórios e exportação" na grade de planos, liberado por padrão.
+* **Registro de cio:**
+  * evento Cio no Portal do Gestor, no Portal Campo e no app (offline), com sinais observados e dados do exame (ovário, folículo em mm, edema uterino de 0 a 3);
+  * previsão do próximo cio pelo ciclo (21 dias, ajustável de 18 a 25) a partir do último cio, cobertura, inseminação ou aborto, até o diagnóstico positivo; tarefa "Observar cio" na Agenda e na tela Hoje;
+  * cio do potro do 7º ao 12º dia após o parto (janela ajustável);
+  * Parametrizações › Reprodução: ligar ou desligar a previsão, ciclo e janela.
+* **Baixa de animais:** Dar baixa na ficha (venda, morte, doação ou transferência, com destino e observação), filtro Baixados no plantel, Desfazer baixa com confirmação, auditoria e importação ABCCMM que não reativa animal baixado. Migração 005.
+* **Ajustes:** botão vermelho nas confirmações de ação sensível; nomes das ações de imagem, baixa e exportação na auditoria; termos novos no glossário.
+* **Testes:** 13 testes novos do motor e da API (79 no total), testes de unidade do app para o cio, verificação visual das quatro abas com download das planilhas, do cio e da baixa, e emulador com cio registrado sem Wi-Fi e conferido no servidor.
+
 ## v1.3.0 · 20/11/2026 · Nova identidade visual e personalização por imagens
 * **Identidade visual nova nos portais e no app:**
   * logotipo próprio (perfil de cavalo com arco dourado) e ícone novo do app;

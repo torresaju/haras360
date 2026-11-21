@@ -96,6 +96,23 @@ void main() {
       expect(montar('reprodutivo', campos: {'evento': 'Diagnóstico positivo', 'dataCobertura': '2026-10-01'})['dataCobertura'], '2026-10-01');
     });
 
+    test('cio (v1.4.0): dados do exame, placeholders vazios e só fêmeas', () {
+      final r = montar('reprodutivo', campos: {'evento': 'Cio', 'sinais': 'Aceita o rufião', 'ovario': 'Esquerdo', 'foliculo': '35', 'edema': '2', 'garanhao': 'X'});
+      expect([r['evento'], r['sinais'], r['ovario'], r['foliculo'], r['edema'], r.containsKey('garanhao')], ['Cio', 'Aceita o rufião', 'Esquerdo', '35', '2', false]);
+      final v = montar('reprodutivo', campos: {'evento': 'Cio', 'ovario': 'Não examinado', 'edema': 'Não avaliado'});
+      expect(v.containsKey('ovario') || v.containsKey('edema'), isFalse);
+      expect(() => montar('reprodutivo', campos: {'evento': 'Cio', 'foliculo': '120'}), throwsA(isA<ErroValidacao>()));
+      expect(() => montar('reprodutivo', campos: {'evento': 'Cio'}, sexo: 'M'), throwsA(isA<ErroValidacao>()));
+    });
+
+    test('cio (v1.4.0): registro de cio ou cobertura atende a previsão e pré-preenche o evento', () {
+      final t = {'id': 'a1:cio', 'animalId': 'a1', 'cat': 'reprodutivo', 'titulo': 'Observar cio', 'due': '2026-11-21', 'cio': true};
+      expect(registroAtende(t, {'animalId': 'a1', 'tipo': 'reprodutivo', 'evento': 'Cio'}), isTrue);
+      expect(registroAtende(t, {'animalId': 'a1', 'tipo': 'reprodutivo', 'evento': 'Cobertura'}), isTrue);
+      expect(registroAtende(t, {'animalId': 'a1', 'tipo': 'reprodutivo', 'evento': 'Parto'}), isFalse);
+      expect(preDeTarefa(t)['evento'], 'Cio');
+    });
+
     test('ocorrência exige descrição', () {
       expect(() => montar('ocorrencia'), throwsA(isA<ErroValidacao>()));
       expect(montar('ocorrencia', campos: {'titulo': 'Mancando'})['gravidade'], 'Leve');
