@@ -147,9 +147,18 @@ def revogar_sessoes(db, usuario_id, exceto=None):
             s.revogada = True
 
 
+# v1.7.0: com a mensalidade em atraso, o gestor fica só para consulta; estas rotas continuam livres
+LIVRES_NO_BLOQUEIO = ("/api/logout", "/api/me/", "/api/notificacoes/lidas", "/api/app/sair", "/api/app/sincronizar", "/api/sessoes/")
+
+
 def usuario_atual(request: Request, db=Depends(get_db)) -> Usuario:
     s, u = sessao_da_requisicao(db, request)
     request.state.sessao = s
+    if u.perfil == "gestor" and request.method not in ("GET", "HEAD") and not request.url.path.startswith(LIVRES_NO_BLOQUEIO):
+        from .financeiro import bloqueio
+        b = bloqueio(db, u.haras_id)
+        if b:
+            erro(423, f"Mensalidade em atraso há {b['diasAtraso']} dias: o portal está só para consulta. Veja como pagar em Minha assinatura.")
     return u
 
 
@@ -173,7 +182,7 @@ def admin(u: Usuario = Depends(usuario_atual)) -> Usuario:
 
 # ---------------- 2FA ----------------
 def exige_2fa(u: Usuario):
-    return u.perfil in ("admin", "gestor")
+    return u.perfil in ("admin", "gestor", "financeiro")
 
 
 def qr_svg(uri):

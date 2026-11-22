@@ -46,6 +46,15 @@ PADRAO_GLOBAL = {
     "audio_max_seg": 120,
     "smtp": {"host": "", "porta": 587, "usuario": "", "senha": "", "remetente": "", "tls": True},
     "email_contato": "",
+    # v1.7.0: financeiro da plataforma (mensalidades dos haras)
+    "financeiro": {
+        "testeDias": 30,          # período de teste de um haras novo, sem cobrança
+        "antecedenciaDias": 10,   # a mensalidade é gerada N dias antes do vencimento
+        "bloqueioDias": 15,       # com N dias de atraso o portal do gestor fica só para consulta
+        "diaPadrao": 10,          # dia de vencimento de um cliente novo
+        "pixChave": "", "pixNome": "", "pixCidade": "",
+        "dadosBancarios": "",
+    },
 }
 
 PADRAO_HARAS = {

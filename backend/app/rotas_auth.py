@@ -14,7 +14,7 @@ r = APIRouter(prefix="/api")
 
 
 def _destino(u: Usuario):
-    return {"admin": "/admin", "gestor": "/gestor"}.get(u.perfil, "/campo")
+    return {"admin": "/admin", "financeiro": "/admin", "gestor": "/gestor"}.get(u.perfil, "/campo")
 
 
 @r.post("/login")

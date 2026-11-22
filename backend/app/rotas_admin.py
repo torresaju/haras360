@@ -46,6 +46,8 @@ def criar_haras_com_gestor(db, nome, municipio, plano, gestor_nome, gestor_email
     g = Usuario(haras_id=h.id, nome=gestor_nome, email=gestor_email, senha_hash=hash_senha(gestor_senha), perfil="gestor", ativo=True)
     db.add(g)
     db.flush()
+    from .financeiro import garantir_clientes
+    garantir_clientes(db)  # v1.7.0: o haras novo começa em teste, sem cobrança
     return h, g
 
 
@@ -64,8 +66,8 @@ def painel(u: Usuario = Depends(admin), db=Depends(get_db)):
         haras.append({"id": h.id, "nome": h.nome, "municipio": h.municipio, "plano": plano["nome"], "logo": L.url(h), "limite": plano["limite"], "ativo": bool(h.ativo),
                       "animais": n, "mensalidade": P.mensalidade(faixas, n), "usuarios": usuarios.get(h.id, []),
                       "criado": h.criado_em.date().isoformat()})
-    administradores = [{"id": x.id, "nome": x.nome, "email": x.email, "ativo": bool(x.ativo), "doisFatores": bool(x.totp_ativo), "eu": x.id == u.id}
-                       for x in db.scalars(select(Usuario).where(Usuario.perfil == "admin").order_by(Usuario.nome))]
+    administradores = [{"id": x.id, "nome": x.nome, "email": x.email, "perfil": x.perfil, "ativo": bool(x.ativo), "doisFatores": bool(x.totp_ativo), "eu": x.id == u.id}
+                       for x in db.scalars(select(Usuario).where(Usuario.perfil.in_(("admin", "financeiro"))).order_by(Usuario.perfil, Usuario.nome))]
     return {
         "versao": VERSAO, "versaoBanco": versao_banco(), "usuario": {"id": u.id, "nome": u.nome, "email": u.email, "perfil": u.perfil},
         "haras": haras, "administradores": administradores, "marca": IMG.descrever(db), "parametros": P.publico_global(P.todos(db)), "modulos": P.MODULOS,
@@ -123,7 +125,7 @@ def editar_haras(hid: int, request: Request, body: dict = Body(...), u: Usuario 
 
 def _usuario(db, uid):
     x = db.get(Usuario, uid)
-    if not x or x.perfil == "admin":
+    if not x or x.perfil in ("admin", "financeiro"):
         erro(404, "Usuário não encontrado.")
     return x
 
@@ -160,7 +162,7 @@ def _confirmar_minha_senha(u: Usuario, body: dict):
 
 def _outro_admin(db, uid, u: Usuario):
     x = db.get(Usuario, uid)
-    if not x or x.perfil != "admin":
+    if not x or x.perfil not in ("admin", "financeiro"):
         erro(404, "Administrador não encontrado.")
     if x.id == u.id:
         erro(400, "Para a sua própria conta, use o menu com o seu nome (senha e códigos de recuperação).")
@@ -180,11 +182,14 @@ def criar_administrador(request: Request, body: dict = Body(...), u: Usuario = D
     validar_senha_nova(senha)
     if db.scalar(select(Usuario).where(Usuario.email == email)):
         erro(409, "Já existe um usuário com este e-mail.")
-    x = Usuario(haras_id=None, nome=nome, email=email, senha_hash=hash_senha(senha), perfil="admin", ativo=True)
+    perfil = body.get("perfil") or "admin"
+    if perfil not in ("admin", "financeiro"):
+        erro(400, "Perfil inválido.")
+    x = Usuario(haras_id=None, nome=nome, email=email, senha_hash=hash_senha(senha), perfil=perfil, ativo=True)
     db.add(x)
-    auditar(db, "usuario_criado", usuario=u, alvo=f"{nome} <{email}> (admin)", request=request)
+    auditar(db, "usuario_criado", usuario=u, alvo=f"{nome} <{email}> ({perfil})", request=request)
     db.commit()
-    return {"resumo": f"Administrador {nome} criado. No primeiro acesso ele cadastra o 2FA."}
+    return {"resumo": f"{'Administrador' if perfil == 'admin' else 'Usuário do financeiro'} {nome} criado. No primeiro acesso ele cadastra o 2FA."}
 
 
 @r.patch("/administradores/{uid}")
@@ -194,13 +199,14 @@ def alterar_administrador(uid: int, request: Request, body: dict = Body(...), u:
         erro(400, "Nada para alterar.")
     _confirmar_minha_senha(u, body)
     ativo = bool(body["ativo"])
-    if not ativo:
+    if not ativo and x.perfil == "admin":
         outros = db.scalar(select(func.count()).select_from(Usuario).where(Usuario.perfil == "admin", Usuario.ativo.is_(True), Usuario.id != x.id)) or 0
         if outros == 0:
             erro(400, "A plataforma precisa de pelo menos um administrador ativo.")
+    if not ativo:
         revogar_sessoes(db, x.id)
     x.ativo = ativo
-    auditar(db, "usuario_ativado" if ativo else "usuario_desativado", usuario=u, alvo=f"{x.nome} <{x.email}> (admin)", request=request)
+    auditar(db, "usuario_ativado" if ativo else "usuario_desativado", usuario=u, alvo=f"{x.nome} <{x.email}> ({x.perfil})", request=request)
     db.commit()
     return {"resumo": f"Administrador {x.nome} {'reativado' if ativo else 'desativado'}."}
 
@@ -213,7 +219,7 @@ def senha_administrador(uid: int, request: Request, body: dict = Body(...), u: U
     validar_senha_nova(s)
     x.senha_hash = hash_senha(s)
     revogar_sessoes(db, x.id)
-    auditar(db, "senha_redefinida", usuario=u, alvo=f"{x.nome} <{x.email}> (admin)", request=request)
+    auditar(db, "senha_redefinida", usuario=u, alvo=f"{x.nome} <{x.email}> ({x.perfil})", request=request)
     db.commit()
     return {"resumo": f"Senha de {x.nome} redefinida. As sessões dele foram encerradas."}
 
@@ -224,7 +230,7 @@ def dois_fatores_administrador(uid: int, request: Request, body: dict = Body(...
     _confirmar_minha_senha(u, body)
     x.totp_ativo, x.totp_segredo, x.recuperacao = False, None, None
     revogar_sessoes(db, x.id)
-    auditar(db, "2fa_redefinido", usuario=u, alvo=f"{x.nome} <{x.email}> (admin)", request=request)
+    auditar(db, "2fa_redefinido", usuario=u, alvo=f"{x.nome} <{x.email}> ({x.perfil})", request=request)
     db.commit()
     return {"resumo": f"2FA de {x.nome} redefinido. Ele cadastra de novo no próximo acesso."}
 
