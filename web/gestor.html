@@ -43,6 +43,11 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .dif td:nth-child(2){color:var(--muted);text-decoration:line-through}
 .dif td:nth-child(3){color:var(--ok);font-weight:600}
 .secao-venda{border-top:1px solid var(--line-2);padding-top:12px;margin-top:4px}
+.faixa-bloq{margin-bottom:14px}
+.pix{display:grid;grid-template-columns:180px minmax(0,1fr);gap:16px;align-items:start}
+.pix .qr-box{width:180px}
+.pix textarea{font-family:var(--f-mono,monospace);font-size:.78rem;height:96px}
+@media (max-width:640px){.pix{grid-template-columns:1fr}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
@@ -104,7 +109,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       { id: 'reproducao', rotulo: 'Reprodução', ic: 'repro' },
       { id: 'agenda', rotulo: 'Agenda', ic: 'agenda' },
       { id: 'relatorios', rotulo: 'Relatórios', ic: 'graf', off: !modOn('relatorios') },
-      { grupo: 'Administração', ic: 'engr', itens: [{ id: 'equipe', rotulo: 'Equipe' }, { id: 'parametros', rotulo: 'Parametrizações', tambem: ['imagens'] }, { id: 'auditoria', rotulo: 'Auditoria' }, { id: 'assistente', rotulo: 'Assistente', off: !modOn('assistente') }, { id: 'plano', rotulo: 'Plano' }] },
+      { grupo: 'Administração', ic: 'engr', itens: [{ id: 'equipe', rotulo: 'Equipe' }, { id: 'parametros', rotulo: 'Parametrizações', tambem: ['imagens'] }, { id: 'auditoria', rotulo: 'Auditoria' }, { id: 'assinatura', rotulo: 'Minha assinatura' }, { id: 'assistente', rotulo: 'Assistente', off: !modOn('assistente') }, { id: 'plano', rotulo: 'Plano' }] },
       { grupo: 'Ajuda', ic: 'ajuda', itens: [{ id: 'sobre', rotulo: 'Sobre' }, { href: '/ajuda', rotulo: 'Manual' }, { id: 'glossario', rotulo: 'Glossário' }, { id: 'normas', rotulo: 'Normas da ABCCMM' }] }
     ];
   }
@@ -112,7 +117,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     painel: ['Visão geral do rebanho, sanidade e reprodução', 'Dashboard'], animais: ['Animais', 'Plantel'], sanidade: ['Sanidade', 'Vacinas e manejos'], reproducao: ['Reprodução', 'Gestações, cios e coberturas'], relatorios: ['Desempenho do haras', 'Relatórios'], imagens: ['Parametrizações', 'Imagens do haras'], ficha: ['Ficha do animal', ''], importar: ['Plantel', 'Importar da ABCCMM'],
     agenda: ['Agenda', 'Próximos eventos e prazos'], protocolos: ['Sanidade', 'Protocolos e intervalos'], notificacoes: ['Alertas', 'Notificações'],
     equipe: ['Usuários, perfis e sessões', 'Equipe do haras'], assistente: ['Inteligência artificial', 'Assistente ABCCMM'], plano: ['Administração', 'Plano e cobrança'],
-    parametros: ['Administração', 'Parametrizações do haras'], auditoria: ['Administração', 'Auditoria'], sobre: ['Ajuda', 'Sobre o Haras360'], glossario: ['Ajuda', 'Glossário'], normas: ['Ajuda', 'Normas da ABCCMM'], vendas: ['Animais', 'Vendas e recebimentos']
+    parametros: ['Administração', 'Parametrizações do haras'], auditoria: ['Administração', 'Auditoria'], sobre: ['Ajuda', 'Sobre o Haras360'], glossario: ['Ajuda', 'Glossário'], normas: ['Ajuda', 'Normas da ABCCMM'], vendas: ['Animais', 'Vendas e recebimentos'], assinatura: ['Administração', 'Minha assinatura do Haras360']
   };
 
   function go(v, p) {
@@ -128,11 +133,11 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     const ti = ti0;
     $('#v-eyebrow').textContent = eb;
     $('#v-title').textContent = view === 'ficha' ? ((H.animal(S, param) || {}).nome || 'Animal') : ti;
-    $('#v-acts').hidden = ['parametros', 'auditoria', 'sobre', 'glossario', 'plano', 'equipe', 'relatorios', 'normas', 'vendas'].includes(view);
+    $('#v-acts').hidden = ['parametros', 'auditoria', 'sobre', 'glossario', 'plano', 'equipe', 'relatorios', 'normas', 'vendas', 'assinatura'].includes(view);
     document.title = 'Haras360 · ' + ($('#v-title').textContent || 'Gestor');
     const v = $('#view');
     v.classList.remove('view-in'); void v.offsetWidth; v.classList.add('view-in');
-    v.innerHTML = VIEWS[view](param);
+    v.innerHTML = faixaBloqueio() + VIEWS[view](param);
     if (AFTER[view]) AFTER[view](param);
   }
 
@@ -570,7 +575,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       '<div style="padding:6px 18px 8px 0">' + (ns.length ? ns.map(n => {
         const lida = S.lidas.includes(n.id);
         const canais = CH.filter(([k]) => (pref[n.tipo] || {})[k]).map(([, l]) => '<span class="chip nodot c-muted">' + l + '</span>').join('');
-        return '<div class="notif ' + n.sev + (lida ? ' lida' : '') + '"><span class="bar"></span><div><b>' + esc(n.titulo) + '</b><p class="small muted">' + esc(n.texto) + '</p><div class="ch"><span class="chip nodot ' + (n.sev === 'critico' ? 'c-late' : n.sev === 'alerta' ? 'c-soon' : 'c-info') + '">' + esc(H.TIPOS_NOTIF[n.tipo]) + '</span>' + canais + '</div></div><div class="row" style="gap:4px;flex-direction:column;align-items:flex-end"><button class="btn sm" data-act="ver-animal" data-id="' + n.animalId + '">Abrir ficha</button>' + (lida ? '' : '<button class="btn ghost sm" data-act="ler" data-id="' + esc(n.id) + '">Marcar como lida</button>') + '</div></div>';
+        return '<div class="notif ' + n.sev + (lida ? ' lida' : '') + '"><span class="bar"></span><div><b>' + esc(n.titulo) + '</b><p class="small muted">' + esc(n.texto) + '</p><div class="ch"><span class="chip nodot ' + (n.sev === 'critico' ? 'c-late' : n.sev === 'alerta' ? 'c-soon' : 'c-info') + '">' + esc(H.TIPOS_NOTIF[n.tipo]) + '</span>' + canais + '</div></div><div class="row" style="gap:4px;flex-direction:column;align-items:flex-end">' + (n.tipo === 'mensalidade' ? '<button class="btn sm" data-act="nav" data-v="assinatura">Ver assinatura</button>' : '<button class="btn sm" data-act="ver-animal" data-id="' + n.animalId + '">Abrir ficha</button>') + '' + (lida ? '' : '<button class="btn ghost sm" data-act="ler" data-id="' + esc(n.id) + '">Marcar como lida</button>') + '</div></div>';
       }).join('') : '<div class="empty">Nenhuma notificação.</div>') + '</div></div>' +
       '<div class="card stack"><h3>Canais por tipo de alerta</h3><div class="tbl-wrap"><table class="tbl matrix"><thead><tr><th>Alerta</th>' + CH.map(([, l]) => '<th>' + l + '</th>').join('') + '</tr></thead><tbody>' +
       Object.keys(H.TIPOS_NOTIF).map(t => '<tr><td class="small">' + H.TIPOS_NOTIF[t] + '</td>' + CH.map(([k, l]) => '<td><input type="checkbox" data-chg="pref" data-t="' + t + '" data-k="' + k + '"' + (pref[t][k] ? ' checked' : '') + ' aria-label="' + l + ' para ' + H.TIPOS_NOTIF[t] + '"></td>').join('') + '</tr>').join('') +
@@ -703,6 +708,32 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     const m = mensal(n);
     $('#sim-n').textContent = n;
     $('#sim-out').innerHTML = '<b style="font-family:var(--f-display);font-size:2rem">' + (m === null ? 'A definir' : H.moeda(m)) + '</b>' + (m === null ? '' : '<span class="muted"> por mês</span>') + '<p class="small muted mono">' + parts.join(' + ') + '</p>';
+  }
+
+  /* ================= ASSINATURA DO HARAS360 (v1.7.0) ================= */
+  function faixaBloqueio() {
+    const b = S.bloqueio; if (!b || view === 'assinatura') return '';
+    return '<div class="note bad spread faixa-bloq" style="align-items:center"><span><b>Mensalidade em atraso há ' + b.diasAtraso + ' dias.</b> O portal está só para consulta até o pagamento (' + esc(b.descricao) + ', ' + H.moeda(b.valor / 100) + '). O caseiro continua registrando.</span><button class="btn sm" data-act="nav" data-v="assinatura">Ver como pagar</button></div>';
+  }
+  let assin = null;
+  function vAssinatura() { return '<div class="sec" id="assin"><div class="card empty">Carregando a assinatura...</div></div>'; }
+  async function carregarAssinatura() {
+    try { assin = await API.get('/api/assinatura'); } catch (e) { $('#assin').innerHTML = '<div class="note bad">' + esc(e.message) + '</div>'; return; }
+    const a = assin, px = a.proxima, din = c => H.moeda((c || 0) / 100);
+    const SIT = { paga: ['Paga', 'c-ok'], aberta: ['Em aberto', 'c-muted'], vence: ['Vence em 7 dias', 'c-soon'], atrasada: ['Atrasada', 'c-late'], cancelada: ['Cancelada', 'c-muted'] };
+    const fixo = px.ajuste && /^Valor fixo/.test(px.ajuste);
+    const fx = fixo ? '' : (px.faixas || []).map(f => f.qtd + ' animal(is) de ' + f.de + ' a ' + f.ate + (f.valor === null ? ' (preço a definir)' : ' × ' + H.moeda(Number(f.valor)))).join(' + ');
+    const abertas = a.cobrancas.filter(c => c.pagamento);
+    const pagar = c => '<div class="card stack"><div class="spread"><h3>' + esc(c.descricao) + ' · ' + din(c.valor) + '</h3><span class="chip ' + SIT[c.situacao][1] + '">' + SIT[c.situacao][0] + '</span></div><p class="small muted">Vencimento ' + br(c.vencimento) + '.</p>' +
+      (c.pagamento.pix ? '<div class="pix"><div class="qr-box">' + c.pagamento.qr + '</div><div class="stack"><b>Pix copia e cola</b><textarea class="inp" readonly id="pix-' + c.id + '">' + esc(c.pagamento.pix) + '</textarea><div class="row"><button class="btn sm pri" data-act="copiar-pix" data-id="' + c.id + '">Copiar código</button><span class="small muted">Recebedor: ' + esc(c.pagamento.pixNome || '') + ' · chave ' + esc(c.pagamento.pixChave) + '</span></div></div></div>' : '') +
+      (c.pagamento.dadosBancarios ? '<p class="small" style="white-space:pre-line"><b>Outras formas:</b> ' + esc(c.pagamento.dadosBancarios) + '</p>' : '') + '</div>';
+    $('#assin').innerHTML = (a.bloqueio ? '<div class="note bad"><b>Mensalidade em atraso há ' + a.bloqueio.diasAtraso + ' dias.</b> O portal e o app do gestor estão só para consulta. Depois do pagamento, a liberação é feita pelo financeiro do Haras360.</div>' : '') +
+      '<div class="card"><dl class="facts"><div><dt>Situação</dt><dd>' + esc(a.situacao) + (a.situacao === 'Teste' && a.testeAte ? ' até ' + br(a.testeAte) : '') + '</dd></div><div><dt>Plano</dt><dd>' + esc(a.plano) + '</dd></div><div><dt>Animais ativos</dt><dd>' + a.animais + '</dd></div><div><dt>Vencimento</dt><dd>Todo dia ' + a.diaVencimento + '</dd></div>' +
+        '<div><dt>Próxima mensalidade</dt><dd>' + (px.valor === null ? 'A definir' : din(px.valor)) + ' em ' + br(px.vencimento) + '</dd></div></dl><p class="small muted" style="margin-top:10px">Cálculo: ' + esc(a.animais + ' animais ativos' + (fx ? ' = ' + fx : '')) + (px.ajuste ? ' · ' + esc(px.ajuste) : '') + '. O valor usa os animais ativos no dia em que a mensalidade é gerada.</p></div>' +
+      (abertas.length ? abertas.map(pagar).join('') : '<div class="note good">Nenhuma cobrança em aberto.</div>') +
+      '<div class="card flush"><div class="card-h" style="padding:16px 18px 6px"><h3>Histórico</h3></div>' + (a.cobrancas.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Vencimento</th><th>Descrição</th><th>Valor</th><th>Situação</th><th>Pagamento</th></tr></thead><tbody>' +
+        a.cobrancas.map(c => '<tr><td class="mono">' + br(c.vencimento) + '</td><td>' + esc(c.descricao) + '</td><td class="mono">' + din(c.valor) + '</td><td><span class="chip ' + SIT[c.situacao][1] + '">' + SIT[c.situacao][0] + '</span></td><td class="small">' + (c.pagoEm ? br(c.pagoEm) + ' · ' + din(c.valorPago) : '-') + '</td></tr>').join('') + '</tbody></table></div>' : '<div class="empty">Nenhuma cobrança ainda.</div>') + '</div>' +
+      '<p class="small muted">Dúvidas sobre a assinatura' + (a.contato ? ': <a href="mailto:' + esc(a.contato) + '">' + esc(a.contato) + '</a>' : ', fale com o Haras360') + '.</p>';
   }
 
   /* ================= VENDAS (v1.6.0) ================= */
@@ -880,10 +911,11 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     });
   }
 
-  const VIEWS = { vendas: vVendas, relatorios: vRelatorios, painel: vPainel, sanidade: vSanidade, reproducao: vReproducao, animais: vAnimais, ficha: vFicha, importar: vImportar, agenda: vAgenda, protocolos: vProtocolos, notificacoes: vNotificacoes, equipe: vEquipe, assistente: vAssistente, plano: vPlano, parametros: vParametros, auditoria: vAuditoria, sobre: vSobre, glossario: vGlossario, normas: vNormas };
+  const VIEWS = { assinatura: vAssinatura, vendas: vVendas, relatorios: vRelatorios, painel: vPainel, sanidade: vSanidade, reproducao: vReproducao, animais: vAnimais, ficha: vFicha, importar: vImportar, agenda: vAgenda, protocolos: vProtocolos, notificacoes: vNotificacoes, equipe: vEquipe, assistente: vAssistente, plano: vPlano, parametros: vParametros, auditoria: vAuditoria, sobre: vSobre, glossario: vGlossario, normas: vNormas };
   const AFTER = {
     relatorios() { carregarRel(); },
     vendas() { if (vendaAba === 'compradores') carregarCompradores(); },
+    assinatura() { carregarAssinatura(); },
     animais() {
       $('#tb-animais').innerHTML = linhasAnimais();
       $('#busca').addEventListener('input', e => { busca = e.target.value; $('#tb-animais').innerHTML = linhasAnimais(); });
@@ -983,6 +1015,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       UI.toast(r.falhas.length ? r.falhas.join(' ') : 'Certificado gravado. ' + (el.dataset.acao === 'atualizar' ? 'Cadastro atualizado.' : 'PDF e genealogia guardados.'));
     },
     'venda-aba': el => { vendaAba = el.dataset.t; render(); },
+    'copiar-pix': async el => { const t = $('#pix-' + el.dataset.id); try { await navigator.clipboard.writeText(t.value); UI.toast('Código Pix copiado.'); } catch (e) { t.select(); UI.toast('Selecione o código e copie.'); } },
     'venda-f': el => { vendaF = el.dataset.f; render(); },
     'venda-transf': async el => { if (await executar(el, () => API.post('/api/vendas/' + el.dataset.id + '/transferencia', { feita: el.dataset.feita === '1' }))) render(); },
     'parcela-pagar': el => {

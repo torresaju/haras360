@@ -20,6 +20,7 @@ class AvisosCelular {
     'documental': 'Pendências da ABCCMM',
     'ocorrencia': 'Ocorrência grave do caseiro',
     'financeiro': 'Parcelas a receber',
+    'mensalidade': 'Mensalidade do Haras360',
   };
 
   /// Toque numa notificação: id do animal a abrir (lido pela tela inicial do gestor).
@@ -70,6 +71,8 @@ class AvisosCelular {
         return 'ocorrencia';
       case 'financeiro': // v1.6.0: parcela de venda vencendo em 7 dias ou vencida
         return 'financeiro';
+      case 'mensalidade': // v1.7.0: mensalidade do Haras360 a vencer, vencendo hoje ou atrasada
+        return 'mensalidade';
       case 'documental':
         return n['sev'] == 'critico' ? 'documental' : null;
       case 'parto':

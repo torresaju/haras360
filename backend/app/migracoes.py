@@ -11,7 +11,7 @@ import time
 from sqlalchemy import inspect, select, text
 from sqlalchemy.exc import OperationalError
 
-from .db import Audio, Base, Comprador, ImagemMarca, Parcela, SchemaVersao, SessionLocal, Venda, VinculoApp, engine
+from .db import Audio, Base, Cliente, Cobranca, Comprador, ImagemMarca, Parcela, SchemaVersao, SessionLocal, Venda, VinculoApp, engine
 
 
 def _m001_base(conn):
@@ -53,6 +53,12 @@ def _m006_certificado_externos_vendas(conn):
         tb.__table__.create(conn, checkfirst=True)
 
 
+def _m007_financeiro(conn):
+    """v1.7.0: clientes (contratantes) e cobranças das mensalidades da plataforma."""
+    for tb in (Cliente, Cobranca):
+        tb.__table__.create(conn, checkfirst=True)
+
+
 # (número, descrição, função). Acrescente novas migrações ao final.
 MIGRACOES = [
     (1, "Esquema inicial da v1.0.0", _m001_base),
@@ -61,6 +67,7 @@ MIGRACOES = [
     (4, "Logotipo e imagens da plataforma e dos haras (v1.3.0)", _m004_imagens),
     (5, "Baixa de animais do plantel (v1.4.0)", _m005_baixa),
     (6, "Certificado, animais externos e vendas (v1.6.0)", _m006_certificado_externos_vendas),
+    (7, "Financeiro da plataforma: clientes e mensalidades (v1.7.0)", _m007_financeiro),
 ]
 
 

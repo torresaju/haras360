@@ -19,6 +19,7 @@ void main() {
       expect(AvisosCelular.tipoDe({'tipo': 'atrasado'}, h), 'atrasado');
       expect(AvisosCelular.tipoDe({'tipo': 'ocorrencia'}, h), 'ocorrencia');
       expect(AvisosCelular.tipoDe({'tipo': 'financeiro'}, h), 'financeiro');
+      expect(AvisosCelular.tipoDe({'tipo': 'mensalidade'}, h), 'mensalidade');
       expect(AvisosCelular.tipoDe({'tipo': 'parto', 'tarefa': {'due': '2026-11-27'}}, h), 'parto');
       expect(AvisosCelular.tipoDe({'tipo': 'parto', 'tarefa': {'due': '2026-12-20'}}, h), isNull);
       expect(AvisosCelular.tipoDe({'tipo': 'semana', 'tarefa': {'cio': true, 'due': h}}, h), 'cio');

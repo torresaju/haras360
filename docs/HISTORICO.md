@@ -2,6 +2,17 @@
 
 Uma nota por versão, da mais recente para a mais antiga.
 
+## v1.7.0 · 22/11/2026 · Financeiro da plataforma (clientes e mensalidades)
+* **Perfil Financeiro:** novo usuário da plataforma, criado em Administradores, com senha e 2FA, que só vê o menu Financeiro do portal do administrador. O administrador vê tudo.
+* **Clientes:** cada haras tem um cliente (contratante), criado em Teste (30 dias, parametrizável) e que passa sozinho para Ativo. Situação (Teste, Ativo, Suspenso, Cancelado), dia de vencimento, contratante com CPF ou CNPJ (cifrado, mascarado, ver completo auditado), contato financeiro, endereço e ajuste de preço (desconto em % ou valor fixo, com validade).
+* **Mensalidades:** geradas 10 dias antes do vencimento (parametrizável), pelas faixas de preço e animais ativos naquele dia, com o ajuste; o cálculo fica guardado. Geração automática a cada 6 horas e ao abrir o painel, sem duplicar o mês. Pagamento manual, estorno, cancelamento com motivo, recálculo antes do vencimento e cobrança avulsa.
+* **Atraso:** avisos "Mensalidade do Haras360" ao gestor (7 dias antes, no dia e no atraso), no portal e no celular. Com 15 dias de atraso (parametrizável), portal e app do gestor ficam só para consulta (resposta 423 nas alterações); o caseiro continua registrando. O pagamento libera na hora; o financeiro pode liberar por até 60 dias, com motivo.
+* **Minha assinatura (gestor):** situação, plano, animais, próxima mensalidade com o cálculo, histórico e, para cada cobrança em aberto, QR Code Pix e Pix copia e cola (BR Code estático com valor e identificador) e dados bancários.
+* **Painel financeiro:** clientes por situação, novos e cancelados, MRR, faturado, recebido, a receber, em atraso, inadimplência por faixa e 12 meses; exportação Excel e CSV de clientes, cobranças e recebimentos.
+* **Banco:** migração 007 (tabelas `clientes` e `cobrancas`). Haras já existentes entram em Teste na atualização.
+* **Fora desta versão:** gateway de pagamento, nota fiscal e envio de e-mail (card no Backlog).
+* **Testes:** 6 testes novos da API (104 no total), teste de unidade do aviso no app e verificação visual do Financeiro, do perfil Financeiro e de Minha assinatura.
+
 ## v1.6.0 · 22/11/2026 · Certificado da ABCCMM, animais externos e venda com parcelas
 * **Certificado de registro da ABCCMM:**
   * leitura no servidor do Certificado de Registro Genealógico em PDF: nome, registro, livro, volume e página, nascimento, sexo, DNA, microchip, pelagem, classificação, datas de resenha e de registro, mensurações, criador, proprietário e genealogia de 4 gerações (30 posições, com registro e DNA);

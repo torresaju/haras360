@@ -13,6 +13,7 @@ from .imagens import r as rotas_imagens
 from .relatorios import r as rotas_relatorios
 from .rotas_certificado import r as rotas_certificado
 from .vendas import r as rotas_vendas
+from .financeiro import r as rotas_financeiro
 from .rotas_app import r as rotas_app
 from .rotas_auth import r as rotas_auth
 from .rotas_haras import r as rotas_haras
@@ -26,11 +27,35 @@ CSP = ("default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.clou
        "frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
 
 
+async def _mensalidades():
+    """v1.7.0: gera as mensalidades que entram no prazo, um minuto depois de subir e a cada 6 horas."""
+    import asyncio
+
+    from .db import SessionLocal
+    from .financeiro import gerar
+
+    def rodar():
+        with SessionLocal() as db:
+            try:
+                gerar(db)
+            except Exception as e:  # outro processo pode ter gerado a mesma mensalidade ao mesmo tempo
+                db.rollback()
+                print(f"Mensalidades: {e.__class__.__name__}", flush=True)
+
+    await asyncio.sleep(60)
+    while True:
+        await asyncio.to_thread(rodar)
+        await asyncio.sleep(6 * 3600)
+
+
 @asynccontextmanager
 async def ciclo(_app):
+    import asyncio
     migrar(silencioso=True)
     Path(FOTOS_DIR).mkdir(parents=True, exist_ok=True)
+    tarefa = asyncio.create_task(_mensalidades())
     yield
+    tarefa.cancel()
 
 
 app = FastAPI(title="Haras360", version=VERSAO, docs_url=None, redoc_url=None, openapi_url=None, lifespan=ciclo)
@@ -62,6 +87,7 @@ app.include_router(rotas_imagens)
 app.include_router(rotas_relatorios)
 app.include_router(rotas_certificado)
 app.include_router(rotas_vendas)
+app.include_router(rotas_financeiro)
 
 
 def _pagina(nome):

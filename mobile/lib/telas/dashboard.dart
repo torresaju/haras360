@@ -53,6 +53,20 @@ class TelaDashboard extends StatelessWidget {
         child: RefreshIndicator(
           onRefresh: dados.sincronizar,
           child: ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, 96), children: [
+            if (dados.estado?['bloqueio'] is Map) ...[
+              // v1.7.0: mensalidade em atraso deixa o gestor só para consulta
+              Card(
+                color: Cores.atrasadoSuave,
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Text(
+                    'Mensalidade do Haras360 em atraso há ${(dados.estado!['bloqueio'] as Map)['diasAtraso']} dias. O app está só para consulta até o pagamento. Veja como pagar no portal, em Minha assinatura.',
+                    style: const TextStyle(color: Cores.atrasado, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,

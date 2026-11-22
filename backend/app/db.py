@@ -5,7 +5,7 @@ versão anterior continuar funcionando se uma atualização precisar voltar.
 """
 from datetime import datetime
 
-from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Integer, String, Text, create_engine
+from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 from .config import DB_URL
@@ -261,3 +261,48 @@ class Parcela(Base):
     valor_pago: Mapped[int] = mapped_column(Integer, nullable=True)
     meio_pago: Mapped[str] = mapped_column(String(20), default="")
     obs: Mapped[str] = mapped_column(String(300), default="")
+
+
+class Cliente(Base):
+    """Contratante de um haras na plataforma (v1.7.0): contrato, dados de cobrança e ajuste de preço."""
+    __tablename__ = "clientes"
+    haras_id: Mapped[int] = mapped_column(ForeignKey("haras.id", ondelete="CASCADE"), primary_key=True)
+    situacao: Mapped[str] = mapped_column(String(12), default="Teste")  # Teste | Ativo | Suspenso | Cancelado
+    inicio: Mapped[object] = mapped_column(Date, nullable=True)
+    teste_ate: Mapped[object] = mapped_column(Date, nullable=True)
+    dia_vencimento: Mapped[int] = mapped_column(Integer, default=10)
+    nome: Mapped[str] = mapped_column(String(160), default="")
+    documento: Mapped[str] = mapped_column(Text, nullable=True)  # CPF ou CNPJ cifrado
+    documento_mascara: Mapped[str] = mapped_column(String(24), default="")
+    contato_nome: Mapped[str] = mapped_column(String(120), default="")
+    contato_email: Mapped[str] = mapped_column(String(160), default="")
+    contato_telefone: Mapped[str] = mapped_column(String(40), default="")
+    endereco: Mapped[dict] = mapped_column(JSON, nullable=True)
+    ajuste_tipo: Mapped[str] = mapped_column(String(10), default="nenhum")  # nenhum | desconto | fixo
+    ajuste_valor: Mapped[int] = mapped_column(Integer, default=0)  # desconto em % ou valor fixo em centavos
+    ajuste_ate: Mapped[object] = mapped_column(Date, nullable=True)
+    liberado_ate: Mapped[object] = mapped_column(Date, nullable=True)
+    liberado_motivo: Mapped[str] = mapped_column(String(300), default="")
+    cancelado_em: Mapped[object] = mapped_column(Date, nullable=True)
+    obs: Mapped[str] = mapped_column(Text, nullable=True)
+    criado_em: Mapped[datetime] = mapped_column(DateTime, default=agora)
+
+
+class Cobranca(Base):
+    """Mensalidade (uma por haras e mês de competência) ou cobrança avulsa, em centavos (v1.7.0)."""
+    __tablename__ = "cobrancas"
+    __table_args__ = (UniqueConstraint("haras_id", "competencia", name="uq_cobranca_mes"),)
+    id: Mapped[str] = mapped_column(String(24), primary_key=True)
+    haras_id: Mapped[int] = mapped_column(ForeignKey("haras.id", ondelete="CASCADE"), index=True)
+    competencia: Mapped[str] = mapped_column(String(7), nullable=True)  # AAAA-MM; nula na avulsa
+    descricao: Mapped[str] = mapped_column(String(160), default="")
+    vencimento: Mapped[object] = mapped_column(Date)
+    valor: Mapped[int] = mapped_column(Integer)
+    calculo: Mapped[dict] = mapped_column(JSON, nullable=True)
+    pago_em: Mapped[object] = mapped_column(Date, nullable=True)
+    valor_pago: Mapped[int] = mapped_column(Integer, nullable=True)
+    meio_pago: Mapped[str] = mapped_column(String(20), default="")
+    obs: Mapped[str] = mapped_column(String(300), default="")
+    cancelada_em: Mapped[object] = mapped_column(Date, nullable=True)
+    motivo_cancelamento: Mapped[str] = mapped_column(String(300), default="")
+    criado_em: Mapped[datetime] = mapped_column(DateTime, default=agora)

@@ -122,8 +122,10 @@ def estado(u: Usuario = Depends(do_haras), db=Depends(get_db)):
     plano = P.plano_do_haras(db, h)
     ativos = sum(1 for a in animais if a["vivo"])
     faixas = P.ler(db, "faixas")
+    from . import financeiro as F
     from . import vendas as V
     vendas = V.vendas_do_haras(db, u.haras_id) if u.perfil == "gestor" else []
+    assin = F.notificacoes_assinatura(db, u.haras_id) if u.perfil == "gestor" else []
     return {
         "versao": VERSAO, "hoje": R.iso(R.hoje()), "limiteAnimais": plano["limite"], "vendas": vendas,
         "plano": dict(plano, faixas=faixas, mensalidade=P.mensalidade(faixas, ativos), modulosNomes=P.MODULOS),
@@ -132,7 +134,8 @@ def estado(u: Usuario = Depends(do_haras), db=Depends(get_db)):
         "usuarios": usuarios, "animais": animais, "registros": regs, "protocolos": prots,
         "notifPrefs": {**R.notif_prefs_padrao(), **(h.notif_prefs or {})}, "lidas": lidas,
         "tarefas": ts, "gestacoes": {a["id"]: R.gestacao(a, regs, hd["gestacaoDias"]) for a in animais},
-        "notificacoes": R.notificacoes(hd, animais, regs, prots, ts) + V.notificacoes_vendas(vendas),
+        "notificacoes": R.notificacoes(hd, animais, regs, prots, ts) + V.notificacoes_vendas(vendas) + assin,
+        "bloqueio": F.bloqueio(db, u.haras_id) if u.perfil == "gestor" else None,
         "imagens": IMG.descrever(db, u.haras_id),
     }
 
