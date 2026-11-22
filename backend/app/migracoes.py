@@ -11,7 +11,7 @@ import time
 from sqlalchemy import inspect, select, text
 from sqlalchemy.exc import OperationalError
 
-from .db import Audio, Base, ImagemMarca, SchemaVersao, SessionLocal, VinculoApp, engine
+from .db import Audio, Base, Comprador, ImagemMarca, Parcela, SchemaVersao, SessionLocal, Venda, VinculoApp, engine
 
 
 def _m001_base(conn):
@@ -42,6 +42,17 @@ def _m005_baixa(conn):
             conn.execute(text(f"ALTER TABLE animais ADD COLUMN {nome} {tipo} NULL"))
 
 
+def _m006_certificado_externos_vendas(conn):
+    """v1.6.0: dados do certificado e animais externos; compradores, vendas e parcelas."""
+    existentes = {c["name"] for c in inspect(conn).get_columns("animais")}
+    for nome, tipo in (("certificado", "JSON"), ("externo", "BOOLEAN"), ("contato", "JSON")):
+        if nome not in existentes:
+            conn.execute(text(f"ALTER TABLE animais ADD COLUMN {nome} {tipo} NULL"))
+    conn.execute(text("UPDATE animais SET externo = 0 WHERE externo IS NULL"))
+    for tb in (Comprador, Venda, Parcela):
+        tb.__table__.create(conn, checkfirst=True)
+
+
 # (número, descrição, função). Acrescente novas migrações ao final.
 MIGRACOES = [
     (1, "Esquema inicial da v1.0.0", _m001_base),
@@ -49,6 +60,7 @@ MIGRACOES = [
     (3, "Áudios dos registros (v1.2.0)", _m003_audios),
     (4, "Logotipo e imagens da plataforma e dos haras (v1.3.0)", _m004_imagens),
     (5, "Baixa de animais do plantel (v1.4.0)", _m005_baixa),
+    (6, "Certificado, animais externos e vendas (v1.6.0)", _m006_certificado_externos_vendas),
 ]
 
 

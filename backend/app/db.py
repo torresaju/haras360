@@ -122,6 +122,11 @@ class Animal(Base):
     baixa_motivo: Mapped[str] = mapped_column(String(20), nullable=True)
     baixa_destino: Mapped[str] = mapped_column(String(160), nullable=True)
     baixa_obs: Mapped[str] = mapped_column(Text, nullable=True)
+    # v1.6.0: dados do certificado de registro (volume, página, datas, criador, proprietário, mensurações, PDF guardado)
+    certificado: Mapped[dict] = mapped_column(JSON, nullable=True)
+    # v1.6.0: animal de fora do haras (garanhão ou égua de terceiros): fora do plantel, do limite e da agenda
+    externo: Mapped[bool] = mapped_column(Boolean, default=False)
+    contato: Mapped[dict] = mapped_column(JSON, nullable=True)  # externo: proprietário, telefone, e-mail, observação
 
 
 class Registro(Base):
@@ -210,3 +215,49 @@ class ImagemMarca(Base):
     arquivo: Mapped[str] = mapped_column(String(80))
     foco: Mapped[str] = mapped_column(String(10), default="centro")
     atualizado_em: Mapped[datetime] = mapped_column(DateTime, default=agora)
+
+
+class Comprador(Base):
+    """Comprador de animais (v1.6.0), reutilizável entre vendas. CPF ou CNPJ cifrado; só o gestor vê."""
+    __tablename__ = "compradores"
+    id: Mapped[str] = mapped_column(String(24), primary_key=True)
+    haras_id: Mapped[int] = mapped_column(Integer, index=True)
+    nome: Mapped[str] = mapped_column(String(160))
+    documento: Mapped[str] = mapped_column(Text, nullable=True)  # cifrado (Fernet)
+    documento_mascara: Mapped[str] = mapped_column(String(24), default="")
+    cadastro_abccmm: Mapped[str] = mapped_column(String(20), default="")
+    telefone: Mapped[str] = mapped_column(String(40), default="")
+    email: Mapped[str] = mapped_column(String(160), default="")
+    cidade: Mapped[str] = mapped_column(String(80), default="")
+    uf: Mapped[str] = mapped_column(String(2), default="")
+    criado_em: Mapped[datetime] = mapped_column(DateTime, default=agora)
+
+
+class Venda(Base):
+    """Venda de um animal (v1.6.0): nasce da baixa por venda."""
+    __tablename__ = "vendas"
+    id: Mapped[str] = mapped_column(String(24), primary_key=True)
+    haras_id: Mapped[int] = mapped_column(Integer, index=True)
+    animal_id: Mapped[str] = mapped_column(String(24), index=True)
+    comprador_id: Mapped[str] = mapped_column(String(24), index=True)
+    data: Mapped[object] = mapped_column(Date)
+    valor_total: Mapped[int] = mapped_column(Integer)  # em centavos
+    forma: Mapped[str] = mapped_column(String(12))  # avista ou parcelado
+    meio: Mapped[str] = mapped_column(String(20), default="")
+    transferencia_em: Mapped[object] = mapped_column(Date, nullable=True)  # comunicação da transferência na ABCCMM
+    obs: Mapped[str] = mapped_column(Text, default="")
+    criado_em: Mapped[datetime] = mapped_column(DateTime, default=agora)
+
+
+class Parcela(Base):
+    """Parcela de uma venda (número 0 = entrada; à vista = uma parcela)."""
+    __tablename__ = "parcelas"
+    id: Mapped[str] = mapped_column(String(24), primary_key=True)
+    venda_id: Mapped[str] = mapped_column(ForeignKey("vendas.id", ondelete="CASCADE"), index=True)
+    numero: Mapped[int] = mapped_column(Integer)
+    vencimento: Mapped[object] = mapped_column(Date)
+    valor: Mapped[int] = mapped_column(Integer)  # centavos
+    pago_em: Mapped[object] = mapped_column(Date, nullable=True)
+    valor_pago: Mapped[int] = mapped_column(Integer, nullable=True)
+    meio_pago: Mapped[str] = mapped_column(String(20), default="")
+    obs: Mapped[str] = mapped_column(String(300), default="")

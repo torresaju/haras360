@@ -237,6 +237,8 @@ def plantel(ctx):
         faixas[k] += 1
     entradas = []
     for a in alvo:
+        if a.get("externo"):
+            continue
         dt, motivo = entrada(a, regs_m)
         if dt and de <= dt <= ate:
             entradas.append((dt, a, motivo))
