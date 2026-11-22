@@ -145,6 +145,11 @@ void main() {
     await captura(t, 'app-gestor-avisos');
     await t.pageBack();
     await t.pump(const Duration(milliseconds: 600));
+    // v1.6.0: Mais › Vendas abre mesmo sem venda registrada
+    await t.tap(find.text('Vendas'));
+    await esperar(t, find.textContaining('a receber em'));
+    await t.pageBack();
+    await t.pump(const Duration(milliseconds: 600));
 
     await aba(t, 'Relatórios');
     await esperar(t, find.text('Animais em dia'), segundos: 60);

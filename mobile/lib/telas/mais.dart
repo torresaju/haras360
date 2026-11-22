@@ -12,6 +12,7 @@ import '../tema.dart';
 import 'avisos.dart';
 import 'comum.dart';
 import 'envio.dart';
+import 'vendas.dart';
 import 'vincular.dart';
 
 /// Aba "Mais" (v1.3.0): avisos, envio para o servidor, versão e vínculo.
@@ -22,6 +23,8 @@ class TelaMais extends StatelessWidget {
 
   void _abrir(BuildContext context, String titulo, Widget corpo) => Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => Scaffold(appBar: AppBar(title: Text(titulo)), body: ListenableBuilder(listenable: dados, builder: (_, __) => corpo))));
+
+  static int _parcelasAtrasadas() => dados.vendas.expand((v) => (v['parcelas'] as List)).where((p) => p['situacao'] == 'atrasada').length;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +51,10 @@ class TelaMais extends StatelessWidget {
                   () => _abrir(context, 'Envio', const TelaEnvio()),
                   fim: pend > 0 || dados.atualizacaoDisponivel ? Badge(label: Text(pend > 0 ? '$pend' : '!')) : null),
               if (dados.gestor) ...[
+                const Divider(height: 1),
+                item(Icons.sell_outlined, 'Vendas', dados.vendas.isEmpty ? 'Parcelas a receber e transferências' : '${dados.vendas.length} venda(s) registrada(s)',
+                    () => _abrir(context, 'Vendas', const TelaVendas()),
+                    fim: _parcelasAtrasadas() > 0 ? Badge(label: Text('${_parcelasAtrasadas()}')) : null),
                 const Divider(height: 1),
                 item(Icons.notifications_active_outlined, 'Avisos no celular', 'Tipos de aviso e horário de silêncio',
                     () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TelaPrefsAvisos()))),

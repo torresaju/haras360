@@ -328,10 +328,10 @@ def vendas(ctx):
     sit = {"paga": "Paga", "atrasada": "Atrasada", "vence": "Vence em 7 dias", "aberta": "Em aberto"}
     return {
         "indicadores": [
-            {"rotulo": "Vendas no período", "valor": f"{len(per)} · {brl(sum(v['total'] for v in per))}"},
+            {"rotulo": f"Vendas no período ({len(per)})", "valor": brl(sum(v['total'] for v in per))},
             {"rotulo": "Recebido no período", "valor": brl(sum(p["valorPago"] or 0 for _, p in recebidas))},
-            {"rotulo": "A receber", "valor": brl(sum(p["valor"] for _, p in abertas))},
-            {"rotulo": "Em atraso", "valor": f"{len(atrasadas)} · {brl(sum(p['valor'] for _, p in atrasadas))}"},
+            {"rotulo": f"A receber ({len(abertas)} parcela(s))", "valor": brl(sum(p["valor"] for _, p in abertas))},
+            {"rotulo": f"Em atraso ({len(atrasadas)} parcela(s))", "valor": brl(sum(p['valor'] for _, p in atrasadas))},
         ],
         "graficos": [
             {"tipo": "barras", "titulo": "Vendas por mês (R$)", "serie": [{"rotulo": _rotulo_mes(k), "valor": reais(soma_v.get(k, 0))} for k in meses]},

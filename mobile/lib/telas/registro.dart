@@ -27,7 +27,7 @@ class _TelaRegistroState extends State<TelaRegistro> {
   late String _dose = _doseInicial(widget.pre['dose']);
   final _obs = TextEditingController();
   late final Map<String, TextEditingController> _txt = {
-    for (final k in ['produto', 'lote', 'ferrador', 'resultado', 'garanhao', 'titulo', 'sinais', 'foliculo']) k: TextEditingController(),
+    for (final k in ['produto', 'lote', 'ferrador', 'resultado', 'garanhao', 'titulo', 'sinais', 'foliculo', 'central']) k: TextEditingController(),
   };
   late final Map<String, String> _sel = {
     'procedimento': (widget.pre['procedimento'] as String?) ?? procedimentosOdonto.first,
@@ -36,7 +36,9 @@ class _TelaRegistroState extends State<TelaRegistro> {
     'gravidade': gravidades.first,
     'ovario': ovarios.first,
     'edema': edemas.first,
+    'semen': _semNaoInformado,
   };
+  static const _semNaoInformado = 'Não informado';
   DateTime? _cobertura;
   final List<File> _fotos = [];
   AudioGravado? _audio;
@@ -71,6 +73,7 @@ class _TelaRegistroState extends State<TelaRegistro> {
         campos: {
           for (final e in _txt.entries) e.key: e.value.text,
           ..._sel,
+          if (_sel['semen'] == _semNaoInformado) 'semen': '',
           if (_cobertura != null) 'dataCobertura': iso(_cobertura!),
         },
       );
@@ -158,6 +161,11 @@ class _TelaRegistroState extends State<TelaRegistro> {
             _lista('edema', 'Edema uterino (0 a 3)', edemas),
           ] else
             _campo('garanhao', 'Garanhão'),
+          if (_sel['evento'] == 'Inseminação') ...[
+            // v1.6.0: tipo e origem do sêmen
+            _lista('semen', 'Tipo de sêmen', const [_semNaoInformado, ...semens]),
+            _campo('central', 'Central ou origem do sêmen'),
+          ],
           if (_sel['evento'] == 'Diagnóstico positivo')
             Padding(
               padding: const EdgeInsets.only(top: 12),

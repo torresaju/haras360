@@ -28,8 +28,8 @@ class _TelaAnimaisState extends State<TelaAnimais> {
     final base = !dados.gestor || _sit == 'ativos'
         ? dados.animais
         : _sit == 'baixados'
-            ? dados.todosAnimais.where((a) => a['baixa'] != null).toList()
-            : dados.todosAnimais;
+            ? dados.doHaras.where((a) => a['baixa'] != null).toList()
+            : dados.doHaras;
     final lista = base.where((a) => _busca.isEmpty || _norm(a['nome'] as String).contains(_norm(_busca)) || '${a['registro']}'.contains(_busca)).toList();
     return Column(children: [
       CabecalhoAba('Animais', subtitulo: '${dados.animais.length} no plantel'),
