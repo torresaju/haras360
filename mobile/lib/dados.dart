@@ -24,6 +24,10 @@ class Dados extends ChangeNotifier {
   List get animais => (estado?['animais'] as List?)?.where((a) => a['vivo'] == true).toList() ?? const [];
   /// Todos os animais, inclusive inativos e baixados (filtro do gestor).
   List get todosAnimais => (estado?['animais'] as List?) ?? const [];
+  /// Animais do haras, sem os externos (v1.6.0: garanhões e éguas de fora, só para reprodução).
+  List get doHaras => todosAnimais.where((a) => a['externo'] != true).toList();
+  /// Vendas com parcelas (v1.6.0, só o gestor recebe).
+  List get vendas => (estado?['vendas'] as List?) ?? const [];
   bool get relatoriosLiberado => estado?['relatorios'] == true;
   List get registros => (estado?['registros'] as List?) ?? const [];
   List get protocolos => (estado?['protocolos'] as List?) ?? const [];

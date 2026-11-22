@@ -59,7 +59,8 @@ def animal_out(a: Animal):
             "dna": a.dna or "", "nascimento": _iso(a.nascimento), "chip": a.chip or "", "pelagem": a.pelagem or "", "genealogia": a.genealogia or {},
             "origem": a.origem or "", "importadoEm": _iso(a.importado_em), "criadoEm": _iso(a.criado_em.date() if a.criado_em else None),
             "baixa": ({"data": _iso(a.baixa_data), "motivo": a.baixa_motivo or "", "destino": a.baixa_destino or "", "obs": a.baixa_obs or ""}
-                      if a.baixa_data else None)}
+                      if a.baixa_data else None),
+            "certificado": a.certificado or None, "externo": bool(a.externo), "contato": a.contato or {}}
 
 
 def _dose_out(v):
@@ -107,6 +108,10 @@ def carregar_base(db, haras_id):
 @r.get("/api/estado")
 def estado(u: Usuario = Depends(do_haras), db=Depends(get_db)):
     h, animais, regs, prots = carregar_base(db, u.haras_id)
+    if u.perfil != "gestor":  # o caseiro não vê animais de fora do haras (v1.6.0)
+        fora = {a["id"] for a in animais if a.get("externo")}
+        animais = [a for a in animais if a["id"] not in fora]
+        regs = [x for x in regs if x["animalId"] not in fora]
     hd = haras_out(db, h)
     ts = R.tarefas(hd, animais, regs, prots)
     usuarios = []
@@ -117,15 +122,17 @@ def estado(u: Usuario = Depends(do_haras), db=Depends(get_db)):
     plano = P.plano_do_haras(db, h)
     ativos = sum(1 for a in animais if a["vivo"])
     faixas = P.ler(db, "faixas")
+    from . import vendas as V
+    vendas = V.vendas_do_haras(db, u.haras_id) if u.perfil == "gestor" else []
     return {
-        "versao": VERSAO, "hoje": R.iso(R.hoje()), "limiteAnimais": plano["limite"],
+        "versao": VERSAO, "hoje": R.iso(R.hoje()), "limiteAnimais": plano["limite"], "vendas": vendas,
         "plano": dict(plano, faixas=faixas, mensalidade=P.mensalidade(faixas, ativos), modulosNomes=P.MODULOS),
         "normas": P.ler(db, "normas_abccmm") if u.perfil == "gestor" else [],
         "haras": hd, "usuario": {"id": u.id, "nome": u.nome, "email": u.email, "perfil": u.perfil},
         "usuarios": usuarios, "animais": animais, "registros": regs, "protocolos": prots,
         "notifPrefs": {**R.notif_prefs_padrao(), **(h.notif_prefs or {})}, "lidas": lidas,
         "tarefas": ts, "gestacoes": {a["id"]: R.gestacao(a, regs, hd["gestacaoDias"]) for a in animais},
-        "notificacoes": R.notificacoes(hd, animais, regs, prots, ts),
+        "notificacoes": R.notificacoes(hd, animais, regs, prots, ts) + V.notificacoes_vendas(vendas),
         "imagens": IMG.descrever(db, u.haras_id),
     }
 
@@ -136,7 +143,7 @@ def _limite(db, haras_id):
 
 
 def _ativos(db, haras_id, excluir=None):
-    q = select(Animal).where(Animal.haras_id == haras_id, Animal.vivo.is_(True))
+    q = select(Animal).where(Animal.haras_id == haras_id, Animal.vivo.is_(True), Animal.externo.isnot(True))
     return [a for a in db.scalars(q) if a.id != excluir]
 
 
@@ -147,8 +154,11 @@ def _aplicar_animal(a: Animal, b: dict, db, haras_id, limite):
     sexo = _txt(b.get("sexo"), 1).upper()
     if sexo not in ("M", "F"):
         erro(400, "Sexo deve ser M ou F.")
-    nasc = _data(b.get("nascimento"), "a data de nascimento")
-    if nasc > R.hoje():
+    if a.externo and not b.get("nascimento"):
+        nasc = None  # animal de fora: o nascimento é opcional
+    else:
+        nasc = _data(b.get("nascimento"), "a data de nascimento")
+    if nasc and nasc > R.hoje():
         erro(400, "A data de nascimento não pode ser futura.")
     registro = _txt(b.get("registro"), 20)
     if not re.search(r"\d", registro):
@@ -157,7 +167,7 @@ def _aplicar_animal(a: Animal, b: dict, db, haras_id, limite):
         dup = db.scalar(select(Animal).where(Animal.haras_id == haras_id, Animal.registro == registro, Animal.id != (a.id or "")))
         if dup:
             erro(409, f"O registro {registro} já pertence a {dup.nome}.")
-    vivo = bool(b.get("vivo", True)) and not a.baixa_data  # animal baixado continua fora do plantel ativo
+    vivo = bool(b.get("vivo", True)) and not a.baixa_data and not a.externo  # baixado ou externo fica fora do plantel ativo
     if vivo and (a.vivo is not True) and len(_ativos(db, haras_id, a.id)) >= limite:
         erro(400, f"O plano deste haras atende até {limite} animais ativos.")
     a.nome, a.sexo, a.nascimento, a.registro, a.vivo = nome, sexo, nasc, registro, vivo
@@ -169,17 +179,25 @@ def _aplicar_animal(a: Animal, b: dict, db, haras_id, limite):
         a.chip = ""
     a.pelagem = _txt(b.get("pelagem"), 60)
     g = b.get("genealogia") or {}
-    a.genealogia = {k: _txt(g.get(k), 160).upper() for k in ("pai", "mae", "avoPaterno", "avoPaterna", "avoMaterno", "avoMaterna")}
+    # mantém a árvore completa lida do certificado (v1.6.0) e atualiza os seis nomes do formulário
+    a.genealogia = {**(a.genealogia or {}), **{k: _txt(g.get(k), 160).upper() for k in ("pai", "mae", "avoPaterno", "avoPaterna", "avoMaterno", "avoMaterna")}}
+    if a.externo:
+        c = b.get("contato") or {}
+        email = _txt(c.get("email"), 160)
+        if email and "@" not in email:
+            erro(400, "E-mail do contato inválido.")
+        a.contato = {"proprietario": _txt(c.get("proprietario"), 160), "telefone": _txt(c.get("telefone"), 40), "email": email, "obs": _txt(c.get("obs"), 500)}
 
 
 @r.post("/api/animais")
 def criar_animal(request: Request, body: dict = Body(...), u: Usuario = Depends(gestor), db=Depends(get_db)):
-    a = Animal(id="a" + nid(), haras_id=u.haras_id, origem="Cadastro manual", vivo=None)
+    externo = bool(body.get("externo"))
+    a = Animal(id="a" + nid(), haras_id=u.haras_id, origem="Externo" if externo else "Cadastro manual", vivo=None, externo=externo)
     _aplicar_animal(a, body, db, u.haras_id, _limite(db, u.haras_id))
     db.add(a)
-    auditar(db, "animal_criado", usuario=u, alvo=a.nome, request=request)
+    auditar(db, "animal_criado", usuario=u, alvo=a.nome + (" (externo)" if externo else ""), request=request)
     db.commit()
-    return {"id": a.id, "resumo": f"{a.nome} cadastrado. A agenda sanitária foi gerada."}
+    return {"id": a.id, "resumo": f"{a.nome} cadastrado como animal externo." if externo else f"{a.nome} cadastrado. A agenda sanitária foi gerada."}
 
 
 @r.put("/api/animais/{aid}")
@@ -253,6 +271,8 @@ def _animal_do_haras(db, aid, u):
 @r.post("/api/animais/{aid}/baixa")
 def dar_baixa(aid: str, request: Request, body: dict = Body(...), u: Usuario = Depends(gestor), db=Depends(get_db)):
     a = _animal_do_haras(db, aid, u)
+    if a.externo:
+        erro(400, "Animais externos não fazem parte do plantel e não recebem baixa.")
     if a.baixa_data:
         erro(400, f"{a.nome} já está baixado desde {R.br(a.baixa_data)}.")
     data = _data(body.get("data"), "a data da baixa")
@@ -279,6 +299,8 @@ def desfazer_baixa(aid: str, request: Request, u: Usuario = Depends(gestor), db=
     limite = _limite(db, u.haras_id)
     if len(_ativos(db, u.haras_id, a.id)) >= limite:
         erro(400, f"O plano deste haras atende até {limite} animais ativos.")
+    from . import vendas as V
+    V.apagar_venda_sem_pagamento(db, a.id)  # v1.6.0: venda sem pagamento é desfeita junto
     detalhe = {"data": _iso(a.baixa_data), "motivo": a.baixa_motivo, "destino": a.baixa_destino}
     a.baixa_data = a.baixa_motivo = a.baixa_destino = a.baixa_obs = None
     a.vivo = True
@@ -289,7 +311,9 @@ def desfazer_baixa(aid: str, request: Request, u: Usuario = Depends(gestor), db=
 
 # ---------------- registros e fotos ----------------
 CAMPOS_DADOS = {"produto": 160, "lote": 40, "ferrador": 120, "resultado": 120, "exame": 80, "procedimento": 80, "evento": 40, "garanhao": 160,
-                "dataCobertura": 10, "titulo": 160, "gravidade": 20, "sinais": 200, "ovario": 10, "foliculo": 3, "edema": 1}
+                "dataCobertura": 10, "titulo": 160, "gravidade": 20, "sinais": 200, "ovario": 10, "foliculo": 3, "edema": 1,
+                "semen": 12, "central": 120}
+SEMEN = ("Fresco", "Refrigerado", "Congelado")
 OVARIOS = ("Esquerdo", "Direito")
 ASSINATURAS = {b"\xff\xd8\xff": "jpg", b"\x89PNG": "png", b"RIFF": "webp"}
 ID_CLIENTE = re.compile(r"^[A-Za-z0-9-]{8,40}$")
@@ -329,11 +353,13 @@ def criar_registro(request: Request, body: dict = Body(...), u: Usuario = Depend
                 erro(409, "Identificador de registro em uso.")
             return {"id": ja.id, "resumo": "Registro já recebido anteriormente.", "duplicado": True}
     a = db.get(Animal, _txt(body.get("animalId"), 16))
-    if not a or a.haras_id != u.haras_id:
+    if not a or a.haras_id != u.haras_id or (a.externo and u.perfil != "gestor"):
         erro(404, "Animal não encontrado.")
     tipo = _txt(body.get("tipo"), 20)
     if tipo not in R.CATS or tipo == "documental":
         erro(400, "Tipo de registro inválido.")
+    if a.externo and tipo != "reprodutivo":
+        erro(400, "Animais externos recebem só registros de reprodução.")
     data = _data(body.get("data"), "a data do registro")
     if data > R.hoje():
         erro(400, "A data não pode ser futura.")
@@ -364,6 +390,12 @@ def criar_registro(request: Request, body: dict = Body(...), u: Usuario = Depend
         else:
             for k in ("sinais", "ovario", "foliculo", "edema"):
                 dados.pop(k, None)
+        if dados["evento"] == "Inseminação":  # v1.6.0: tipo de sêmen e central ou origem
+            if dados.get("semen") and dados["semen"] not in SEMEN:
+                erro(400, "Tipo de sêmen deve ser fresco, refrigerado ou congelado.")
+        else:
+            dados.pop("semen", None)
+            dados.pop("central", None)
         dados["garanhao"] = dados.get("garanhao", "").upper()
     if tipo == "ocorrencia" and not dados.get("titulo"):
         erro(400, "Descreva a ocorrência em poucas palavras.")

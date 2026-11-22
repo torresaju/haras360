@@ -569,7 +569,8 @@ const H = (function () {
     parto: 'Previsão de parto',
     ocorrencia: 'Ocorrência grave do caseiro',
     documental: 'Pendência documental ABCCMM',
-    campo: 'Registro feito pelo operador de campo'
+    campo: 'Registro feito pelo operador de campo',
+    financeiro: 'Parcelas de vendas a receber'
   };
 
   function tituloRegistro(st, r) {
@@ -851,6 +852,7 @@ const UI = (function () {
       if (r.ferrador) meta.push('Ferrador: ' + esc(r.ferrador));
       if (r.resultado) meta.push('Resultado: ' + esc(r.resultado));
       if (r.garanhao) meta.push('Garanhão: ' + esc(r.garanhao));
+      if (r.semen) meta.push('Sêmen ' + esc(r.semen.toLowerCase()) + (r.central ? ' · ' + esc(r.central) : ''));
       if (r.dataCobertura && r.evento === 'Diagnóstico positivo') meta.push('Cobertura em ' + br(r.dataCobertura));
       if (r.gravidade) meta.push('Gravidade: ' + esc(r.gravidade));
       if (r.sinais) meta.push('Sinais: ' + esc(r.sinais));
@@ -948,12 +950,15 @@ const UI = (function () {
       return '<div class="field"><label for="f-exame">Exame</label><select id="f-exame" class="inp">' + OPC(['Anemia Infecciosa (AIE)', 'Mormo', 'Hemograma', 'Ultrassonografia', 'Raio-X', 'Outro'], sel) + '</select></div><div class="field"><label for="f-res">Resultado</label><input id="f-res" class="inp" value="' + esc(p.resultado || '') + '" placeholder="Ex.: Negativo"></div>';
     }
     if (tipo === 'reprodutivo') {
-      const machos = st.animais.filter(a => a.sexo === 'M').map(a => '<option value="' + esc(a.nome) + '">');
-      const ev = p.evento || 'Cobertura', cio = ev === 'Cio';
+      // v1.6.0: garanhões do haras e de fora (externos), marcados
+      const machos = st.animais.filter(a => a.sexo === 'M' && !(a.baixa && a.baixa.motivo === 'Morte')).map(a => '<option value="' + esc(a.nome) + '"' + (a.externo ? ' label="' + esc(a.nome) + ' (externo)"' : '') + '>');
+      const ev = p.evento || 'Cobertura', cio = ev === 'Cio', ins = ev === 'Inseminação';
       // v1.4.0: o evento Cio mostra sinais e dados do exame; os demais, garanhão e cobertura
       return '<div class="field"><label for="f-evento">Evento</label><select id="f-evento" class="inp">' + OPC(H.EVENTOS_REPRO, ev) + '</select></div>' +
         '<div class="field" data-ev="outro"' + (cio ? ' hidden' : '') + '><label for="f-garanhao">Garanhão</label><input id="f-garanhao" class="inp" list="dl-machos" value="' + esc(p.garanhao || '') + '"><datalist id="dl-machos">' + machos.join('') + '</datalist></div>' +
         '<div class="field" data-ev="outro"' + (cio ? ' hidden' : '') + '><label for="f-cob">Data da cobertura (diagnóstico positivo)</label><input id="f-cob" type="date" class="inp" value="' + esc(p.dataCobertura || '') + '"></div>' +
+        '<div class="field" data-ev="ins"' + (ins ? '' : ' hidden') + '><label for="f-semen">Tipo de sêmen</label><select id="f-semen" class="inp">' + OPC([['', 'Não informado'], 'Fresco', 'Refrigerado', 'Congelado'], p.semen || '') + '</select></div>' +
+        '<div class="field" data-ev="ins"' + (ins ? '' : ' hidden') + '><label for="f-central">Central ou origem do sêmen</label><input id="f-central" class="inp" value="' + esc(p.central || '') + '" placeholder="Ex.: Central Reprodutiva X"></div>' +
         '<div class="field" data-ev="cio"' + (cio ? '' : ' hidden') + '><label for="f-sinais">Sinais observados</label><input id="f-sinais" class="inp" value="' + esc(p.sinais || '') + '" placeholder="Ex.: aceita o rufião, urina com frequência"></div>' +
         '<div class="field" data-ev="cio"' + (cio ? '' : ' hidden') + '><label for="f-ovario">Ovário (exame)</label><select id="f-ovario" class="inp">' + OPC([['', 'Não examinado'], 'Esquerdo', 'Direito'], p.ovario || '') + '</select></div>' +
         '<div class="field" data-ev="cio"' + (cio ? '' : ' hidden') + '><label for="f-foliculo">Folículo (mm)</label><input id="f-foliculo" type="number" min="5" max="80" class="inp" value="' + esc(p.foliculo || '') + '" placeholder="Ex.: 35"></div>' +
@@ -966,10 +971,11 @@ const UI = (function () {
   function formRegistro(st, pre, ctx) {
     pre = pre || {}; fotosPend = [];
     const tipos = Object.keys(H.CATS).filter(k => k !== 'documental');
-    const animais = st.animais.filter(a => a.vivo && !a.baixa);
-    const tipo = pre.tipo || 'vacina';
+    // v1.6.0: animais externos (só gestor) entram no fim da lista, para eventos reprodutivos
+    const animais = st.animais.filter(a => a.vivo && !a.baixa).concat(st.animais.filter(a => a.externo));
+    const tipo = pre.tipo || ((H.animal(st, pre.animalId) || {}).externo ? 'reprodutivo' : 'vacina');
     const corpo = '<form id="fr" class="stack" novalidate><div class="fgrid">' +
-      '<div class="field"><label for="f-animal">Animal</label><select id="f-animal" class="inp">' + OPC(animais.map(a => [a.id, a.nome]), pre.animalId) + '</select></div>' +
+      '<div class="field"><label for="f-animal">Animal</label><select id="f-animal" class="inp">' + OPC(animais.map(a => [a.id, a.nome + (a.externo ? ' (externo)' : '')]), pre.animalId) + '</select></div>' +
       '<div class="field"><label for="f-data">Data</label><input id="f-data" type="date" class="inp" value="' + (pre.data || H.iso(H.hoje())) + '" max="' + H.iso(H.hoje()) + '"></div>' +
       '<div class="field full"><label for="f-tipo">Tipo de registro</label><select id="f-tipo" class="inp">' + OPC(tipos.map(k => [k, H.CATS[k].nome]), tipo) + '</select></div>' +
       '</div><div id="f-extra" class="fgrid">' + extras(st, tipo, pre) + '</div>' +
@@ -980,8 +986,8 @@ const UI = (function () {
     $('#f-tipo').addEventListener('change', e => { $('#f-extra').innerHTML = extras(st, e.target.value, {}); });
     $('#f-extra').addEventListener('change', e => {
       if (e.target.id !== 'f-evento') return;
-      const cio = e.target.value === 'Cio';
-      document.querySelectorAll('#f-extra [data-ev]').forEach(el => { el.hidden = (el.dataset.ev === 'cio') !== cio; });
+      const ev = e.target.value, cio = ev === 'Cio';
+      document.querySelectorAll('#f-extra [data-ev]').forEach(el => { el.hidden = el.dataset.ev === 'ins' ? ev !== 'Inseminação' : (el.dataset.ev === 'cio') !== cio; });
     });
     $('#f-fotos').addEventListener('change', async e => {
       const files = [...e.target.files].slice(0, 4 - fotosPend.length);
@@ -1005,6 +1011,7 @@ const UI = (function () {
     if (!r.animalId) return erro('Escolha o animal.');
     if (!r.data) return erro('Informe a data do registro.');
     if (r.data > H.iso(H.hoje())) return erro('A data não pode ser futura. Para agendar, o sistema calcula a próxima etapa automaticamente.');
+    if ((H.animal(st, r.animalId) || {}).externo && tipo !== 'reprodutivo') return erro('Para animais externos, registre apenas eventos reprodutivos.');
     if (tipo === 'vacina') {
       r.protocolos = [...document.querySelectorAll('input[name=prot]:checked')].map(i => i.value);
       if (!r.protocolos.length) return erro('Marque ao menos uma doença coberta pela vacina.');
@@ -1020,6 +1027,7 @@ const UI = (function () {
         r.sinais = v('f-sinais'); r.ovario = v('f-ovario'); r.foliculo = v('f-foliculo'); r.edema = v('f-edema');
         if (r.foliculo && !(+r.foliculo >= 5 && +r.foliculo <= 80)) return erro('O folículo deve ficar entre 5 e 80 mm.');
       } else { r.garanhao = v('f-garanhao').toUpperCase(); r.dataCobertura = v('f-cob'); }
+      if (r.evento === 'Inseminação') { r.semen = v('f-semen'); r.central = v('f-central'); }
       const a = H.animal(st, r.animalId);
       if (a && a.sexo !== 'F' && r.evento !== 'Cobertura') return erro(r.evento === 'Cio' ? 'O cio só se aplica a fêmeas.' : 'Eventos de gestação só se aplicam a fêmeas.');
       if (r.evento === 'Diagnóstico positivo' && !r.dataCobertura) return erro('Informe a data da cobertura para calcular a previsão de parto.');

@@ -59,6 +59,7 @@ def notif_prefs_padrao():
         "documental": {"push": False, "email": True, "web": True},
         "campo": {"push": False, "email": False, "web": True},
         "ocorrencia": {"push": True, "email": True, "web": True},
+        "financeiro": {"push": True, "email": True, "web": True},
     }
 
 

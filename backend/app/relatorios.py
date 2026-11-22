@@ -27,6 +27,7 @@ TIPOS = OrderedDict([
     ("reprodutivo", "Relatório reprodutivo"),
     ("plantel", "Relatório do plantel"),
     ("campo", "Atividade do campo"),
+    ("vendas", "Vendas e recebimentos"),
 ])
 SANITARIOS = ["vacina", "vermifugacao", "exame", "odontologia", "ferrageamento"]
 CATEGORIAS = OrderedDict([("eguas", "Éguas"), ("machos", "Machos"), ("potros", "Potros"), ("outros", "Outros")])
@@ -237,6 +238,8 @@ def plantel(ctx):
         faixas[k] += 1
     entradas = []
     for a in alvo:
+        if a.get("externo"):
+            continue
         dt, motivo = entrada(a, regs_m)
         if dt and de <= dt <= ate:
             entradas.append((dt, a, motivo))
@@ -301,7 +304,58 @@ def campo(ctx):
     }
 
 
-GERAR = {"sanitario": sanitario, "reprodutivo": reprodutivo, "plantel": plantel, "campo": campo}
+def vendas(ctx):
+    """v1.6.0: vendas do período, recebimentos e parcelas em aberto. Valores em reais."""
+    from .vendas import brl
+    de, ate = ctx["de"], ctx["ate"]
+    todas = ctx["vendas"]
+    if ctx["animal"]:
+        todas = [v for v in todas if v["animalId"] == ctx["animal"]]
+    per = [v for v in todas if de <= v["data"] <= ate]
+    parcelas = [(v, p) for v in todas for p in v["parcelas"]]
+    recebidas = [(v, p) for v, p in parcelas if p["pagoEm"] and de <= p["pagoEm"] <= ate]
+    abertas = sorted([(v, p) for v, p in parcelas if not p["pagoEm"]], key=lambda x: x[1]["vencimento"])
+    atrasadas = [x for x in abertas if x[1]["situacao"] == "atrasada"]
+    meses = _meses(R.d(de), R.d(ate))
+    soma_v, soma_r = Counter(), Counter()
+    for v in per:
+        soma_v[v["data"][:7]] += v["total"]
+    for _v, p in recebidas:
+        soma_r[p["pagoEm"][:7]] += p["valorPago"] or 0
+    reais = lambda c: round(c / 100, 2)  # noqa: E731
+    nparc = lambda v: sum(1 for x in v["parcelas"] if x["numero"] > 0)  # noqa: E731
+    rot = lambda v, p: "Entrada" if p["numero"] == 0 else ("À vista" if v["forma"] == "avista" else f"{p['numero']}/{nparc(v)}")  # noqa: E731
+    sit = {"paga": "Paga", "atrasada": "Atrasada", "vence": "Vence em 7 dias", "aberta": "Em aberto"}
+    return {
+        "indicadores": [
+            {"rotulo": f"Vendas no período ({len(per)})", "valor": brl(sum(v['total'] for v in per))},
+            {"rotulo": "Recebido no período", "valor": brl(sum(p["valorPago"] or 0 for _, p in recebidas))},
+            {"rotulo": f"A receber ({len(abertas)} parcela(s))", "valor": brl(sum(p["valor"] for _, p in abertas))},
+            {"rotulo": f"Em atraso ({len(atrasadas)} parcela(s))", "valor": brl(sum(p['valor'] for _, p in atrasadas))},
+        ],
+        "graficos": [
+            {"tipo": "barras", "titulo": "Vendas por mês (R$)", "serie": [{"rotulo": _rotulo_mes(k), "valor": reais(soma_v.get(k, 0))} for k in meses]},
+            {"tipo": "linha", "titulo": "Recebimentos por mês (R$)", "serie": [{"rotulo": _rotulo_mes(k), "valor": reais(soma_r.get(k, 0))} for k in meses]},
+            {"tipo": "rosca", "titulo": "Forma de pagamento", "serie": [{"rotulo": "À vista", "valor": sum(1 for v in per if v["forma"] == "avista")},
+                                                                        {"rotulo": "Parcelado", "valor": sum(1 for v in per if v["forma"] == "parcelado")}]},
+        ],
+        "tabelas": [
+            {"nome": "Vendas", "colunas": ["Data", "Animal", "Comprador", "Forma", "Total (R$)", "Recebido (R$)", "Saldo (R$)", "Transferência ABCCMM"],
+             "linhas": [[R.br(v["data"]), v["animal"], v["comprador"], "À vista" if v["forma"] == "avista" else f"Parcelado ({nparc(v)}x)", reais(v["total"]),
+                         reais(v["recebido"]), reais(v["saldo"]), R.br(v["transferenciaEm"]) if v["transferenciaEm"] else "Pendente"] for v in per],
+             "links": [v["animalId"] for v in per]},
+            {"nome": "Parcelas em aberto", "colunas": ["Vencimento", "Animal", "Comprador", "Parcela", "Valor (R$)", "Situação"],
+             "linhas": [[R.br(p["vencimento"]), v["animal"], v["comprador"], rot(v, p), reais(p["valor"]), sit[p["situacao"]]] for v, p in abertas],
+             "links": [v["animalId"] for v, _ in abertas]},
+            {"nome": "Recebimentos", "colunas": ["Pago em", "Animal", "Comprador", "Parcela", "Valor pago (R$)", "Meio"],
+             "linhas": [[R.br(p["pagoEm"]), v["animal"], v["comprador"], rot(v, p), reais(p["valorPago"] or 0), p["meio"] or "-"]
+                        for v, p in sorted(recebidas, key=lambda x: x[1]["pagoEm"], reverse=True)],
+             "links": [v["animalId"] for v, _ in sorted(recebidas, key=lambda x: x[1]["pagoEm"], reverse=True)]},
+        ],
+    }
+
+
+GERAR = {"sanitario": sanitario, "reprodutivo": reprodutivo, "plantel": plantel, "campo": campo, "vendas": vendas}
 
 
 def gerar(db, haras_id, tipo, de="", ate="", animal="", cat=""):
@@ -323,6 +377,9 @@ def gerar(db, haras_id, tipo, de="", ate="", animal="", cat=""):
         erro(404, "Animal não encontrado.")
     ctx = {"haras": haras_out(db, h), "animais": animais, "registros": regs, "protocolos": prots,
            "de": R.iso(ini), "ate": R.iso(fim), "animal": animal, "categoria": cat}
+    if tipo == "vendas":
+        from .vendas import vendas_do_haras
+        ctx["vendas"] = vendas_do_haras(db, haras_id)
     out = GERAR[tipo](ctx)
     nome_animal = next((a["nome"] for a in animais if a["id"] == animal), "")
     out.update({"tipo": tipo, "titulo": TIPOS[tipo], "haras": h.nome, "periodo": {"de": R.iso(ini), "ate": R.iso(fim)},

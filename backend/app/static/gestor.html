@@ -420,6 +420,19 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .aud .det{font-size:.8rem;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;max-width:420px}
 .glos dt{font-weight:700;margin-top:12px}
 .glos dd{margin:2px 0 0;color:var(--muted)}
+/* v1.6.0: certificado, externos e vendas */
+.arvore{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));column-gap:10px;row-gap:4px;overflow-x:auto;padding-bottom:4px;align-items:center}
+.arvore>small{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.arvore .no{border:1px solid var(--line-2);border-left:3px solid var(--accent);border-radius:6px;padding:5px 8px;font-size:.78rem;line-height:1.25;background:var(--surface)}
+.arvore .no.f{border-left-color:#D5A064}
+.arvore .no span{display:block;color:var(--muted);font-family:var(--f-mono,monospace);font-size:.7rem}
+.receber{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;cursor:pointer;font:inherit}
+.receber b{color:var(--ink)}
+.venda{border-top:1px solid var(--line-2);padding:14px 0}
+.venda:first-child{border-top:0;padding-top:0}
+.dif td:nth-child(2){color:var(--muted);text-decoration:line-through}
+.dif td:nth-child(3){color:var(--ok);font-weight:600}
+.secao-venda{border-top:1px solid var(--line-2);padding-top:12px;margin-top:4px}
 </style>
 </head>
 <body>
@@ -557,7 +570,8 @@ const H = (function () {
     parto: 'Previsão de parto',
     ocorrencia: 'Ocorrência grave do caseiro',
     documental: 'Pendência documental ABCCMM',
-    campo: 'Registro feito pelo operador de campo'
+    campo: 'Registro feito pelo operador de campo',
+    financeiro: 'Parcelas de vendas a receber'
   };
 
   function tituloRegistro(st, r) {
@@ -839,6 +853,7 @@ const UI = (function () {
       if (r.ferrador) meta.push('Ferrador: ' + esc(r.ferrador));
       if (r.resultado) meta.push('Resultado: ' + esc(r.resultado));
       if (r.garanhao) meta.push('Garanhão: ' + esc(r.garanhao));
+      if (r.semen) meta.push('Sêmen ' + esc(r.semen.toLowerCase()) + (r.central ? ' · ' + esc(r.central) : ''));
       if (r.dataCobertura && r.evento === 'Diagnóstico positivo') meta.push('Cobertura em ' + br(r.dataCobertura));
       if (r.gravidade) meta.push('Gravidade: ' + esc(r.gravidade));
       if (r.sinais) meta.push('Sinais: ' + esc(r.sinais));
@@ -936,12 +951,15 @@ const UI = (function () {
       return '<div class="field"><label for="f-exame">Exame</label><select id="f-exame" class="inp">' + OPC(['Anemia Infecciosa (AIE)', 'Mormo', 'Hemograma', 'Ultrassonografia', 'Raio-X', 'Outro'], sel) + '</select></div><div class="field"><label for="f-res">Resultado</label><input id="f-res" class="inp" value="' + esc(p.resultado || '') + '" placeholder="Ex.: Negativo"></div>';
     }
     if (tipo === 'reprodutivo') {
-      const machos = st.animais.filter(a => a.sexo === 'M').map(a => '<option value="' + esc(a.nome) + '">');
-      const ev = p.evento || 'Cobertura', cio = ev === 'Cio';
+      // v1.6.0: garanhões do haras e de fora (externos), marcados
+      const machos = st.animais.filter(a => a.sexo === 'M' && !(a.baixa && a.baixa.motivo === 'Morte')).map(a => '<option value="' + esc(a.nome) + '"' + (a.externo ? ' label="' + esc(a.nome) + ' (externo)"' : '') + '>');
+      const ev = p.evento || 'Cobertura', cio = ev === 'Cio', ins = ev === 'Inseminação';
       // v1.4.0: o evento Cio mostra sinais e dados do exame; os demais, garanhão e cobertura
       return '<div class="field"><label for="f-evento">Evento</label><select id="f-evento" class="inp">' + OPC(H.EVENTOS_REPRO, ev) + '</select></div>' +
         '<div class="field" data-ev="outro"' + (cio ? ' hidden' : '') + '><label for="f-garanhao">Garanhão</label><input id="f-garanhao" class="inp" list="dl-machos" value="' + esc(p.garanhao || '') + '"><datalist id="dl-machos">' + machos.join('') + '</datalist></div>' +
         '<div class="field" data-ev="outro"' + (cio ? ' hidden' : '') + '><label for="f-cob">Data da cobertura (diagnóstico positivo)</label><input id="f-cob" type="date" class="inp" value="' + esc(p.dataCobertura || '') + '"></div>' +
+        '<div class="field" data-ev="ins"' + (ins ? '' : ' hidden') + '><label for="f-semen">Tipo de sêmen</label><select id="f-semen" class="inp">' + OPC([['', 'Não informado'], 'Fresco', 'Refrigerado', 'Congelado'], p.semen || '') + '</select></div>' +
+        '<div class="field" data-ev="ins"' + (ins ? '' : ' hidden') + '><label for="f-central">Central ou origem do sêmen</label><input id="f-central" class="inp" value="' + esc(p.central || '') + '" placeholder="Ex.: Central Reprodutiva X"></div>' +
         '<div class="field" data-ev="cio"' + (cio ? '' : ' hidden') + '><label for="f-sinais">Sinais observados</label><input id="f-sinais" class="inp" value="' + esc(p.sinais || '') + '" placeholder="Ex.: aceita o rufião, urina com frequência"></div>' +
         '<div class="field" data-ev="cio"' + (cio ? '' : ' hidden') + '><label for="f-ovario">Ovário (exame)</label><select id="f-ovario" class="inp">' + OPC([['', 'Não examinado'], 'Esquerdo', 'Direito'], p.ovario || '') + '</select></div>' +
         '<div class="field" data-ev="cio"' + (cio ? '' : ' hidden') + '><label for="f-foliculo">Folículo (mm)</label><input id="f-foliculo" type="number" min="5" max="80" class="inp" value="' + esc(p.foliculo || '') + '" placeholder="Ex.: 35"></div>' +
@@ -954,10 +972,11 @@ const UI = (function () {
   function formRegistro(st, pre, ctx) {
     pre = pre || {}; fotosPend = [];
     const tipos = Object.keys(H.CATS).filter(k => k !== 'documental');
-    const animais = st.animais.filter(a => a.vivo && !a.baixa);
-    const tipo = pre.tipo || 'vacina';
+    // v1.6.0: animais externos (só gestor) entram no fim da lista, para eventos reprodutivos
+    const animais = st.animais.filter(a => a.vivo && !a.baixa).concat(st.animais.filter(a => a.externo));
+    const tipo = pre.tipo || ((H.animal(st, pre.animalId) || {}).externo ? 'reprodutivo' : 'vacina');
     const corpo = '<form id="fr" class="stack" novalidate><div class="fgrid">' +
-      '<div class="field"><label for="f-animal">Animal</label><select id="f-animal" class="inp">' + OPC(animais.map(a => [a.id, a.nome]), pre.animalId) + '</select></div>' +
+      '<div class="field"><label for="f-animal">Animal</label><select id="f-animal" class="inp">' + OPC(animais.map(a => [a.id, a.nome + (a.externo ? ' (externo)' : '')]), pre.animalId) + '</select></div>' +
       '<div class="field"><label for="f-data">Data</label><input id="f-data" type="date" class="inp" value="' + (pre.data || H.iso(H.hoje())) + '" max="' + H.iso(H.hoje()) + '"></div>' +
       '<div class="field full"><label for="f-tipo">Tipo de registro</label><select id="f-tipo" class="inp">' + OPC(tipos.map(k => [k, H.CATS[k].nome]), tipo) + '</select></div>' +
       '</div><div id="f-extra" class="fgrid">' + extras(st, tipo, pre) + '</div>' +
@@ -968,8 +987,8 @@ const UI = (function () {
     $('#f-tipo').addEventListener('change', e => { $('#f-extra').innerHTML = extras(st, e.target.value, {}); });
     $('#f-extra').addEventListener('change', e => {
       if (e.target.id !== 'f-evento') return;
-      const cio = e.target.value === 'Cio';
-      document.querySelectorAll('#f-extra [data-ev]').forEach(el => { el.hidden = (el.dataset.ev === 'cio') !== cio; });
+      const ev = e.target.value, cio = ev === 'Cio';
+      document.querySelectorAll('#f-extra [data-ev]').forEach(el => { el.hidden = el.dataset.ev === 'ins' ? ev !== 'Inseminação' : (el.dataset.ev === 'cio') !== cio; });
     });
     $('#f-fotos').addEventListener('change', async e => {
       const files = [...e.target.files].slice(0, 4 - fotosPend.length);
@@ -993,6 +1012,7 @@ const UI = (function () {
     if (!r.animalId) return erro('Escolha o animal.');
     if (!r.data) return erro('Informe a data do registro.');
     if (r.data > H.iso(H.hoje())) return erro('A data não pode ser futura. Para agendar, o sistema calcula a próxima etapa automaticamente.');
+    if ((H.animal(st, r.animalId) || {}).externo && tipo !== 'reprodutivo') return erro('Para animais externos, registre apenas eventos reprodutivos.');
     if (tipo === 'vacina') {
       r.protocolos = [...document.querySelectorAll('input[name=prot]:checked')].map(i => i.value);
       if (!r.protocolos.length) return erro('Marque ao menos uma doença coberta pela vacina.');
@@ -1008,6 +1028,7 @@ const UI = (function () {
         r.sinais = v('f-sinais'); r.ovario = v('f-ovario'); r.foliculo = v('f-foliculo'); r.edema = v('f-edema');
         if (r.foliculo && !(+r.foliculo >= 5 && +r.foliculo <= 80)) return erro('O folículo deve ficar entre 5 e 80 mm.');
       } else { r.garanhao = v('f-garanhao').toUpperCase(); r.dataCobertura = v('f-cob'); }
+      if (r.evento === 'Inseminação') { r.semen = v('f-semen'); r.central = v('f-central'); }
       const a = H.animal(st, r.animalId);
       if (a && a.sexo !== 'F' && r.evento !== 'Cobertura') return erro(r.evento === 'Cio' ? 'O cio só se aplica a fêmeas.' : 'Eventos de gestação só se aplicam a fêmeas.');
       if (r.evento === 'Diagnóstico positivo' && !r.dataCobertura) return erro('Informe a data da cobertura para calcular a previsão de parto.');
@@ -1234,7 +1255,7 @@ const UI = (function () {
   function menu() {
     return [
       { id: 'painel', rotulo: 'Dashboard', ic: 'dash' },
-      { grupo: 'Animais', ic: 'cavalo', itens: [{ id: 'animais', rotulo: 'Plantel', tambem: ['ficha'] }, { id: 'importar', rotulo: 'Importar ABCCMM', off: !modOn('importacao') }] },
+      { grupo: 'Animais', ic: 'cavalo', itens: [{ id: 'animais', rotulo: 'Plantel', tambem: ['ficha'] }, { id: 'importar', rotulo: 'Importar ABCCMM', off: !modOn('importacao') }, { id: 'vendas', rotulo: 'Vendas' }] },
       { grupo: 'Sanidade', ic: 'escudo', itens: [{ id: 'sanidade', rotulo: 'Vacinas e manejos' }, { id: 'protocolos', rotulo: 'Protocolos' }] },
       { id: 'reproducao', rotulo: 'Reprodução', ic: 'repro' },
       { id: 'agenda', rotulo: 'Agenda', ic: 'agenda' },
@@ -1244,10 +1265,10 @@ const UI = (function () {
     ];
   }
   const TITULOS = {
-    painel: ['Visão geral do rebanho, sanidade e reprodução', 'Dashboard'], animais: ['Animais', 'Plantel'], sanidade: ['Sanidade', 'Vacinas e manejos'], reproducao: ['Reprodução', 'Gestações, cios e coberturas'], relatorios: ['Desempenho do haras', 'Relatórios'], imagens: ['Parametrizações', 'Imagens do haras'], ficha: ['Ficha do animal', ''], importar: ['Plantel', 'Importar Relatório de Plantel'],
+    painel: ['Visão geral do rebanho, sanidade e reprodução', 'Dashboard'], animais: ['Animais', 'Plantel'], sanidade: ['Sanidade', 'Vacinas e manejos'], reproducao: ['Reprodução', 'Gestações, cios e coberturas'], relatorios: ['Desempenho do haras', 'Relatórios'], imagens: ['Parametrizações', 'Imagens do haras'], ficha: ['Ficha do animal', ''], importar: ['Plantel', 'Importar da ABCCMM'],
     agenda: ['Agenda', 'Próximos eventos e prazos'], protocolos: ['Sanidade', 'Protocolos e intervalos'], notificacoes: ['Alertas', 'Notificações'],
     equipe: ['Usuários, perfis e sessões', 'Equipe do haras'], assistente: ['Inteligência artificial', 'Assistente ABCCMM'], plano: ['Administração', 'Plano e cobrança'],
-    parametros: ['Administração', 'Parametrizações do haras'], auditoria: ['Administração', 'Auditoria'], sobre: ['Ajuda', 'Sobre o Haras360'], glossario: ['Ajuda', 'Glossário'], normas: ['Ajuda', 'Normas da ABCCMM']
+    parametros: ['Administração', 'Parametrizações do haras'], auditoria: ['Administração', 'Auditoria'], sobre: ['Ajuda', 'Sobre o Haras360'], glossario: ['Ajuda', 'Glossário'], normas: ['Ajuda', 'Normas da ABCCMM'], vendas: ['Animais', 'Vendas e recebimentos']
   };
 
   function go(v, p) {
@@ -1263,7 +1284,7 @@ const UI = (function () {
     const ti = ti0;
     $('#v-eyebrow').textContent = eb;
     $('#v-title').textContent = view === 'ficha' ? ((H.animal(S, param) || {}).nome || 'Animal') : ti;
-    $('#v-acts').hidden = ['parametros', 'auditoria', 'sobre', 'glossario', 'plano', 'equipe', 'relatorios', 'normas'].includes(view);
+    $('#v-acts').hidden = ['parametros', 'auditoria', 'sobre', 'glossario', 'plano', 'equipe', 'relatorios', 'normas', 'vendas'].includes(view);
     document.title = 'Haras360 · ' + ($('#v-title').textContent || 'Gestor');
     const v = $('#view');
     v.classList.remove('view-in'); void v.offsetWidth; v.classList.add('view-in');
@@ -1310,7 +1331,7 @@ const UI = (function () {
       kpi('k-soon', 'agenda', vac7.length, 'Vacinas (7 dias)', 'data-act="nav" data-v="sanidade"') +
       kpi('k-repro', 'repro', gest.length, 'Gestações ativas', 'data-act="nav" data-v="reproducao"') +
       kpi('k-info', 'cavalo', partos.length, 'Previsão de parto (30 dias)', 'data-act="nav" data-v="reproducao"') +
-      '</div>' +
+      '</div>' + aReceber() +
       '<div class="grid3">' +
       '<div class="card"><div class="card-h"><h3>' + UI.ICON.agenda + 'Próximos eventos</h3><button class="btn ghost sm" data-act="nav" data-v="agenda">Ver agenda →</button></div>' + (proximos.length ? '<div class="pevs">' + proximos.map(evento).join('') + '</div>' : '<p class="muted small">Nada previsto.</p>') + '</div>' +
       '<div class="card"><div class="card-h"><h3>Rebanho por categoria</h3></div><div class="rosca-w">' + rosca(partes, n) + '<ul class="leg">' + partes.map(p => '<li><i style="background:' + p.cor + '"></i>' + p.rot + '<b>' + p.n + ' <small>(' + pct(p.n) + ')</small></b></li>').join('') + '</ul></div><p class="small muted">Potros: até 2 anos. Outros: sem data de nascimento.</p></div>' +
@@ -1326,6 +1347,15 @@ const UI = (function () {
       (modOn('relatorios') ? '<button class="btn gold" data-act="nav" data-v="relatorios">Ver relatórios</button>' : '') + '</div></div>' +
       '<p class="small muted">' + n + ' de ' + H.LIMITE_ANIMAIS + ' animais no plano ' + esc(S.plano.nome) + ' · mensalidade ' + (mensal(n) === null ? 'a definir' : H.moeda(mensal(n))) + ' · <a href="#" data-act="nav" data-v="plano">ver plano</a></p>' +
       '</div>';
+  }
+  /* v1.6.0: valores a receber das vendas parceladas (só o gestor recebe S.vendas) */
+  const reais = c => H.moeda((c || 0) / 100);
+  function aReceber() {
+    const ab = (S.vendas || []).flatMap(v => v.parcelas.filter(p => !p.pagoEm));
+    if (!ab.length) return '';
+    const atr = ab.filter(p => p.situacao === 'atrasada'), vence = ab.filter(p => p.situacao === 'vence');
+    return '<button class="note receber' + (atr.length ? ' bad' : vence.length ? ' warn' : '') + '" data-act="nav" data-v="vendas"><span><b>A receber: ' + reais(ab.reduce((s, p) => s + p.valor, 0)) + '</b> · ' + ab.length + ' parcela(s) em aberto' +
+      (atr.length ? ' · ' + atr.length + ' em atraso (' + reais(atr.reduce((s, p) => s + p.valor, 0)) + ')' : '') + (vence.length ? ' · ' + vence.length + ' vence(m) em 7 dias' : '') + '</span><span>Ver vendas →</span></button>';
   }
   function saudacao() { const h = new Date().getHours(); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; }
   function vSanidade() { return vAgenda('sanidade'); }
@@ -1351,7 +1381,7 @@ const UI = (function () {
 
   /* ================= RELATÓRIOS (v1.4.0) ================= */
   let relTipo = 'sanitario', relF = { de: '', ate: '', animal: '', categoria: '' }, relSeq = 0;
-  const REL_TABS = [['sanitario', 'Sanitário'], ['reprodutivo', 'Reprodutivo'], ['plantel', 'Plantel'], ['campo', 'Atividade do campo']];
+  const REL_TABS = [['sanitario', 'Sanitário'], ['reprodutivo', 'Reprodutivo'], ['plantel', 'Plantel'], ['campo', 'Atividade do campo'], ['vendas', 'Vendas']];
   const relQuery = () => new URLSearchParams(Object.entries(relF).filter(([, v]) => v)).toString();
   function vRelatorios() {
     const animais = S.animais.slice().sort((a, b) => a.nome < b.nome ? -1 : 1);
@@ -1420,14 +1450,14 @@ const UI = (function () {
   function vAnimais() {
     return '<div class="sec"><div class="spread"><div class="row"><input id="busca" class="inp" style="width:min(320px,100%)" placeholder="Buscar por nome, registro ou chip" value="' + esc(busca) + '">' +
       '<select id="sexoF" class="inp" style="width:auto"><option value="">Todos os sexos</option><option value="F"' + (sexoF === 'F' ? ' selected' : '') + '>Fêmeas</option><option value="M"' + (sexoF === 'M' ? ' selected' : '') + '>Machos</option></select>' +
-      '<select id="sitF" class="inp" style="width:auto" aria-label="Situação">' + [['ativos', 'Plantel ativo'], ['baixados', 'Baixados'], ['todos', 'Todos']].map(([k, l]) => '<option value="' + k + '"' + (sitF === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></div>' +
-      '<div class="row"><button class="btn" data-act="nav" data-v="importar">' + IC.upload + 'Importar PDF ABCCMM</button><button class="btn pri" data-act="novo-animal">' + IC.plus + 'Novo animal</button></div></div>' +
+      '<select id="sitF" class="inp" style="width:auto" aria-label="Situação">' + [['ativos', 'Plantel ativo'], ['baixados', 'Baixados'], ['todos', 'Todos do haras'], ['externos', 'Animais externos']].map(([k, l]) => '<option value="' + k + '"' + (sitF === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></div>' +
+      '<div class="row"><button class="btn" data-act="nav" data-v="importar">' + IC.upload + 'Importar PDF ABCCMM</button><button class="btn" data-act="novo-externo">' + IC.plus + 'Novo externo</button><button class="btn pri" data-act="novo-animal">' + IC.plus + 'Novo animal</button></div></div>' +
       '<div class="card flush"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Animal</th><th>Sexo</th><th>Idade</th><th>Livro</th><th>DNA</th><th>Situação</th><th>Próxima etapa</th></tr></thead><tbody id="tb-animais"></tbody></table></div></div></div>';
   }
   function linhasAnimais() {
     const q = H.norm(busca);
     const ts = H.tarefas(S);
-    const sit = a => sitF === 'todos' || (sitF === 'baixados' ? !!a.baixa : (a.vivo && !a.baixa));
+    const sit = a => sitF === 'externos' ? a.externo : !a.externo && (sitF === 'todos' || (sitF === 'baixados' ? !!a.baixa : (a.vivo && !a.baixa)));
     const lst = S.animais.filter(a => sit(a) && (!sexoF || a.sexo === sexoF) && (!q || H.norm(a.nome + ' ' + a.registro + ' ' + a.chip).includes(q)));
     if (!lst.length) return '<tr><td colspan="7"><div class="empty">Nenhum animal encontrado.</div></td></tr>';
     return lst.map(a => {
@@ -1435,7 +1465,8 @@ const UI = (function () {
       const at = t.filter(x => x.status === 'atrasado').length, pd = t.filter(x => x.doc).length;
       const prox = t.find(x => !x.doc && x.status !== 'atrasado');
       const g = H.gestacao(S, a);
-      const sit = [a.baixa ? '<span class="chip c-muted">' + esc(a.baixa.motivo) + ' em ' + H.br(a.baixa.data) + '</span>' : !a.vivo ? '<span class="chip c-muted">Inativo</span>' : '', at ? '<span class="chip c-late">' + at + ' atrasado' + (at > 1 ? 's' : '') + '</span>' : '', pd ? '<span class="chip c-info">' + pd + ' pendência' + (pd > 1 ? 's' : '') + '</span>' : '', g ? '<span class="chip c-accent">Gestante ' + g.mes + 'º mês</span>' : '', (a.vivo && !at && !pd) ? '<span class="chip c-ok">Em dia</span>' : ''].join(' ');
+      const sit = a.externo ? '<span class="chip c-info">Externo</span>' + ((a.contato || {}).proprietario ? ' <span class="small muted">' + esc(a.contato.proprietario) + '</span>' : '') : [a.baixa ? '<span class="chip c-muted">' + esc(a.baixa.motivo) + ' em ' + H.br(a.baixa.data) + '</span>' : !a.vivo ? '<span class="chip c-muted">Inativo</span>' : '', at ? '<span class="chip c-late">' + at + ' atrasado' + (at > 1 ? 's' : '') + '</span>' : '', pd ? '<span class="chip c-info">' + pd + ' pendência' + (pd > 1 ? 's' : '') + '</span>' : '', g ? '<span class="chip c-accent">Gestante ' + g.mes + 'º mês</span>' : '', (a.vivo && !at && !pd) ? '<span class="chip c-ok">Em dia</span>' : ''].join(' ');
+      if (a.externo) return '<tr class="click" data-act="ver-animal" data-id="' + a.id + '"><td><b>' + esc(a.nome) + '</b><br><span class="mono muted">' + (a.registro ? 'Reg. ' + esc(a.registro) : 'Sem registro') + '</span></td><td>' + (a.sexo === 'F' ? 'Fêmea' : 'Macho') + '</td><td style="white-space:nowrap">' + (a.nascimento ? H.idadeTxt(a.nascimento) : '-') + '</td><td class="small">' + esc(a.livro || '-') + '</td><td><span class="chip ' + (/sem/i.test(a.dna) ? 'c-late' : 'c-ok') + '">' + esc(a.dna || '-') + '</span></td><td><div class="row" style="gap:4px">' + sit + '</div></td><td class="small">-</td></tr>';
       return '<tr class="click" data-act="ver-animal" data-id="' + a.id + '"><td><b>' + esc(a.nome) + '</b><br><span class="mono muted">' + (a.registro ? 'Reg. ' + esc(a.registro) : 'Sem registro') + '</span></td><td>' + (a.sexo === 'F' ? 'Fêmea' : 'Macho') + '</td><td style="white-space:nowrap">' + H.idadeTxt(a.nascimento) + '</td><td class="small">' + esc(a.livro || '-') + '</td><td><span class="chip ' + (/sem/i.test(a.dna) ? 'c-late' : 'c-ok') + '">' + esc(a.dna || '-') + '</span></td><td><div class="row" style="gap:4px">' + sit + '</div></td><td class="small">' + (prox ? esc(prox.titulo) + '<br><span class="muted">' + H.br(prox.due) + '</span>' : '-') + '</td></tr>';
     }).join('');
   }
@@ -1444,7 +1475,8 @@ const UI = (function () {
   function vFicha(id) {
     const a = H.animal(S, id); if (!a) return '<div class="empty">Animal não encontrado.</div>';
     const g = H.gestacao(S, a);
-    const tabs = [['prontuario', 'Prontuário'], ['agenda', 'Agenda'], ['dados', 'Dados e genealogia']];
+    const tabs = a.externo ? [['prontuario', 'Prontuário'], ['dados', 'Dados e genealogia']] : [['prontuario', 'Prontuário'], ['agenda', 'Agenda'], ['dados', 'Dados e genealogia']];
+    if (a.externo && fichaTab === 'agenda') fichaTab = 'prontuario';
     let corpo = '';
     if (fichaTab === 'prontuario') {
       const regs = S.registros.filter(r => r.animalId === a.id && (filtroCat === 'todos' || r.tipo === filtroCat)).sort((x, y) => x.data < y.data ? 1 : -1);
@@ -1455,35 +1487,129 @@ const UI = (function () {
       corpo = '<h3 style="margin:4px 0 6px">Em aberto e próximos 30 dias</h3><div class="tasks">' + (ab.length ? ab.map(t => UI.linhaTarefa(t, { semAnimal: true })).join('') : '<div class="empty">Nada em aberto.</div>') + '</div>' +
         '<h3 style="margin:22px 0 6px">Programados</h3><div class="tasks">' + (fu.length ? fu.map(t => UI.linhaTarefa(t, { semAnimal: true })).join('') : '<div class="empty">Sem etapas futuras.</div>') + '</div>';
     } else {
-      const ge = a.genealogia || {};
+      const ge = a.genealogia || {}, ct = a.contato || {};
       const f = (id, lab, val, extra) => '<div class="field' + (extra || '') + '"><label for="d-' + id + '">' + lab + '</label><input id="d-' + id + '" class="inp" value="' + esc(val || '') + '"></div>';
       corpo = '<form id="fd" class="stack" novalidate><h3>Dados cadastrais</h3><div class="fgrid">' +
         f('nome', 'Nome', a.nome) + f('pelagem', 'Pelagem', a.pelagem) +
         '<div class="field"><label for="d-registro">Registro ABCCMM</label><input id="d-registro" class="inp" value="' + esc(a.registro || '') + '"' + (a.registro ? '' : ' disabled') + '>' +
         '<label class="chk"><input type="checkbox" id="d-semreg" data-chg="semreg" data-alvo="d-registro"' + (a.registro ? '' : ' checked') + '> Sem registro na ABCCMM</label></div>' + f('livro', 'Livro', a.livro) +
         '<div class="field"><label for="d-sexo">Sexo</label><select id="d-sexo" class="inp"><option value="F"' + (a.sexo === 'F' ? ' selected' : '') + '>Fêmea</option><option value="M"' + (a.sexo === 'M' ? ' selected' : '') + '>Macho</option></select></div>' +
-        '<div class="field"><label for="d-nasc">Nascimento</label><input id="d-nasc" type="date" class="inp" value="' + esc(a.nascimento) + '"></div>' +
+        '<div class="field"><label for="d-nasc">Nascimento' + (a.externo ? ' (opcional)' : '') + '</label><input id="d-nasc" type="date" class="inp" value="' + esc(a.nascimento) + '"></div>' +
         f('chip', 'Microchip', a.chip) +
         '<div class="field"><label for="d-dna">DNA</label><select id="d-dna" class="inp">' + ['DNA - VP', 'Sem exame'].concat(['DNA - VP', 'Sem exame'].includes(a.dna) ? [] : [a.dna]).map(o => '<option' + (o === a.dna ? ' selected' : '') + '>' + esc(o) + '</option>').join('') + '</select></div>' +
-        (a.baixa ? '<div class="field"><span class="lbl">Situação</span><p class="small" style="margin:8px 0 0">Baixado: ' + esc(a.baixa.motivo.toLowerCase()) + ' em ' + br(a.baixa.data) + '</p><input id="d-vivo" type="hidden" value="0"></div>' :
+        (a.externo ? '<input id="d-vivo" type="hidden" value="0">' : a.baixa ? '<div class="field"><span class="lbl">Situação</span><p class="small" style="margin:8px 0 0">Baixado: ' + esc(a.baixa.motivo.toLowerCase()) + ' em ' + br(a.baixa.data) + '</p><input id="d-vivo" type="hidden" value="0"></div>' :
           '<div class="field"><label for="d-vivo">Situação</label><select id="d-vivo" class="inp"><option value="1"' + (a.vivo ? ' selected' : '') + '>Vivo, ativo no plantel</option><option value="0"' + (!a.vivo ? ' selected' : '') + '>Inativo (sem baixa registrada)</option></select></div>') +
         '<div class="field"><label for="d-bloq">Bloqueio ABCCMM</label><select id="d-bloq" class="inp"><option value="0"' + (!a.bloqueado ? ' selected' : '') + '>Não bloqueado</option><option value="1"' + (a.bloqueado ? ' selected' : '') + '>Bloqueado</option></select></div>' +
-        '</div><div class="spread" style="margin-top:8px"><h3>Genealogia</h3><div class="row"><label class="btn sm" for="cert">' + IC.file + 'Importar certificado (PDF)</label><input id="cert" type="file" accept="application/pdf,.pdf" hidden></div></div>' +
-        '<p class="small muted">O Relatório de Plantel não traz genealogia. Preencha à mão ou importe o certificado de registro, se houver. Os campos encontrados no PDF aparecem destacados para conferência.</p><p id="cert-st" class="note" hidden></p>' +
+        '</div>' +
+        (a.externo ? '<h3>Contato do proprietário</h3><div class="fgrid">' + f('c-prop', 'Proprietário ou haras', ct.proprietario) + f('c-tel', 'Telefone', ct.telefone) + f('c-email', 'E-mail', ct.email) + f('c-obs', 'Observação', ct.obs) + '</div>' : '') +
+        '<div class="spread" style="margin-top:8px"><h3>Genealogia</h3><div class="row"><label class="btn sm" for="cert">' + IC.file + 'Atualizar pelo certificado (PDF)</label><input id="cert" type="file" accept="application/pdf,.pdf" hidden data-chg="cert-ficha" data-id="' + a.id + '"></div></div>' +
+        '<p class="small muted">Envie o Certificado de Registro Genealógico da ABCCMM: o Haras360 lê os dados e a genealogia de 4 gerações, mostra o que muda e guarda o PDF. Sem certificado, preencha os pais e avós à mão.</p>' +
         '<div class="fgrid">' + f('pai', 'Pai', ge.pai) + f('mae', 'Mãe', ge.mae) + f('avoPaterno', 'Avô paterno', ge.avoPaterno) + f('avoPaterna', 'Avó paterna', ge.avoPaterna) + f('avoMaterno', 'Avô materno', ge.avoMaterno) + f('avoMaterna', 'Avó materna', ge.avoMaterna) + '</div>' +
-        '<div class="row" style="justify-content:flex-end"><button type="button" class="btn pri" data-act="salvar-dados" data-id="' + a.id + '">' + IC.check + 'Salvar dados</button></div></form>';
+        '<div class="row" style="justify-content:flex-end"><button type="button" class="btn pri" data-act="salvar-dados" data-id="' + a.id + '">' + IC.check + 'Salvar dados</button></div></form>' +
+        arvore(ge.arvore) + painelCertificado(a);
     }
     const chips = [(a.sexo === 'F' ? 'Fêmea' : 'Macho'), H.idadeTxt(a.nascimento)].map(x => '<span class="chip nodot c-muted">' + x + '</span>').join(' ') +
-      (g ? ' <span class="chip c-accent">Gestante · ' + g.mes + 'º mês</span>' : '') + (!a.registro ? ' <span class="chip c-late">Sem registro</span>' : '') + (/sem/i.test(a.dna) ? ' <span class="chip c-late">DNA pendente</span>' : '') + (a.baixa ? ' <span class="chip c-muted">Baixado</span>' : !a.vivo ? ' <span class="chip c-muted">Inativo</span>' : '');
-    const baixa = a.baixa ? '<div class="note warn spread" style="align-items:center"><span><b>Fora do plantel ativo.</b> ' + esc(a.baixa.motivo) + ' em ' + br(a.baixa.data) + (a.baixa.destino ? ' · destino: ' + esc(a.baixa.destino) : '') + (a.baixa.obs ? ' · ' + esc(a.baixa.obs) : '') + '. O prontuário continua guardado.</span><button class="btn sm" data-act="desfazer-baixa" data-id="' + a.id + '">Desfazer baixa</button></div>' : '';
-    return '<div class="sec"><div class="spread"><button class="btn ghost" data-act="nav" data-v="animais">' + IC.back + 'Voltar ao plantel</button><div class="row">' + chips + (a.baixa ? '' : ' <button class="btn ghost sm danger" data-act="dar-baixa" data-id="' + a.id + '">Dar baixa</button>') + '</div></div>' +
-      baixa + '<div class="card"><dl class="facts"><div><dt>Registro</dt><dd class="mono">' + esc(a.registro || '-') + '</dd></div><div><dt>Livro</dt><dd>' + esc(a.livro || '-') + '</dd></div><div><dt>Nascimento</dt><dd>' + br(a.nascimento) + '</dd></div><div><dt>Microchip</dt><dd class="mono">' + esc(a.chip || '-') + '</dd></div><div><dt>DNA</dt><dd>' + esc(a.dna || '-') + '</dd></div><div><dt>Origem do cadastro</dt><dd>' + esc(a.origem || 'Manual') + (a.importadoEm ? ' · ' + br(a.importadoEm) : '') + '</dd></div></dl>' +
+      (a.externo ? ' <span class="chip c-info">Externo</span>' : '') + (a.certificado ? ' <span class="chip c-ok">Certificado</span>' : '') +
+      (g ? ' <span class="chip c-accent">Gestante · ' + g.mes + 'º mês</span>' : '') + (!a.registro ? ' <span class="chip c-late">Sem registro</span>' : '') + (/sem/i.test(a.dna) ? ' <span class="chip c-late">DNA pendente</span>' : '') + (a.baixa ? ' <span class="chip c-muted">Baixado</span>' : (!a.vivo && !a.externo) ? ' <span class="chip c-muted">Inativo</span>' : '');
+    const venda = (S.vendas || []).find(v => v.animalId === a.id);
+    const baixa = a.externo ? '<div class="note spread" style="align-items:center"><span><b>Animal externo.</b> Fica fora do plantel, da agenda e do limite do plano; serve para coberturas e inseminações.' + ((a.contato || {}).proprietario ? ' Proprietário: ' + esc(a.contato.proprietario) + ((a.contato || {}).telefone ? ', ' + esc(a.contato.telefone) : '') + '.' : '') + '</span></div>' :
+      a.baixa ? '<div class="note warn spread" style="align-items:center"><span><b>Fora do plantel ativo.</b> ' + esc(a.baixa.motivo) + ' em ' + br(a.baixa.data) + (a.baixa.destino ? ' · ' + (venda ? 'comprador' : 'destino') + ': ' + esc(a.baixa.destino) : '') + (a.baixa.obs ? ' · ' + esc(a.baixa.obs) : '') + '. O prontuário continua guardado.' +
+        (venda ? '<br>Venda de ' + reais(venda.total) + (venda.saldo ? ', saldo a receber ' + reais(venda.saldo) : ', quitada') + (venda.transferenciaEm ? '' : '. Transferência na ABCCMM pendente') + '. <a href="#" data-act="nav" data-v="vendas">Ver em Vendas</a>' : '') +
+        '</span><button class="btn sm" data-act="desfazer-baixa" data-id="' + a.id + '">Desfazer baixa</button></div>' : '';
+    return '<div class="sec"><div class="spread"><button class="btn ghost" data-act="nav" data-v="' + (a.externo ? 'animais" data-sit="externos' : 'animais') + '">' + IC.back + 'Voltar ao plantel</button><div class="row">' + chips + (a.baixa || a.externo ? '' : ' <button class="btn ghost sm danger" data-act="dar-baixa" data-id="' + a.id + '">Dar baixa</button>') + '</div></div>' +
+      baixa + '<div class="card"><dl class="facts"><div><dt>Registro</dt><dd class="mono">' + esc(a.registro || '-') + '</dd></div><div><dt>Livro</dt><dd>' + esc(a.livro || '-') + '</dd></div><div><dt>Nascimento</dt><dd>' + (a.nascimento ? br(a.nascimento) : '-') + '</dd></div><div><dt>Microchip</dt><dd class="mono">' + esc(a.chip || '-') + '</dd></div><div><dt>DNA</dt><dd>' + esc(a.dna || '-') + '</dd></div><div><dt>Origem do cadastro</dt><dd>' + esc(a.origem || 'Manual') + (a.importadoEm ? ' · ' + br(a.importadoEm) : '') + '</dd></div></dl>' +
       (g ? '<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line-2)">' + gestBloco(a, g) + '</div>' : '') + '</div>' +
       '<div class="card"><div class="tabs" role="tablist">' + tabs.map(([k, l]) => '<button role="tab" aria-selected="' + (fichaTab === k) + '" data-act="tab" data-t="' + k + '">' + l + '</button>').join('') + '</div><div style="padding-top:14px">' + corpo + '</div></div></div>';
   }
 
+  /* v1.6.0: genealogia de 4 gerações (pos P, M, PP ... MMMM) e dados do certificado */
+  function arvore(lst) {
+    if (!lst || !lst.length) return '';
+    const por = {}; lst.forEach(x => { por[x.pos] = x; });
+    const ger = n => n === 1 ? ['P', 'M'] : ger(n - 1).flatMap(x => [x + 'P', x + 'M']);
+    const tit = ['Pais', 'Avós', 'Bisavós', 'Trisavós'];
+    // grade de 16 linhas: cada geração ocupa 16/2^n linhas, alinhando cada animal entre os seus pais
+    return '<h3 style="margin:22px 0 8px">Genealogia (certificado)</h3><div class="arvore" role="list">' + tit.map((t, i) => '<small style="grid-column:' + (i + 1) + ';grid-row:1">' + t + '</small>').join('') +
+      [1, 2, 3, 4].map(n => ger(n).map((pos, i) => {
+        const x = por[pos], f = pos.slice(-1) === 'M', sp = 16 / Math.pow(2, n);
+        return '<div class="no' + (f ? ' f' : '') + '" role="listitem" style="grid-column:' + n + ';grid-row:' + (2 + i * sp) + ' / span ' + sp + '">' + (x ? esc(x.nome) + (x.registro || x.dna ? '<span>' + esc([x.registro, x.dna].filter(Boolean).join(' · ')) + '</span>' : '') : '<span>-</span>') + '</div>';
+      }).join('')).join('') + '</div>';
+  }
+  function painelCertificado(a) {
+    const c = a.certificado; if (!c) return '';
+    const m = c.mensuracoes || {}, cr = c.criador || {}, pr = c.proprietario || {};
+    const dd = (t, v) => '<div><dt>' + t + '</dt><dd>' + esc(v || '-') + '</dd></div>';
+    const pessoa = p => [p.nome, p.cadastro ? 'cadastro ' + p.cadastro : '', p.propriedade, [p.municipio, p.uf].filter(Boolean).join('/')].filter(Boolean).join(' · ');
+    return '<div class="spread" style="margin:22px 0 8px"><h3>Certificado de registro</h3>' + (c.pdf ? '<a class="btn sm" href="/api/animais/' + a.id + '/certificado.pdf" download>' + IC.file + 'Baixar o PDF</a>' : '') + '</div>' +
+      '<dl class="facts">' + dd('Classificação', c.classificacao) + dd('Volume e página', [c.volume, c.pagina].filter(Boolean).join(' / ')) + dd('Resenha', c.dataResenha ? br(c.dataResenha) : '') + dd('Registro em', c.dataRegistro ? br(c.dataRegistro) : '') +
+      '</dl><dl class="facts" style="margin-top:12px">' + [['altura', 'Altura'], ['comprimento', 'Comprimento'], ['largura', 'Largura'], ['perimetro', 'Perímetro']].map(([k, t]) => dd(t, Object.entries(m[k] || {}).map(([p, v]) => p + ' ' + String(v).replace('.', ',') + ' m').join(' · '))).join('') + '</dl>' +
+      '<dl class="facts" style="margin-top:12px">' + dd('Criador', pessoa(cr)) + dd('Proprietário', pessoa(pr)) + dd('Enviado em', c.enviadoEm ? br(c.enviadoEm) : '') + '</dl>';
+  }
+
   /* ================= IMPORTAR ================= */
+  /* v1.6.0: abas Relatório de Plantel e Certificados (lote) */
+  let impAba = 'plantel', certLote = null;
   function vImportar() {
+    const abas = '<div class="tabs" role="tablist" style="margin-bottom:14px">' + [['plantel', 'Relatório de Plantel'], ['certificados', 'Certificados de registro']].map(([k, l]) => '<button role="tab" aria-selected="' + (impAba === k) + '" data-act="imp-aba" data-t="' + k + '">' + l + '</button>').join('') + '</div>';
+    return abas + (impAba === 'certificados' ? vCertificados() : vImportarPlantel());
+  }
+  const SIT_CERT = { novo: '<span class="chip c-ok">Novo</span>', atualizar: '<span class="chip c-soon">Atualizar</span>', igual: '<span class="chip c-muted">Já confere</span>' };
+  function opcoesCert(c) {
+    if (!c.ok) return [];
+    if (c.situacao === 'novo') return [['criar', 'Cadastrar no plantel'], ['criar-externo', 'Cadastrar como externo'], ['ignorar', 'Ignorar']];
+    if (c.situacao === 'atualizar') return [['atualizar', 'Atualizar o cadastro'], ['anexar', 'Só guardar PDF e genealogia'], ['ignorar', 'Ignorar']];
+    return [['anexar', 'Guardar o PDF de novo'], ['ignorar', 'Ignorar']];
+  }
+  function vCertificados() {
+    if (!certLote) {
+      return '<div class="sec"><div class="grid2"><div class="card stack"><h2>Certificados de registro da ABCCMM</h2><p class="muted">Envie um ou vários Certificados de Registro Genealógico (até 30 PDFs de até 3 MB). O Haras360 lê nome, registro, livro, nascimento, sexo, DNA, microchip, pelagem, mensurações, criador, proprietário e a genealogia de 4 gerações, e mostra o que muda antes de gravar.</p>' +
+        '<label class="drop" id="drop-cert" for="pdf-cert">' + IC.upload + '<b>Arraste os PDFs aqui ou clique para escolher</b><span class="small muted">Os PDFs ficam guardados na ficha de cada animal</span></label><input id="pdf-cert" type="file" accept="application/pdf,.pdf" multiple hidden data-chg="cert-lote">' +
+        '<p id="cert-lote-st" class="note" hidden></p></div>' +
+        '<div class="card stack"><h3>Como funciona</h3><ol class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px"><li>Cada certificado é comparado com o plantel pelo registro, pelo chip ou pelo nome.</li><li>Animais que ainda não existem podem entrar no plantel ou como externos (garanhões e éguas de fora).</li><li>Para quem já existe, você escolhe atualizar o cadastro ou só guardar o PDF e a genealogia.</li><li>Nada é gravado sem a sua confirmação.</li></ol></div></div></div>';
+    }
+    const it = certLote.itens;
+    const n = it.filter(x => x.acao && x.acao !== 'ignorar').length;
+    return '<div class="sec"><div class="card flush"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Arquivo</th><th>Animal no certificado</th><th>Situação</th><th>O que muda</th><th>Ação</th></tr></thead><tbody>' +
+      it.map((x, i) => {
+        const c = x.res;
+        if (!c.ok) return '<tr><td class="small">' + esc(c.arquivo) + '</td><td colspan="4"><span class="chip c-late">Não lido</span> <span class="small">' + esc(c.erro) + '</span></td></tr>';
+        const d = c.dados;
+        const muda = c.situacao === 'atualizar' ? c.diferencas.map(f => esc(f.campo)).join(', ') : c.situacao === 'novo' ? (d.genealogia.arvore.length + ' ancestrais') : '-';
+        return '<tr><td class="small">' + esc(c.arquivo) + '</td><td><b>' + esc(d.nome) + '</b><br><span class="mono muted small">' + esc(d.registro || 'Sem registro') + ' · ' + (d.sexo === 'F' ? 'Fêmea' : 'Macho') + ' · ' + (d.nascimento ? br(d.nascimento) : 'sem nascimento') + '</span>' +
+          (c.animal && c.situacao !== 'novo' ? '<br><span class="small">Cadastro: ' + esc(c.animal) + (c.externo ? ' (externo)' : '') + '</span>' : '') + (c.avisos.length ? '<br><span class="small" style="color:var(--soon)">' + c.avisos.map(esc).join('<br>') + '</span>' : '') + '</td>' +
+          '<td>' + SIT_CERT[c.situacao] + '</td><td class="small">' + muda + '</td><td><select class="inp" style="width:auto" data-chg="lote-acao" data-i="' + i + '" aria-label="Ação para ' + esc(d.nome) + '">' + opcoesCert(c).map(([k, l]) => '<option value="' + k + '"' + (x.acao === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></td></tr>';
+      }).join('') + '</tbody></table></div></div>' +
+      '<div class="row" style="justify-content:flex-end"><button class="btn" data-act="lote-cancelar">Cancelar</button><button class="btn pri" data-act="lote-gravar"' + (n ? '' : ' disabled') + '>' + IC.check + 'Gravar ' + n + ' certificado(s)</button></div></div>';
+  }
+  async function previaCert(files, animalId) {
+    const fd = new FormData(); [...files].forEach(f => fd.append('arquivos', f)); if (animalId) fd.append('animalId', animalId);
+    return (await API.upload('/api/certificados/previa', fd)).certificados;
+  }
+  function gravarCert(files, acoes) {
+    const fd = new FormData(); files.forEach(f => fd.append('arquivos', f)); fd.append('acoes', JSON.stringify(acoes));
+    return API.upload('/api/certificados/gravar', fd);
+  }
+  async function lerLote(files) {
+    const st = $('#cert-lote-st'); const msg = (t, c) => { st.textContent = t; st.className = 'note ' + (c || ''); st.hidden = false; };
+    files = [...files].filter(f => /\.pdf$/i.test(f.name) || /pdf$/i.test(f.type));
+    if (!files.length) return msg('Envie arquivos em PDF.', 'bad');
+    if (files.length > 30) return msg('Envie até 30 certificados por vez.', 'bad');
+    msg('Lendo ' + files.length + ' certificado(s)...');
+    try {
+      const res = await previaCert(files);
+      certLote = { itens: res.map((c, i) => ({ file: files[i], res: c, acao: c.ok ? (c.situacao === 'igual' ? 'ignorar' : opcoesCert(c)[0][0]) : null })) };
+      render();
+    } catch (e) { msg(e.message, 'bad'); }
+  }
+  async function gravarLote(el) {
+    const it = certLote.itens.filter(x => x.res.ok);
+    const acoes = it.map(x => x.acao === 'criar-externo' ? { acao: 'criar', externo: true } : { acao: x.acao, animalId: x.res.animalId });
+    const r = await executar(el, () => gravarCert(it.map(x => x.file), acoes), false);
+    if (!r) return;
+    certLote = null; render();
+    UI.toast(r.resumo);
+  }
+  function vImportarPlantel() {
     if (!importacao) {
       return '<div class="sec"><div class="steps"><span class="on">1. Enviar PDF</span><span>2. Conferir</span><span>3. Importar</span></div>' +
         '<div class="grid2"><div class="card stack"><h2>Relatório de Plantel da ABCCMM</h2><p class="muted">Envie o PDF gerado no Sistema de Gestão ABCCMM. O Haras360 lê nome, livro, registro, sexo, bloqueio, situação, DNA, nascimento e microchip de cada animal e confere com o resumo do relatório antes de gravar.</p>' +
@@ -1735,9 +1861,185 @@ const UI = (function () {
     $('#sim-out').innerHTML = '<b style="font-family:var(--f-display);font-size:2rem">' + (m === null ? 'A definir' : H.moeda(m)) + '</b>' + (m === null ? '' : '<span class="muted"> por mês</span>') + '<p class="small muted mono">' + parts.join(' + ') + '</p>';
   }
 
-  const VIEWS = { relatorios: vRelatorios, painel: vPainel, sanidade: vSanidade, reproducao: vReproducao, animais: vAnimais, ficha: vFicha, importar: vImportar, agenda: vAgenda, protocolos: vProtocolos, notificacoes: vNotificacoes, equipe: vEquipe, assistente: vAssistente, plano: vPlano, parametros: vParametros, auditoria: vAuditoria, sobre: vSobre, glossario: vGlossario, normas: vNormas };
+  /* ================= VENDAS (v1.6.0) ================= */
+  let vendaAba = 'vendas', vendaF = 'abertas', compradores = null;
+  const MEIOS = ['Pix', 'Transferência', 'Boleto', 'Cheque', 'Dinheiro', 'Cartão'];
+  const SIT_PARC = { paga: '<span class="chip c-ok">Paga</span>', atrasada: '<span class="chip c-late">Atrasada</span>', vence: '<span class="chip c-soon">Vence em 7 dias</span>', aberta: '<span class="chip c-muted">Em aberto</span>' };
+  /* "30.000,50" ou "30000.5" em centavos */
+  function centavos(t) {
+    t = String(t || '').replace(/R\$|\s/g, '');
+    if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.');
+    const n = Number(t); return isFinite(n) && n >= 0 ? Math.round(n * 100) : NaN;
+  }
+  function addMesesIso(iso, n) {
+    const [y, m, d] = iso.split('-').map(Number); const t = new Date(y, m - 1 + n, 1);
+    const ult = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
+    return H.iso(new Date(t.getFullYear(), t.getMonth(), Math.min(d, ult)));
+  }
+  function gerarParcelas(total, entrada, n, primeiro) {
+    const resto = total - entrada, base = Math.floor(resto / n), out = entrada ? [{ numero: 0, vencimento: null, valor: entrada }] : [];
+    for (let i = 0; i < n; i++) out.push({ numero: i + 1, vencimento: addMesesIso(primeiro, i), valor: base + (i === n - 1 ? resto - base * n : 0) });
+    return out;
+  }
+  const rotParcela = (v, p) => p.numero === 0 ? 'Entrada' : v.forma === 'avista' ? 'À vista' : p.numero + '/' + v.parcelas.filter(x => x.numero > 0).length;
+  function vVendas() {
+    const vs = S.vendas || [];
+    const parc = vs.flatMap(v => v.parcelas);
+    const ab = parc.filter(p => !p.pagoEm), atr = ab.filter(p => p.situacao === 'atrasada');
+    const soma = l => l.reduce((s, p) => s + p.valor, 0);
+    const abas = '<div class="tabs" role="tablist">' + [['vendas', 'Vendas'], ['compradores', 'Compradores']].map(([k, l]) => '<button role="tab" aria-selected="' + (vendaAba === k) + '" data-act="venda-aba" data-t="' + k + '">' + l + '</button>').join('') + '</div>';
+    if (vendaAba === 'compradores') return '<div class="sec"><div class="card">' + abas + '<div class="spread" style="margin:14px 0 6px"><p class="small muted">Compradores ficam salvos para as próximas vendas. O CPF ou CNPJ é guardado cifrado e aparece mascarado; ver o número completo fica registrado na auditoria.</p><button class="btn pri" data-act="comprador-novo">' + IC.plus + 'Novo comprador</button></div><div id="lst-compradores"><div class="empty">Carregando...</div></div></div></div>';
+    const filtro = { abertas: v => v.saldo > 0 || !v.transferenciaEm, todas: () => true, quitadas: v => v.saldo <= 0 };
+    const lst = vs.filter(filtro[vendaF]);
+    return '<div class="sec"><div class="rel-kpis">' +
+      '<div class="rel-kpi"><b>' + reais(vs.reduce((s, v) => s + v.total, 0)) + '</b><span>Total vendido (' + vs.length + ' venda' + (vs.length === 1 ? '' : 's') + ')</span></div>' +
+      '<div class="rel-kpi"><b>' + reais(vs.reduce((s, v) => s + v.recebido, 0)) + '</b><span>Recebido</span></div>' +
+      '<div class="rel-kpi"><b>' + reais(soma(ab)) + '</b><span>A receber (' + ab.length + ' parcela' + (ab.length === 1 ? '' : 's') + ')</span></div>' +
+      '<div class="rel-kpi"><b>' + reais(soma(atr)) + '</b><span>Em atraso (' + atr.length + ')</span></div></div>' +
+      '<div class="card">' + abas + '<div class="spread" style="margin:14px 0 6px"><div class="row">' + [['abertas', 'Com pendência'], ['quitadas', 'Quitadas'], ['todas', 'Todas']].map(([k, l]) => '<button class="btn sm' + (vendaF === k ? ' pri' : ' ghost') + '" data-act="venda-f" data-f="' + k + '">' + l + '</button>').join('') + '</div>' +
+      '<span class="small muted">Para registrar uma venda, abra a ficha do animal e use Dar baixa › Venda.</span></div>' +
+      (lst.length ? lst.map(cartaoVenda).join('') : '<div class="empty">' + (vs.length ? 'Nenhuma venda neste filtro.' : 'Nenhuma venda registrada.') + '</div>') + '</div></div>';
+  }
+  function cartaoVenda(v) {
+    const transf = v.transferenciaEm ? '<span class="chip c-ok">Transferência comunicada em ' + br(v.transferenciaEm) + '</span> <button class="btn ghost sm" data-act="venda-transf" data-id="' + v.id + '" data-feita="0">Desfazer</button>'
+      : '<span class="chip c-soon">Comunicar a transferência na ABCCMM</span> <button class="btn sm" data-act="venda-transf" data-id="' + v.id + '" data-feita="1">Marcar como comunicada</button>';
+    return '<div class="venda"><div class="spread"><div><a href="#" data-act="ver-animal" data-id="' + v.animalId + '"><b>' + esc(v.animal) + '</b></a> <span class="muted">para</span> <b>' + esc(v.comprador) + '</b><br><span class="small muted">' + br(v.data) + ' · ' + (v.forma === 'avista' ? 'à vista' : 'parcelado') + (v.meio ? ' · ' + esc(v.meio) : '') + ' · total ' + reais(v.total) + ' · recebido ' + reais(v.recebido) + (v.saldo > 0 ? ' · <b>saldo ' + reais(v.saldo) + '</b>' : ' · quitada') + '</span>' + (v.obs ? '<br><span class="small">' + esc(v.obs) + '</span>' : '') + '</div><div class="row">' + transf + '</div></div>' +
+      '<div class="tbl-wrap" style="margin-top:8px"><table class="tbl"><thead><tr><th>Parcela</th><th>Vencimento</th><th>Valor</th><th>Situação</th><th>Pagamento</th><th><span class="sr">Ações</span></th></tr></thead><tbody>' +
+      v.parcelas.map(p => '<tr><td>' + rotParcela(v, p) + '</td><td class="mono">' + br(p.vencimento) + '</td><td class="mono">' + reais(p.valor) + '</td><td>' + SIT_PARC[p.situacao] + '</td><td class="small">' + (p.pagoEm ? br(p.pagoEm) + ' · ' + reais(p.valorPago) + (p.meio ? ' · ' + esc(p.meio) : '') + (p.obs ? ' · ' + esc(p.obs) : '') : '-') + '</td>' +
+        '<td style="text-align:right">' + (p.pagoEm ? '<button class="btn ghost sm" data-act="parcela-estornar" data-id="' + p.id + '">Estornar</button>' : '<button class="btn sm pri" data-act="parcela-pagar" data-id="' + p.id + '" data-v="' + v.id + '">Registrar pagamento</button>') + '</td></tr>').join('') +
+      '</tbody></table></div></div>';
+  }
+  async function carregarCompradores() {
+    try { compradores = await API.get('/api/compradores'); } catch (e) { UI.toast(e.message); return; }
+    const el = $('#lst-compradores'); if (!el) return;
+    el.innerHTML = compradores.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Comprador</th><th>CPF ou CNPJ</th><th>Contato</th><th>Cidade</th><th>Nº ABCCMM</th><th>Vendas</th><th><span class="sr">Ações</span></th></tr></thead><tbody>' +
+      compradores.map(c => '<tr><td><b>' + esc(c.nome) + '</b></td><td class="mono"><span id="doc-' + c.id + '">' + esc(c.documento || '-') + '</span>' + (c.documento ? ' <button class="btn ghost sm" data-act="comprador-doc" data-id="' + c.id + '">Ver</button>' : '') + '</td>' +
+        '<td class="small">' + [c.telefone, c.email].filter(Boolean).map(esc).join('<br>') + '</td><td class="small">' + esc([c.cidade, c.uf].filter(Boolean).join('/') || '-') + '</td><td class="mono small">' + esc(c.cadastroAbccmm || '-') + '</td><td>' + c.vendas + '</td>' +
+        '<td style="text-align:right;white-space:nowrap"><button class="btn ghost sm" data-act="comprador-editar" data-id="' + c.id + '">Editar</button>' + (c.vendas ? '' : ' <button class="btn ghost sm danger" data-act="comprador-excluir" data-id="' + c.id + '">Excluir</button>') + '</td></tr>').join('') + '</tbody></table></div>'
+      : '<div class="empty">Nenhum comprador cadastrado. Eles também podem ser cadastrados na hora da venda.</div>';
+  }
+  const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
+  function camposComprador(c, px) {
+    c = c || {}; px = px || 'cp';
+    const f = (id, lab, val, extra) => '<div class="field' + (extra || '') + '"><label for="' + px + '-' + id + '">' + lab + '</label><input id="' + px + '-' + id + '" class="inp" value="' + esc(val || '') + '"></div>';
+    return f('nome', 'Nome ou razão social', c.nome, ' full') + f('doc', 'CPF ou CNPJ (opcional)', c.documento) + f('abccmm', 'Nº de cadastro na ABCCMM', c.cadastroAbccmm) + f('tel', 'Telefone', c.telefone) + f('email', 'E-mail', c.email) + f('cidade', 'Cidade', c.cidade) +
+      '<div class="field"><label for="' + px + '-uf">UF</label><select id="' + px + '-uf" class="inp"><option value="">-</option>' + UFS.map(u => '<option' + (c.uf === u ? ' selected' : '') + '>' + u + '</option>').join('') + '</select></div>';
+  }
+  function lerComprador(px) {
+    const v = id => (document.getElementById(px + '-' + id) || {}).value || '';
+    return { nome: v('nome').trim(), documento: v('doc').trim(), cadastroAbccmm: v('abccmm').trim(), telefone: v('tel').trim(), email: v('email').trim(), cidade: v('cidade').trim(), uf: v('uf') };
+  }
+  function docValido(doc) {
+    const d = doc.replace(/\D/g, '');
+    const dv = (n, pesos) => { const s = pesos.reduce((t, p, i) => t + Number(n[i]) * p, 0) % 11; return s < 2 ? 0 : 11 - s; };
+    if (d.length === 11 && !/^(\d)\1+$/.test(d)) return dv(d, [10, 9, 8, 7, 6, 5, 4, 3, 2]) === +d[9] && dv(d, [11, 10, 9, 8, 7, 6, 5, 4, 3, 2]) === +d[10];
+    if (d.length === 14 && !/^(\d)\1+$/.test(d)) return dv(d, [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]) === +d[12] && dv(d, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]) === +d[13];
+    return false;
+  }
+  function erroComprador(c) {
+    if (!c.nome) return 'Informe o nome do comprador.';
+    if (c.documento && !c.documento.includes('*') && !docValido(c.documento)) return 'CPF ou CNPJ inválido. Confira os números.';
+    if (c.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c.email)) return 'E-mail do comprador inválido.';
+    return '';
+  }
+  /* seção de venda dentro do Dar baixa */
+  function secaoVenda() {
+    const hoje = H.iso(H.hoje());
+    return '<div id="b-venda" class="full stack secao-venda"><h3>Venda</h3><div class="fgrid">' +
+      '<div class="field full"><label for="v-comp">Comprador</label><select id="v-comp" class="inp" data-chg="v-comp"><option value="">+ Novo comprador</option>' + (compradores || []).map(c => '<option value="' + c.id + '">' + esc(c.nome) + (c.documento ? ' · ' + esc(c.documento) : '') + '</option>').join('') + '</select></div>' +
+      '</div><div id="v-novo" class="fgrid">' + camposComprador({}, 'vn') + '</div><div class="fgrid">' +
+      '<div class="field"><label for="v-valor">Valor total (R$)</label><input id="v-valor" class="inp" inputmode="decimal" placeholder="Ex.: 30.000,00" data-calc="1"></div>' +
+      '<div class="field"><label for="v-meio">Meio de pagamento</label><select id="v-meio" class="inp"><option value="">-</option>' + MEIOS.map(m => '<option>' + m + '</option>').join('') + '</select></div>' +
+      '<div class="field"><label for="v-forma">Forma</label><select id="v-forma" class="inp" data-chg="v-forma"><option value="avista">À vista</option><option value="parcelado">Parcelado</option></select></div>' +
+      '<div class="field" id="v-av"><span class="lbl">Pagamento</span><label class="chk"><input type="checkbox" id="v-pago" checked> Valor já recebido</label></div>' +
+      '</div><div id="v-parc" class="fgrid" hidden>' +
+      '<div class="field"><label for="v-entrada">Entrada (R$, opcional)</label><input id="v-entrada" class="inp" inputmode="decimal" placeholder="0,00" data-calc="1"></div>' +
+      '<div class="field"><label for="v-n">Número de parcelas</label><input id="v-n" type="number" min="2" max="60" class="inp" value="3" data-calc="1"></div>' +
+      '<div class="field"><label for="v-venc">1º vencimento</label><input id="v-venc" type="date" class="inp" value="' + addMesesIso(hoje, 1) + '" data-calc="1"></div>' +
+      '<div class="field"><span class="lbl">Entrada</span><label class="chk"><input type="checkbox" id="v-entpaga" checked> Entrada já recebida</label></div>' +
+      '<div class="full small" id="v-prev"></div></div></div>';
+  }
+  function previaParcelas() {
+    const el = $('#v-prev'); if (!el || $('#v-forma').value !== 'parcelado') return;
+    const t = centavos($('#v-valor').value), e = centavos($('#v-entrada').value || '0'), n = Number($('#v-n').value), d = $('#v-venc').value;
+    if (!(t > 0) || isNaN(e) || !(n >= 2 && n <= 60) || !d) { el.innerHTML = '<span class="muted">Informe o valor, as parcelas e o 1º vencimento para ver o plano de pagamento.</span>'; return; }
+    if (e > t) { el.innerHTML = '<span style="color:var(--late)">A entrada não pode passar do valor total.</span>'; return; }
+    el.innerHTML = '<b>Plano de pagamento:</b> ' + gerarParcelas(t, e, n, d).map(p => (p.numero ? p.numero + 'ª em ' + br(p.vencimento) : 'entrada') + ' ' + reais(p.valor)).join(' · ');
+  }
+  function lerVenda(aid, data, obs) {
+    const forma = $('#v-forma').value, compId = $('#v-comp').value;
+    const b = { animalId: aid, data, obs, forma, meio: $('#v-meio').value, valor: $('#v-valor').value };
+    if (compId) b.compradorId = compId; else { b.comprador = lerComprador('vn'); const e = erroComprador(b.comprador); if (e) return e; }
+    const t = centavos(b.valor); if (!(t > 0)) return 'Informe o valor da venda.';
+    if (forma === 'avista') b.pago = $('#v-pago').checked;
+    else {
+      Object.assign(b, { entrada: $('#v-entrada').value || '0', nParcelas: Number($('#v-n').value), primeiroVencimento: $('#v-venc').value, entradaPaga: $('#v-entpaga').checked });
+      if (!(b.nParcelas >= 2 && b.nParcelas <= 60)) return 'Parcelado: informe de 2 a 60 parcelas.';
+      if (!b.primeiroVencimento) return 'Informe o 1º vencimento.';
+      if (centavos(b.entrada) > t) return 'A entrada não pode passar do valor total.';
+    }
+    return b;
+  }
+
+  /* novo animal (do plantel ou externo), com leitura opcional do certificado */
+  let certNovo = null;
+  function formAnimal(externo) {
+    certNovo = null;
+    UI.abrir({
+      titulo: externo ? 'Novo animal externo' : 'Novo animal', corpo: '<form id="fa" class="fgrid" novalidate>' +
+        '<div class="field full"><div class="row"><label class="btn" for="n-cert">' + IC.file + 'Preencher pelo certificado (PDF)</label><input id="n-cert" type="file" accept="application/pdf,.pdf" hidden data-chg="cert-novo"><span class="small muted">Opcional. O PDF fica guardado na ficha.</span></div><p class="note" id="n-cert-st" hidden></p></div>' +
+        (externo ? '<p class="note full">Garanhão ou égua de fora do haras, usado em coberturas e inseminações. Não entra no plantel, na agenda nem no limite do plano, e o caseiro não vê.</p>' : '') +
+        '<div class="field full"><label for="n-nome">Nome</label><input id="n-nome" class="inp"></div>' +
+        '<div class="field"><label for="n-sexo">Sexo</label><select id="n-sexo" class="inp"><option value="F"' + (externo ? '' : ' selected') + '>Fêmea</option><option value="M"' + (externo ? ' selected' : '') + '>Macho</option></select></div>' +
+        '<div class="field"><label for="n-nasc">Nascimento' + (externo ? ' (opcional)' : '') + '</label><input id="n-nasc" type="date" class="inp" max="' + H.iso(H.hoje()) + '"></div>' +
+        '<div class="field"><label for="n-reg">Registro ABCCMM</label><input id="n-reg" class="inp" inputmode="numeric" placeholder="Ex.: 0185916">' +
+        '<label class="chk"><input type="checkbox" id="n-semreg" data-chg="semreg" data-alvo="n-reg"> Sem registro na ABCCMM</label></div>' +
+        '<div class="field"><label for="n-chip">Microchip</label><input id="n-chip" class="inp" inputmode="numeric"></div>' +
+        '<div class="field"><label for="n-livro">Livro</label><input id="n-livro" class="inp" placeholder="Ex.: MM6 - DEFINITIVO FECHADO FÊMEA"></div>' +
+        '<div class="field"><label for="n-dna">DNA</label><select id="n-dna" class="inp"><option>Sem exame</option><option>DNA - VP</option></select></div>' +
+        '<div class="field"><label for="n-pelagem">Pelagem</label><input id="n-pelagem" class="inp"></div>' +
+        (externo ? '<div class="field"><label for="n-prop">Proprietário ou haras</label><input id="n-prop" class="inp"></div><div class="field"><label for="n-tel">Telefone</label><input id="n-tel" class="inp" inputmode="tel"></div><div class="field"><label for="n-email">E-mail</label><input id="n-email" type="email" class="inp"></div>' : '') +
+        '<p class="note full" id="n-erro" hidden></p></form>',
+      rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-novo-animal"' + (externo ? ' data-externo="1"' : '') + '>' + IC.check + 'Cadastrar</button>'
+    });
+  }
+  async function lerCertNovo(file) {
+    const st = $('#n-cert-st'); const msg = (t, c) => { st.innerHTML = t; st.className = 'note ' + (c || ''); st.hidden = false; };
+    if (!file) return;
+    msg('Lendo o certificado...');
+    try {
+      const c = (await previaCert([file]))[0];
+      if (!c.ok) { certNovo = null; return msg(esc(c.erro), 'bad'); }
+      if (c.situacao !== 'novo') { certNovo = null; return msg('Este certificado é de <b>' + esc(c.animal) + '</b>, que já está cadastrado' + (c.externo ? ' como externo' : '') + '. <a href="#" data-act="ver-animal" data-id="' + c.animalId + '">Abra a ficha</a> e use Atualizar pelo certificado.', 'warn'); }
+      const d = c.dados, set = (id, v) => { const el = document.getElementById(id); if (el && v) { el.value = v; el.style.borderColor = 'var(--accent)'; el.style.background = 'var(--accent-soft)'; } };
+      set('n-nome', d.nome); set('n-sexo', d.sexo); set('n-nasc', d.nascimento); set('n-chip', d.chip); set('n-livro', d.livro); set('n-pelagem', d.pelagem);
+      if (d.registro) { $('#n-semreg').checked = false; $('#n-reg').disabled = false; set('n-reg', d.registro); }
+      const dna = $('#n-dna'); if (d.dna && ![...dna.options].some(o => o.value === d.dna)) dna.insertAdjacentHTML('beforeend', '<option>' + esc(d.dna) + '</option>'); set('n-dna', d.dna);
+      certNovo = file;
+      msg('Dados preenchidos a partir do certificado. A genealogia (' + d.genealogia.arvore.length + ' ancestrais), as mensurações, o criador, o proprietário e o PDF serão gravados junto.' + (c.avisos.length ? '<br>' + c.avisos.map(esc).join('<br>') : ''), 'good');
+    } catch (e) { msg(esc(e.message), 'bad'); }
+  }
+  /* atualizar a ficha pelo certificado: mostra o que muda e grava */
+  let certFicha = null;
+  async function lerCertFicha(file, aid) {
+    if (!file) return;
+    UI.toast('Lendo o certificado...');
+    let c; try { c = (await previaCert([file], aid))[0]; } catch (e) { UI.toast(e.message); return; }
+    if (!c.ok) { UI.toast(c.erro); return; }
+    certFicha = { file, aid };
+    const a = H.animal(S, aid);
+    const dif = c.diferencas.length ? '<table class="tbl dif"><thead><tr><th>Campo</th><th>Hoje</th><th>No certificado</th></tr></thead><tbody>' + c.diferencas.map(d => '<tr><td>' + esc(d.campo) + '</td><td>' + esc(d.antes || '-') + '</td><td>' + esc(d.depois) + '</td></tr>').join('') + '</tbody></table>' : '<p class="note good">Os dados do cadastro já conferem com o certificado.</p>';
+    UI.abrir({
+      titulo: 'Atualizar ' + esc(a.nome) + ' pelo certificado', largo: true,
+      corpo: '<div class="stack">' + (c.avisos.length ? '<p class="note warn">' + c.avisos.map(esc).join('<br>') + '</p>' : '') + dif + '<p class="small muted">' + c.dados.genealogia.arvore.length + ' ancestrais na genealogia. O PDF fica guardado na ficha.</p></div>',
+      rodape: '<button class="btn" data-act="fechar">Cancelar</button>' + (c.diferencas.length ? '<button class="btn" data-act="cert-ficha-gravar" data-acao="anexar">Só guardar PDF e genealogia</button><button class="btn pri" data-act="cert-ficha-gravar" data-acao="atualizar">' + IC.check + 'Atualizar o cadastro</button>' : '<button class="btn pri" data-act="cert-ficha-gravar" data-acao="anexar">Guardar o PDF</button>')
+    });
+  }
+
+  const VIEWS = { vendas: vVendas, relatorios: vRelatorios, painel: vPainel, sanidade: vSanidade, reproducao: vReproducao, animais: vAnimais, ficha: vFicha, importar: vImportar, agenda: vAgenda, protocolos: vProtocolos, notificacoes: vNotificacoes, equipe: vEquipe, assistente: vAssistente, plano: vPlano, parametros: vParametros, auditoria: vAuditoria, sobre: vSobre, glossario: vGlossario, normas: vNormas };
   const AFTER = {
     relatorios() { carregarRel(); },
+    vendas() { if (vendaAba === 'compradores') carregarCompradores(); },
     animais() {
       $('#tb-animais').innerHTML = linhasAnimais();
       $('#busca').addEventListener('input', e => { busca = e.target.value; $('#tb-animais').innerHTML = linhasAnimais(); });
@@ -1746,19 +2048,14 @@ const UI = (function () {
     },
     ficha(id) {
       const fc = $('#filtroCat'); if (fc) fc.addEventListener('change', e => { filtroCat = e.target.value; render(); });
-      const ce = $('#cert'); if (ce) ce.addEventListener('change', async e => {
-        const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-        const st = $('#cert-st'); st.hidden = false; st.className = 'note'; st.textContent = 'Lendo o certificado...';
-        try {
-          const g = H.lerGenealogia(await H.linhasPDF(f));
-          const ks = Object.keys(g);
-          if (!ks.length) { st.className = 'note warn'; st.textContent = 'Não encontramos campos de genealogia (Pai, Mãe, Avós) neste PDF. Preencha manualmente.'; return; }
-          ks.forEach(k => { const el = document.getElementById('d-' + k); if (el) { el.value = g[k]; el.style.borderColor = 'var(--accent)'; el.style.background = 'var(--accent-soft)'; } });
-          st.className = 'note good'; st.textContent = ks.length + ' campo(s) preenchido(s) a partir do PDF. Confira e clique em Salvar dados.';
-        } catch (err) { st.className = 'note bad'; st.textContent = 'Não foi possível ler o PDF: ' + err.message; }
-      });
     },
     importar() {
+      const dc = $('#drop-cert');
+      if (dc) {
+        ['dragenter', 'dragover'].forEach(ev => dc.addEventListener(ev, e => { e.preventDefault(); dc.classList.add('over'); }));
+        ['dragleave', 'drop'].forEach(ev => dc.addEventListener(ev, e => { e.preventDefault(); dc.classList.remove('over'); }));
+        dc.addEventListener('drop', e => lerLote(e.dataTransfer.files));
+      }
       const inp = $('#pdf'), dr = $('#drop'); if (!inp) return;
       inp.addEventListener('change', e => lerPDF(e.target.files[0]));
       ['dragenter', 'dragover'].forEach(ev => dr.addEventListener(ev, e => { e.preventDefault(); dr.classList.add('over'); }));
@@ -1789,7 +2086,7 @@ const UI = (function () {
   /* ================= AÇÕES ================= */
   const senhaForm = (id, rot) => '<div class="field"><label for="' + id + '">' + rot + '</label><input id="' + id + '" type="password" class="inp" autocomplete="new-password" minlength="8"></div>';
   const ACT = {
-    nav: el => go(el.dataset.v),
+    nav: el => { if (el.dataset.sit) sitF = el.dataset.sit; go(el.dataset.v); },
     'agenda-ir': el => { agendaFiltro = el.dataset.f; go('agenda'); },
     'ver-animal': el => { fichaTab = 'prontuario'; filtroCat = 'todos'; UI.fechar(); go('ficha', el.dataset.id); },
     tab: el => { fichaTab = el.dataset.t; render(); },
@@ -1802,22 +2099,78 @@ const UI = (function () {
       const r = UI.lerRegistro(S); if (!r) return;
       if (await executar(el, () => API.post('/api/registros', r))) { UI.fechar(); render(); }
     },
-    'dar-baixa': el => {
+    'dar-baixa': async el => {
       const a = H.animal(S, el.dataset.id); if (!a) return;
+      try { compradores = await API.get('/api/compradores'); } catch (e) { compradores = []; }
       UI.abrir({
-        titulo: 'Dar baixa em ' + esc(a.nome), corpo: '<form id="fb" class="fgrid" novalidate>' +
+        titulo: 'Dar baixa em ' + esc(a.nome), largo: true, corpo: '<form id="fb" class="fgrid" novalidate>' +
           '<div class="field"><label for="b-data">Data</label><input id="b-data" type="date" class="inp" value="' + H.iso(H.hoje()) + '" max="' + H.iso(H.hoje()) + '"></div>' +
-          '<div class="field"><label for="b-motivo">Motivo</label><select id="b-motivo" class="inp">' + ['Venda', 'Morte', 'Doação', 'Transferência'].map(m => '<option>' + m + '</option>').join('') + '</select></div>' +
-          '<div class="field full"><label for="b-destino">Destino ou comprador (opcional)</label><input id="b-destino" class="inp" placeholder="Ex.: Haras Boa Esperança"></div>' +
+          '<div class="field"><label for="b-motivo">Motivo</label><select id="b-motivo" class="inp" data-chg="b-motivo">' + ['Venda', 'Morte', 'Doação', 'Transferência'].map(m => '<option>' + m + '</option>').join('') + '</select></div>' +
+          '<div class="field full" id="b-dest" hidden><label for="b-destino">Destino (opcional)</label><input id="b-destino" class="inp" placeholder="Ex.: Haras Boa Esperança"></div>' +
+          secaoVenda() +
           '<div class="field full"><label for="b-obs">Observação</label><textarea id="b-obs" class="inp"></textarea></div>' +
-          '<p class="note full">O animal sai do plantel ativo, da agenda e do app do caseiro. O prontuário continua guardado e a baixa pode ser desfeita.</p></form>',
+          '<p class="note full" id="b-erro" hidden></p>' +
+          '<p class="note full">O animal sai do plantel ativo, da agenda e do app do caseiro. O prontuário continua guardado e a baixa pode ser desfeita (numa venda, enquanto não houver pagamento registrado). Valores de venda só aparecem para o gestor.</p></form>',
         rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri danger" data-act="confirmar-baixa" data-id="' + a.id + '">Confirmar baixa</button>'
       });
+      previaParcelas();
     },
     'confirmar-baixa': async el => {
+      const err = m => { const e = $('#b-erro'); e.textContent = m; e.className = 'note bad full'; e.hidden = false; };
       const corpo = { data: $('#b-data').value, motivo: $('#b-motivo').value, destino: $('#b-destino').value, obs: $('#b-obs').value };
-      if (!corpo.data) { UI.toast('Informe a data da baixa.'); return; }
+      if (!corpo.data) return err('Informe a data da baixa.');
+      if (corpo.motivo === 'Venda') {
+        const b = lerVenda(el.dataset.id, corpo.data, corpo.obs);
+        if (typeof b === 'string') return err(b);
+        if (await executar(el, () => API.post('/api/vendas', b))) { UI.fechar(); render(); }
+        return;
+      }
       if (await executar(el, () => API.post('/api/animais/' + el.dataset.id + '/baixa', corpo))) { UI.fechar(); render(); }
+    },
+    'imp-aba': el => { impAba = el.dataset.t; render(); },
+    'lote-cancelar': () => { certLote = null; render(); },
+    'lote-gravar': el => gravarLote(el),
+    'cert-ficha-gravar': async el => {
+      if (!certFicha) return;
+      const { file, aid } = certFicha;
+      const r = await executar(el, () => gravarCert([file], [{ acao: el.dataset.acao, animalId: aid }]), false);
+      if (!r) return;
+      certFicha = null; UI.fechar(); render();
+      UI.toast(r.falhas.length ? r.falhas.join(' ') : 'Certificado gravado. ' + (el.dataset.acao === 'atualizar' ? 'Cadastro atualizado.' : 'PDF e genealogia guardados.'));
+    },
+    'venda-aba': el => { vendaAba = el.dataset.t; render(); },
+    'venda-f': el => { vendaF = el.dataset.f; render(); },
+    'venda-transf': async el => { if (await executar(el, () => API.post('/api/vendas/' + el.dataset.id + '/transferencia', { feita: el.dataset.feita === '1' }))) render(); },
+    'parcela-pagar': el => {
+      const v = (S.vendas || []).find(x => x.id === el.dataset.v); const p = v && v.parcelas.find(x => x.id === el.dataset.id); if (!p) return;
+      UI.abrir({
+        titulo: 'Registrar pagamento', corpo: '<form class="fgrid" novalidate><p class="full small muted">' + esc(v.animal) + ' · ' + esc(v.comprador) + ' · ' + rotParcela(v, p) + ', vencimento ' + br(p.vencimento) + '</p>' +
+          '<div class="field"><label for="pg-data">Pago em</label><input id="pg-data" type="date" class="inp" value="' + H.iso(H.hoje()) + '" max="' + H.iso(H.hoje()) + '"></div>' +
+          '<div class="field"><label for="pg-valor">Valor recebido (R$)</label><input id="pg-valor" class="inp" inputmode="decimal" value="' + (p.valor / 100).toFixed(2).replace('.', ',') + '"></div>' +
+          '<div class="field"><label for="pg-meio">Meio</label><select id="pg-meio" class="inp"><option value="">-</option>' + MEIOS.map(m => '<option' + (m === v.meio ? ' selected' : '') + '>' + m + '</option>').join('') + '</select></div>' +
+          '<div class="field"><label for="pg-obs">Observação</label><input id="pg-obs" class="inp"></div></form>',
+        rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="parcela-confirmar" data-id="' + p.id + '">' + IC.check + 'Registrar</button>'
+      });
+    },
+    'parcela-confirmar': async el => {
+      const valor = $('#pg-valor').value; if (!(centavos(valor) > 0)) { UI.toast('Informe o valor recebido.'); return; }
+      if (await executar(el, () => API.post('/api/parcelas/' + el.dataset.id + '/pagar', { data: $('#pg-data').value, valor, meio: $('#pg-meio').value, obs: $('#pg-obs').value }))) { UI.fechar(); render(); }
+    },
+    'parcela-estornar': el => confirmar(el, 'Confirmar estorno', async () => { if (await executar(el, () => API.post('/api/parcelas/' + el.dataset.id + '/estornar'))) render(); }),
+    'comprador-novo': () => UI.abrir({ titulo: 'Novo comprador', corpo: '<form class="fgrid" novalidate>' + camposComprador({}, 'cp') + '<p class="note full" id="cp-erro" hidden></p></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="comprador-salvar">' + IC.check + 'Salvar</button>' }),
+    'comprador-editar': el => {
+      const c = (compradores || []).find(x => x.id === el.dataset.id); if (!c) return;
+      UI.abrir({ titulo: 'Editar comprador', corpo: '<form class="fgrid" novalidate>' + camposComprador(c, 'cp') + '<p class="small muted full">O CPF ou CNPJ aparece mascarado. Para trocar, apague e digite o número completo.</p><p class="note full" id="cp-erro" hidden></p></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="comprador-salvar" data-id="' + c.id + '">' + IC.check + 'Salvar</button>' });
+    },
+    'comprador-salvar': async el => {
+      const c = lerComprador('cp'), e = erroComprador(c);
+      if (e) { const x = $('#cp-erro'); x.textContent = e; x.className = 'note bad full'; x.hidden = false; return; }
+      if (await executar(el, () => el.dataset.id ? API.put('/api/compradores/' + el.dataset.id, c) : API.post('/api/compradores', c))) { UI.fechar(); render(); }
+    },
+    'comprador-excluir': el => confirmar(el, 'Confirmar exclusão', async () => { if (await executar(el, () => API.del('/api/compradores/' + el.dataset.id))) render(); }),
+    'comprador-doc': async el => {
+      try { const r = await API.post('/api/compradores/' + el.dataset.id + '/documento'); $('#doc-' + el.dataset.id).textContent = r.documento; el.remove(); }
+      catch (e) { UI.toast(e.message); }
     },
     'desfazer-baixa': el => confirmar(el, 'Confirmar: voltar ao plantel', async () => { if (await executar(el, () => API.del('/api/animais/' + el.dataset.id + '/baixa'))) render(); }),
     'rel-tab': el => { relTipo = el.dataset.t; render(); },
@@ -1826,35 +2179,35 @@ const UI = (function () {
     'excluir-reg': el => confirmar(el, 'Confirmar exclusão', async () => { if (await executar(el, () => API.del('/api/registros/' + el.dataset.id))) render(); }),
     'novo-animal': () => {
       if (S.animais.filter(a => a.vivo).length >= S.limiteAnimais) { UI.toast('Limite de ' + S.limiteAnimais + ' animais ativos atingido.'); return; }
-      UI.abrir({
-        titulo: 'Novo animal', corpo: '<form id="fa" class="fgrid" novalidate>' +
-          '<div class="field full"><label for="n-nome">Nome</label><input id="n-nome" class="inp"></div>' +
-          '<div class="field"><label for="n-sexo">Sexo</label><select id="n-sexo" class="inp"><option value="F">Fêmea</option><option value="M">Macho</option></select></div>' +
-          '<div class="field"><label for="n-nasc">Nascimento</label><input id="n-nasc" type="date" class="inp" max="' + H.iso(H.hoje()) + '"></div>' +
-          '<div class="field"><label for="n-reg">Registro ABCCMM</label><input id="n-reg" class="inp" inputmode="numeric" placeholder="Ex.: 0185916">' +
-          '<label class="chk"><input type="checkbox" id="n-semreg" data-chg="semreg" data-alvo="n-reg"> Sem registro na ABCCMM</label></div>' +
-          '<div class="field"><label for="n-chip">Microchip</label><input id="n-chip" class="inp" inputmode="numeric"></div>' +
-          '<div class="field"><label for="n-livro">Livro</label><input id="n-livro" class="inp" placeholder="Ex.: MM6 - DEFINITIVO FECHADO FÊMEA"></div>' +
-          '<div class="field"><label for="n-dna">DNA</label><select id="n-dna" class="inp"><option>Sem exame</option><option>DNA - VP</option></select></div>' +
-          '<p class="note full" id="n-erro" hidden></p></form>',
-        rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="salvar-novo-animal">' + IC.check + 'Cadastrar</button>'
-      });
+      formAnimal(false);
     },
+    'novo-externo': () => formAnimal(true),
     'salvar-novo-animal': async el => {
-      const v = id => document.getElementById(id).value.trim();
+      const externo = el.dataset.externo === '1';
+      const v = id => { const x = document.getElementById(id); return x ? x.value.trim() : ''; };
       const err = m => { const e = $('#n-erro'); e.textContent = m; e.className = 'note bad full'; e.hidden = false; };
       if (!v('n-nome')) return err('Informe o nome do animal.');
-      if (!v('n-nasc')) return err('Informe a data de nascimento. Ela é a base da agenda sanitária.');
-      const r = await executar(el, () => API.post('/api/animais', { nome: v('n-nome'), sexo: v('n-sexo'), nascimento: v('n-nasc'), registro: $('#n-semreg').checked ? '' : v('n-reg'), chip: v('n-chip'), livro: v('n-livro'), dna: v('n-dna'), vivo: true, bloqueado: false }));
-      if (r) { UI.fechar(); fichaTab = 'agenda'; go('ficha', r.id); }
+      if (!externo && !v('n-nasc')) return err('Informe a data de nascimento. Ela é a base da agenda sanitária.');
+      if (externo && v('n-email') && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v('n-email'))) return err('E-mail do contato inválido.');
+      const corpo = { nome: v('n-nome'), sexo: v('n-sexo'), nascimento: v('n-nasc'), registro: $('#n-semreg').checked ? '' : v('n-reg'), chip: v('n-chip'), livro: v('n-livro'), dna: v('n-dna'), pelagem: v('n-pelagem'), vivo: !externo, bloqueado: false };
+      if (externo) Object.assign(corpo, { externo: true, contato: { proprietario: v('n-prop'), telefone: v('n-tel'), email: v('n-email') } });
+      const cert = certNovo;
+      const r = await executar(el, async () => {
+        const x = await API.post('/api/animais', corpo);
+        if (cert) { const g = await gravarCert([cert], [{ acao: 'anexar', animalId: x.id }]); if (g.falhas.length) x.resumo += ' Certificado não guardado: ' + g.falhas.join(' '); else x.resumo += ' Certificado guardado.'; }
+        return x;
+      });
+      if (r) { certNovo = null; UI.fechar(); fichaTab = externo ? 'dados' : 'agenda'; go('ficha', r.id); }
     },
     'salvar-dados': async el => {
       const a = H.animal(S, el.dataset.id); if (!a) return;
       const v = id => document.getElementById('d-' + id).value.trim();
       if (!v('nome')) { UI.toast('O nome não pode ficar vazio.'); return; }
-      if (!v('nasc')) { UI.toast('Informe a data de nascimento.'); return; }
+      if (!v('nasc') && !a.externo) { UI.toast('Informe a data de nascimento.'); return; }
       const genealogia = {}; ['pai', 'mae', 'avoPaterno', 'avoPaterna', 'avoMaterno', 'avoMaterna'].forEach(k => { genealogia[k] = v(k); });
-      if (await executar(el, () => API.put('/api/animais/' + a.id, { nome: v('nome'), pelagem: v('pelagem'), registro: $('#d-semreg').checked ? '' : v('registro'), livro: v('livro'), sexo: v('sexo'), nascimento: v('nasc'), chip: v('chip'), dna: v('dna'), vivo: v('vivo') === '1', bloqueado: v('bloq') === '1', genealogia }))) render();
+      const corpo = { nome: v('nome'), pelagem: v('pelagem'), registro: $('#d-semreg').checked ? '' : v('registro'), livro: v('livro'), sexo: v('sexo'), nascimento: v('nasc'), chip: v('chip'), dna: v('dna'), vivo: v('vivo') === '1', bloqueado: v('bloq') === '1', genealogia };
+      if (a.externo) corpo.contato = { proprietario: v('c-prop'), telefone: v('c-tel'), email: v('c-email'), obs: v('c-obs') };
+      if (await executar(el, () => API.put('/api/animais/' + a.id, corpo))) render();
     },
     'imp-cancelar': () => { importacao = null; render(); },
     'imp-confirmar': el => confirmarImportacao(el),
@@ -1939,12 +2292,20 @@ const UI = (function () {
   document.addEventListener('change', async e => {
     const el = e.target.closest('[data-chg]'); if (!el) return;
     if (el.dataset.chg === 'semreg') { const alvo = document.getElementById(el.dataset.alvo); alvo.disabled = el.checked; if (el.checked) alvo.value = ''; else alvo.focus(); }
+    if (el.dataset.chg === 'cert-novo') { const f = el.files[0]; el.value = ''; lerCertNovo(f); }
+    if (el.dataset.chg === 'cert-ficha') { const f = el.files[0]; el.value = ''; lerCertFicha(f, el.dataset.id); }
+    if (el.dataset.chg === 'cert-lote') { const fs = [...el.files]; el.value = ''; lerLote(fs); }
+    if (el.dataset.chg === 'lote-acao') { certLote.itens[Number(el.dataset.i)].acao = el.value; render(); }
+    if (el.dataset.chg === 'b-motivo') { const venda = el.value === 'Venda'; $('#b-venda').hidden = !venda; $('#b-dest').hidden = venda; }
+    if (el.dataset.chg === 'v-comp') $('#v-novo').hidden = !!el.value;
+    if (el.dataset.chg === 'v-forma') { const p = el.value === 'parcelado'; $('#v-parc').hidden = !p; $('#v-av').hidden = p; previaParcelas(); }
     if (el.dataset.chg === 'imp-sel') { const i = Number(el.dataset.i); el.checked ? importacao.sel.add(i) : importacao.sel.delete(i); render(); }
     if (el.dataset.chg === 'pref') {
       const p = JSON.parse(JSON.stringify(S.notifPrefs)); p[el.dataset.t][el.dataset.k] = el.checked;
       if (await executar(null, () => API.put('/api/notif-prefs', p), 'Preferência salva.')) render();
     }
   });
+  document.addEventListener('input', e => { if (e.target.dataset && e.target.dataset.calc) previaParcelas(); });
   (async () => {
     $('#view').innerHTML = '<div class="empty">Carregando o haras...</div>';
     try {

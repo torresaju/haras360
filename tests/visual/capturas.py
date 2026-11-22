@@ -16,6 +16,9 @@ from pathlib import Path
 import pyotp
 from playwright.sync_api import sync_playwright
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from pdf_teste import certificado_teste  # noqa: E402  certificado anonimizado (v1.6.0)
+
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8090"
 SAIDA = Path(sys.argv[2] if len(sys.argv) > 2 else "backend/app/static/ajuda")
 SAIDA.mkdir(parents=True, exist_ok=True)
@@ -47,6 +50,7 @@ def nova_pagina(ctx, nome):
 
 def foto(p, nome, pagina_inteira=False):
     p.wait_for_timeout(350)
+    p.evaluate("const t = document.getElementById('toast'); if (t) t.hidden = true")  # o aviso passageiro não entra na captura
     p.screenshot(path=str(SAIDA / f"{nome}.png"), full_page=pagina_inteira)
 
 
@@ -117,10 +121,10 @@ with sync_playwright() as pw:
             foto(g, v)
     # relatórios (v1.4.0): quatro abas com indicadores, gráficos e tabelas; exportação Excel e CSV
     ir(g, "relatorios")
-    for aba in ("sanitario", "reprodutivo", "plantel", "campo"):
+    for aba in ("sanitario", "reprodutivo", "plantel", "campo", "vendas"):
         g.click(f'[data-act="rel-tab"][data-t="{aba}"]')
         g.wait_for_selector(".rel-kpi")
-        assert g.locator("#rel-corpo table").count() > 0, f"relatório sem tabela: {aba}"
+        assert aba == "vendas" or g.locator("#rel-corpo table").count() > 0, f"relatório sem tabela: {aba}"  # vendas: conferido depois da venda
         if aba in ("sanitario", "reprodutivo"):
             foto(g, "relatorios" if aba == "sanitario" else "relatorio-reprodutivo")
         for fmt in ("xlsx", "csv"):
@@ -173,7 +177,94 @@ with sync_playwright() as pw:
     g.click("tr:has-text('CANELA DO RIACHO')")
     g.click('[data-act="dar-baixa"]')
     g.wait_for_selector("#b-motivo")
+    g.wait_for_timeout(150)  # deixa o foco automático da janela (30 ms) acontecer antes de digitar
+    # v1.6.0: venda parcelada com comprador novo
+    g.fill("#vn-nome", "Comprador da Demonstração")
+    g.fill("#vn-doc", "529.982.247-25")
+    g.fill("#vn-tel", "(79) 98888-0000")
+    g.fill("#vn-cidade", "Aracaju")
+    g.select_option("#vn-uf", "SE")
+    g.fill("#v-valor", "36.000,00")
+    g.select_option("#v-meio", "Pix")
+    g.select_option("#v-forma", "parcelado")
+    g.fill("#v-entrada", "6.000,00")
+    g.fill("#v-n", "6")
+    g.wait_for_selector("#v-prev:has-text('Plano de pagamento')")
+    g.locator("#v-prev").scroll_into_view_if_needed()
     foto(g, "baixa")
+    g.click('[data-act="confirmar-baixa"]')
+    g.wait_for_selector("#modal", state="hidden")
+    g.wait_for_selector(".note:has-text('Ver em Vendas')")
+    ir(g, "vendas")
+    g.wait_for_selector(".venda")
+    g.locator('[data-act="parcela-pagar"]').first.click()
+    g.wait_for_selector("#pg-valor")
+    g.click('[data-act="parcela-confirmar"]')
+    g.wait_for_selector("#modal", state="hidden")
+    assert g.locator('[data-act="parcela-estornar"]').count() == 2, "pagamento da parcela não registrado"
+    foto(g, "vendas")
+    g.click('[data-act="venda-aba"][data-t="compradores"]')
+    g.wait_for_selector("#lst-compradores table")
+    assert "***.982.247-**" in g.inner_text("#lst-compradores"), "CPF deveria aparecer mascarado"
+    g.click('[data-act="comprador-doc"]')
+    g.wait_for_selector("#lst-compradores:has-text('529.982.247-25')")
+    g.click('[data-act="venda-aba"][data-t="vendas"]')
+    ir(g, "relatorios")
+    g.click('[data-act="rel-tab"][data-t="vendas"]')
+    g.wait_for_selector("#rel-corpo table")
+    foto(g, "relatorio-vendas")
+    ir(g, "painel")
+    assert g.locator(".receber").count() == 1, "falta o valor a receber no Dashboard"
+    # v1.6.0: novo animal pelo certificado da ABCCMM, com a genealogia de 4 gerações na ficha
+    ir(g, "animais")
+    g.click('[data-act="novo-animal"]')
+    g.set_input_files("#n-cert", files=[{"name": "certificado.pdf", "mimeType": "application/pdf", "buffer": certificado_teste()}])
+    g.wait_for_selector("#n-cert-st.good")
+    assert g.input_value("#n-nome") == "BERIBELA DE TESTE" and g.input_value("#n-reg") == "0185916"
+    foto(g, "certificado-novo")
+    g.click('[data-act="salvar-novo-animal"]')
+    g.wait_for_selector("#modal", state="hidden")
+    g.click('[data-act="tab"][data-t="dados"]')
+    g.wait_for_selector(".arvore")
+    assert g.locator(".arvore .no").count() == 30, "a árvore deveria ter 30 posições (4 gerações)"
+    g.locator(".arvore").scroll_into_view_if_needed()
+    foto(g, "certificado-ficha")
+    resp = g.request.get(BASE + g.get_attribute('a[href$="certificado.pdf"]', "href"))
+    assert resp.ok and resp.body()[:4] == b"%PDF", "o PDF do certificado não foi guardado"
+    # importação de certificados em lote
+    ir(g, "importar")
+    g.click('[data-act="imp-aba"][data-t="certificados"]')
+    g.set_input_files("#pdf-cert", files=[{"name": "beribela.pdf", "mimeType": "application/pdf", "buffer": certificado_teste()},
+                                          {"name": "outro.pdf", "mimeType": "application/pdf", "buffer": b"%PDF-1.4 nada"}])
+    g.wait_for_selector('[data-act="lote-gravar"]')
+    foto(g, "certificados-lote")
+    g.click('[data-act="lote-cancelar"]')
+    g.click('[data-act="imp-aba"][data-t="plantel"]')
+    # animal externo e inseminação com tipo de sêmen
+    ir(g, "animais")
+    g.click('[data-act="novo-externo"]')
+    g.fill("#n-nome", "TROVÃO DE FORA")
+    g.fill("#n-reg", "0555001")
+    g.fill("#n-prop", "Haras Vizinho")
+    g.fill("#n-tel", "(79) 99999-0000")
+    foto(g, "externo")
+    g.click('[data-act="salvar-novo-animal"]')
+    g.wait_for_selector("#modal", state="hidden")
+    g.wait_for_selector(".note:has-text('Animal externo')")
+    ir(g, "animais")
+    g.select_option("#sitF", "externos")
+    g.wait_for_selector("tr:has-text('TROVÃO DE FORA')")
+    g.select_option("#sitF", "ativos")
+    g.click("tr:has-text('BRISA DA SERRA AZUL')")
+    g.wait_for_selector(".gest")
+    g.click('[data-act="registrar"][data-id]')
+    g.select_option("#f-tipo", "reprodutivo")
+    g.select_option("#f-evento", "Inseminação")
+    g.wait_for_selector("#f-semen", state="visible")
+    g.fill("#f-garanhao", "TROVÃO DE FORA")
+    g.select_option("#f-semen", "Congelado")
+    g.fill("#f-central", "Central de Teste")
+    foto(g, "inseminacao")
     g.click('#modal [data-act="fechar"]')
     # personalização (v1.3.0): o gestor envia o próprio banner e o Dashboard passa a usá-lo
     ir(g, "parametros")

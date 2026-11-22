@@ -23,7 +23,7 @@ class TelaRelatorios extends StatefulWidget {
 }
 
 class _TelaRelatoriosState extends State<TelaRelatorios> {
-  static const abas = {'sanitario': 'Sanitário', 'reprodutivo': 'Reprodutivo', 'plantel': 'Plantel', 'campo': 'Campo'};
+  static const abas = {'sanitario': 'Sanitário', 'reprodutivo': 'Reprodutivo', 'plantel': 'Plantel', 'campo': 'Campo', 'vendas': 'Vendas'};
   static const periodos = {'3': '3 meses', '12': '12 meses', 'ano': 'Este ano'};
   String _tipo = 'sanitario', _periodo = '12';
   Map<String, dynamic>? _rel;

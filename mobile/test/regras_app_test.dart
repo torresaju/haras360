@@ -113,6 +113,21 @@ void main() {
       expect(preDeTarefa(t)['evento'], 'Cio');
     });
 
+    test('inseminação (v1.6.0): tipo e origem do sêmen', () {
+      final r = montar('reprodutivo', campos: {'evento': 'Inseminação', 'garanhao': 'trovão de fora', 'semen': 'Congelado', 'central': 'Central X'});
+      expect([r['garanhao'], r['semen'], r['central']], ['TROVÃO DE FORA', 'Congelado', 'Central X']);
+      expect(montar('reprodutivo', campos: {'evento': 'Inseminação', 'semen': ''}).containsKey('semen'), isFalse);
+      expect(() => montar('reprodutivo', campos: {'evento': 'Inseminação', 'semen': 'Gelado'}), throwsA(isA<ErroValidacao>()));
+      expect(montar('reprodutivo', campos: {'evento': 'Cobertura', 'semen': 'Congelado'}).containsKey('semen'), isFalse);
+    });
+
+    test('valores em reais (v1.6.0)', () {
+      expect(reais(0), 'R\$ 0,00');
+      expect(reais(5), 'R\$ 0,05');
+      expect(reais(123456), 'R\$ 1.234,56');
+      expect(reais(3600000000), 'R\$ 36.000.000,00');
+    });
+
     test('ocorrência exige descrição', () {
       expect(() => montar('ocorrencia'), throwsA(isA<ErroValidacao>()));
       expect(montar('ocorrencia', campos: {'titulo': 'Mancando'})['gravidade'], 'Leve');

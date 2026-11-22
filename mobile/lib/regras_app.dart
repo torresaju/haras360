@@ -158,6 +158,18 @@ class ErroValidacao implements Exception {
   String toString() => mensagem;
 }
 
+/// Tipos de sêmen na inseminação (v1.6.0).
+const semens = ['Fresco', 'Refrigerado', 'Congelado'];
+
+/// Centavos em reais no formato brasileiro: 123456 -> "R\$ 1.234,56".
+String reais(num? centavos) {
+  final c = (centavos ?? 0).round();
+  final neg = c < 0;
+  final a = c.abs();
+  final inteiro = '${a ~/ 100}'.replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => '.');
+  return '${neg ? '-' : ''}R\$ $inteiro,${(a % 100).toString().padLeft(2, '0')}';
+}
+
 /// Monta o corpo enviado a POST /api/registros, com as mesmas validações do servidor e do Portal Campo.
 Map<String, dynamic> montarRegistro({
   required String id,
@@ -221,6 +233,12 @@ Map<String, dynamic> montarRegistro({
         break;
       }
       r['garanhao'] = c('garanhao').toUpperCase();
+      if (ev == 'Inseminação') {
+        // v1.6.0: tipo e origem do sêmen (opcionais)
+        if (c('semen').isNotEmpty && !semens.contains(c('semen'))) throw ErroValidacao('Tipo de sêmen inválido.');
+        r['semen'] = c('semen');
+        r['central'] = c('central');
+      }
       if (ev == 'Diagnóstico positivo') {
         final cob = data(c('dataCobertura'));
         if (cob == null) throw ErroValidacao('Informe a data da cobertura para calcular a previsão de parto.');

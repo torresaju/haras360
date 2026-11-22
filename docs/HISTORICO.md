@@ -2,6 +2,21 @@
 
 Uma nota por versão, da mais recente para a mais antiga.
 
+## v1.6.0 · 22/11/2026 · Certificado da ABCCMM, animais externos e venda com parcelas
+* **Certificado de registro da ABCCMM:**
+  * leitura no servidor do Certificado de Registro Genealógico em PDF: nome, registro, livro, volume e página, nascimento, sexo, DNA, microchip, pelagem, classificação, datas de resenha e de registro, mensurações, criador, proprietário e genealogia de 4 gerações (30 posições, com registro e DNA);
+  * três usos: "Preencher pelo certificado" no Novo animal, "Atualizar pelo certificado" na ficha (mostra antes e depois; atualizar o cadastro ou só guardar PDF e genealogia) e Importar ABCCMM › Certificados de registro, em lote (até 30 PDFs);
+  * o PDF fica guardado (e entra no backup) e pode ser baixado na ficha; um registro que já pertence a outro animal não é gravado; auditoria `certificado_importado`;
+  * a leitura antiga, feita no navegador e limitada a pais e avós, foi substituída.
+* **Animais externos:** garanhões e éguas de fora do haras, cadastrados à mão ou pelo certificado, com contato do proprietário. Ficam fora do plantel, da agenda, do Dashboard e do limite do plano; o caseiro não os vê; aceitam só registros de reprodução; aparecem na lista de garanhões marcados como "externo". A inseminação ganhou tipo de sêmen (fresco, refrigerado ou congelado) e central ou origem, também no app.
+* **Venda com comprador e parcelas (somente gestor):**
+  * a baixa por Venda pede o comprador (novo ou já cadastrado: nome, CPF ou CNPJ, nº ABCCMM, telefone, e-mail, cidade e UF), o valor, o meio e a forma: à vista ou parcelado (entrada opcional, 2 a 60 parcelas mensais, centavos na última);
+  * tela Animais › Vendas com indicadores, parcelas, registro de pagamento, estorno e a pendência "Comunicar a transferência na ABCCMM"; aba Compradores;
+  * avisos do novo tipo "Parcelas de vendas a receber" (7 dias antes do vencimento e em atraso), também no celular do gestor; "A receber" no Dashboard; aba Vendas em Relatórios, com Excel e CSV; Mais › Vendas no app do gestor;
+  * CPF e CNPJ conferidos pelos dígitos, guardados cifrados e mostrados mascarados; ver o número completo fica na auditoria (LGPD); a baixa por venda só é desfeita sem pagamento registrado.
+* **Banco:** migração 006 (colunas `certificado`, `externo` e `contato` em animais; tabelas `compradores`, `vendas` e `parcelas`). Nova dependência do servidor: pdfminer.six.
+* **Testes:** 11 testes novos da API (certificado, externos e vendas; 98 no total), testes de unidade do app (sêmen, reais, aviso financeiro), verificação visual da venda, do certificado (novo, ficha e lote), do externo e da inseminação, e Mais › Vendas no emulador.
+
 ## v1.5.2 · 22/11/2026 · Correções do prontuário e do cadastro sem registro
 * **Prontuário desconfigurado:** a lista "Próximos eventos" do Dashboard (v1.3.0) usava o mesmo nome de estilo da linha do prontuário e espremia o texto numa coluna estreita, quebrando ocorrências letra por letra. Os estilos foram separados; as observações mantêm as quebras de linha.
 * **Vários animais sem registro:** caixa "Sem registro na ABCCMM" no Novo animal e na ficha. O servidor passa a tratar como vazio qualquer registro ou chip sem números ("sem registro", "*****"), que antes contava como registro repetido. Registros de verdade continuam únicos.
