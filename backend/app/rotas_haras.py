@@ -122,15 +122,17 @@ def estado(u: Usuario = Depends(do_haras), db=Depends(get_db)):
     plano = P.plano_do_haras(db, h)
     ativos = sum(1 for a in animais if a["vivo"])
     faixas = P.ler(db, "faixas")
+    from . import vendas as V
+    vendas = V.vendas_do_haras(db, u.haras_id) if u.perfil == "gestor" else []
     return {
-        "versao": VERSAO, "hoje": R.iso(R.hoje()), "limiteAnimais": plano["limite"],
+        "versao": VERSAO, "hoje": R.iso(R.hoje()), "limiteAnimais": plano["limite"], "vendas": vendas,
         "plano": dict(plano, faixas=faixas, mensalidade=P.mensalidade(faixas, ativos), modulosNomes=P.MODULOS),
         "normas": P.ler(db, "normas_abccmm") if u.perfil == "gestor" else [],
         "haras": hd, "usuario": {"id": u.id, "nome": u.nome, "email": u.email, "perfil": u.perfil},
         "usuarios": usuarios, "animais": animais, "registros": regs, "protocolos": prots,
         "notifPrefs": {**R.notif_prefs_padrao(), **(h.notif_prefs or {})}, "lidas": lidas,
         "tarefas": ts, "gestacoes": {a["id"]: R.gestacao(a, regs, hd["gestacaoDias"]) for a in animais},
-        "notificacoes": R.notificacoes(hd, animais, regs, prots, ts),
+        "notificacoes": R.notificacoes(hd, animais, regs, prots, ts) + V.notificacoes_vendas(vendas),
         "imagens": IMG.descrever(db, u.haras_id),
     }
 
@@ -297,6 +299,8 @@ def desfazer_baixa(aid: str, request: Request, u: Usuario = Depends(gestor), db=
     limite = _limite(db, u.haras_id)
     if len(_ativos(db, u.haras_id, a.id)) >= limite:
         erro(400, f"O plano deste haras atende até {limite} animais ativos.")
+    from . import vendas as V
+    V.apagar_venda_sem_pagamento(db, a.id)  # v1.6.0: venda sem pagamento é desfeita junto
     detalhe = {"data": _iso(a.baixa_data), "motivo": a.baixa_motivo, "destino": a.baixa_destino}
     a.baixa_data = a.baixa_motivo = a.baixa_destino = a.baixa_obs = None
     a.vivo = True

@@ -12,6 +12,7 @@ from .rotas_admin import r as rotas_admin
 from .imagens import r as rotas_imagens
 from .relatorios import r as rotas_relatorios
 from .rotas_certificado import r as rotas_certificado
+from .vendas import r as rotas_vendas
 from .rotas_app import r as rotas_app
 from .rotas_auth import r as rotas_auth
 from .rotas_haras import r as rotas_haras
@@ -60,6 +61,7 @@ app.include_router(rotas_app)
 app.include_router(rotas_imagens)
 app.include_router(rotas_relatorios)
 app.include_router(rotas_certificado)
+app.include_router(rotas_vendas)
 
 
 def _pagina(nome):
