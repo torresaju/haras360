@@ -73,6 +73,7 @@ const UI = (function () {
   }
 
   /* ---------- prontuário ---------- */
+  const ORIGEM = { 'Portal Cliente': 'Portal Campo', 'Portal Gestor': 'Portal do Gestor', App: 'App do caseiro', 'App do gestor': 'App do gestor' };
   function linhaTempo(st, regs, o) {
     o = o || {};
     if (!regs.length) return '<div class="empty">Nenhum registro nesta categoria.</div>';
@@ -95,7 +96,7 @@ const UI = (function () {
       const audio = r.audio ? '<div class="audio-reg"><span class="small muted">' + ICON.mic + 'Áudio do campo · ' + dur + '</span><audio controls preload="none" src="' + esc(r.audio.url) + '"></audio></div>' : '';
       const nome = o.comAnimal ? (() => { const a = H.animal(st, r.animalId); return a ? '<a href="#" data-act="ver-animal" data-id="' + a.id + '">' + esc(a.nome) + '</a> · ' : ''; })() : '';
       const del = o.excluir ? '<button class="btn ghost sm danger" data-act="excluir-reg" data-id="' + r.id + '">Excluir</button>' : '';
-      return '<div class="ev"><div class="d">' + br(r.data) + '</div><div class="body"><div class="spread"><div class="row" style="gap:8px">' + chipCat(r.tipo) + '<strong>' + esc(H.tituloRegistro(st, r)) + '</strong></div>' + del + '</div>' + (meta.length ? '<div class="meta">' + meta.map(m => '<span>' + m + '</span>').join('') + '</div>' : '') + (r.obs ? '<p class="obs">' + esc(r.obs) + '</p>' : '') + fotos + audio + '<div class="meta">' + nome + '<span>' + esc(r.autor) + ' · ' + esc(r.origem) + '</span></div></div></div>';
+      return '<div class="ev"><div class="d">' + br(r.data) + '</div><div class="body"><div class="spread"><div class="row" style="gap:8px">' + chipCat(r.tipo) + '<strong>' + esc(H.tituloRegistro(st, r)) + '</strong></div>' + del + '</div>' + (meta.length ? '<div class="meta">' + meta.map(m => '<span>' + m + '</span>').join('') + '</div>' : '') + (r.obs ? '<p class="obs">' + esc(r.obs) + '</p>' : '') + fotos + audio + '<div class="meta">' + nome + '<span>' + esc(r.autor) + ' · ' + esc(ORIGEM[r.origem] || r.origem) + '</span></div></div></div>';
     }).join('') + '</div>';
   }
 

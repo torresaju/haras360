@@ -20,7 +20,8 @@ A especificação aprovada está em [`docs/ESPECIFICACAO.md`](docs/ESPECIFICACAO
 | v1.3.0 | 20/11/2026 | etapa/1.3-identidade-visual | Nova identidade visual (logotipo, paleta, Manrope e Inter), menu lateral por módulos, novo Dashboard, app com Hoje, Animais, Agenda e Mais; imagens próprias da plataforma e de cada haras | Publicada |
 | v1.4.0 | 20/11/2026 | etapa/1.4-relatorios-cio | Relatórios sanitário, reprodutivo, plantel e campo com gráficos, Excel e CSV; registro e previsão de cio (cio do potro); baixa de animais | Publicada |
 | v1.5.0 | 21/11/2026 | etapa/1.5-app-gestor | App do gestor no Android (mesmo app, por perfil): entrada com 2FA, digital ou PIN, Dashboard, Relatórios com envio da planilha, registros offline no 4G e avisos no celular; exige HTTPS | Publicada |
-| v1.5.1 | 21/11/2026 | etapa/1.5.1-normas-abccmm | Links para as normas oficiais da ABCCMM no Assistente, em Ajuda, em Importar ABCCMM e no app do gestor, parametrizáveis pelo administrador | Em teste (PR) |
+| v1.5.1 | 21/11/2026 | etapa/1.5.1-normas-abccmm | Links para as normas oficiais da ABCCMM no Assistente, em Ajuda, em Importar ABCCMM e no app do gestor, parametrizáveis pelo administrador | Publicada |
+| v1.5.2 | 22/11/2026 | etapa/1.5.2-correcoes | Prontuário legível (ocorrência quebrava letra por letra), vários animais sem registro na ABCCMM, origem "Portal Campo" | Em teste (PR) |
 
 Notas de cada versão: [`docs/HISTORICO.md`](docs/HISTORICO.md).
 

@@ -145,7 +145,7 @@ textarea.inp{min-height:84px;resize:vertical}
 .ev .d{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);padding-top:2px}
 .ev .body{display:flex;flex-direction:column;gap:6px;min-width:0}
 .ev .meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--muted)}
-.ev .obs{font-size:.92rem;overflow-wrap:anywhere}
+.ev .obs{font-size:.92rem;overflow-wrap:break-word;word-break:normal;white-space:pre-line}
 .thumbs{display:flex;gap:8px;flex-wrap:wrap}
 .thumbs button{padding:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;cursor:zoom-in;width:72px;height:72px;background:var(--surface-2)}
 .thumbs img{width:100%;height:100%;object-fit:cover;display:block}
@@ -303,9 +303,10 @@ ol.passos{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;
 @media (max-width:1100px){.grid3{grid-template-columns:minmax(0,1fr)}}
 .card-h h3{display:flex;align-items:center;gap:8px}
 .card-h h3 svg{width:19px;height:19px;color:var(--forest)}
-.evs{display:flex;flex-direction:column}
-.ev{display:grid;grid-template-columns:48px 26px minmax(0,1fr);gap:12px;align-items:center;border:0;border-top:1px solid var(--line-2);background:none;padding:10px 0;text-align:left;cursor:pointer;font:inherit;color:inherit}
-.ev:first-child{border-top:0}
+/* Próximos eventos do Dashboard (.pev): nome próprio, para não atingir a linha do prontuário (.ev) */
+.pevs{display:flex;flex-direction:column}
+.pev{display:grid;grid-template-columns:48px 26px minmax(0,1fr);gap:12px;align-items:center;border:0;border-top:1px solid var(--line-2);background:none;padding:10px 0;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.pev:first-child{border-top:0}
 .ev-d{display:flex;flex-direction:column;align-items:center;background:var(--gold-soft);border-radius:10px;padding:5px 0;line-height:1}
 .ev-d b{font:800 1.15rem var(--f-display)} .ev-d small{font-size:.66rem;font-weight:700;letter-spacing:.05em;color:var(--gold-text);margin-top:2px}
 .ev-ic svg{width:22px;height:22px;color:var(--forest)}
@@ -377,3 +378,8 @@ hr.div{border:0;border-top:1px solid var(--line-2);margin:14px 0}
 .norma{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;color:var(--ink);text-decoration:none;font-weight:600}
 .norma:hover{border-color:var(--forest);background:var(--surface-2)}
 .norma svg{width:18px;height:18px;flex:none;color:var(--forest)}
+
+/* ---------- caixa "Sem registro na ABCCMM" (v1.5.2) ---------- */
+.chk{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:.88rem;color:var(--muted);cursor:pointer}
+.chk input{width:18px;height:18px;accent-color:var(--forest)}
+.inp:disabled{opacity:.55;cursor:not-allowed}
