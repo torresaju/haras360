@@ -2,6 +2,13 @@
 
 Uma nota por versão, da mais recente para a mais antiga.
 
+## v1.7.1 · 22/11/2026 · Imagens do manual
+* **Imagens quebradas no manual:** as seções novas da v1.6.0 e da v1.7.0 (Certificado de registro, Animais externos, Vendas e parcelas, Minha assinatura e Financeiro da plataforma) citavam capturas que não tinham sido copiadas para o pacote. As 10 imagens foram incluídas.
+* As demais capturas do portal foram atualizadas com as telas atuais (menu com Vendas e Financeiro, baixa com a venda parcelada).
+* **Teste novo:** confere que toda imagem citada no manual existe no pacote, para o problema não voltar.
+* **Perfis das seções:** quando uma seção vale para mais de um perfil (por exemplo Caseiro e Gestor), as etiquetas ficam lado a lado logo abaixo do título, em vez de uma embaixo da outra.
+* **Figuras do manual:** o cartão de cada imagem acompanha a largura da captura; capturas de celular e recortes (como os últimos registros do campo) não ficam mais com uma sobra branca ao lado. A captura antiga do áudio no Dashboard, com o texto espremido (problema corrigido na v1.5.2), foi trocada pela atual.
+
 ## v1.7.0 · 22/11/2026 · Financeiro da plataforma (clientes e mensalidades)
 * **Perfil Financeiro:** novo usuário da plataforma, criado em Administradores, com senha e 2FA, que só vê o menu Financeiro do portal do administrador. O administrador vê tudo.
 * **Clientes:** cada haras tem um cliente (contratante), criado em Teste (30 dias, parametrizável) e que passa sozinho para Ativo. Situação (Teste, Ativo, Suspenso, Cancelado), dia de vencimento, contratante com CPF ou CNPJ (cifrado, mascarado, ver completo auditado), contato financeiro, endereço e ajuste de preço (desconto em % ou valor fixo, com validade).

@@ -17,10 +17,12 @@ section{display:flex;flex-direction:column;gap:12px;scroll-margin-top:16px}
 section h2{font-size:1.5rem}
 section p,section li{max-width:70ch}
 section ol,section ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
-figure{margin:6px 0 0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
-figure img{display:block;width:100%;height:auto}
+/* v1.7.1: o cartão da figura acompanha a largura da captura (capturas de celular e recortes não ficam com sobra branca) */
+figure{margin:6px 0 0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);width:fit-content;max-width:100%}
+figure img{display:block;width:auto;max-width:100%;height:auto}
 figcaption{font-size:.84rem;color:var(--muted);padding:8px 12px;border-top:1px solid var(--line-2)}
-.perfil{align-self:flex-start;display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:99px;padding:2px 9px;background:var(--accent-soft);color:var(--accent)}
+.perfis{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.perfil{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:99px;padding:2px 9px;background:var(--accent-soft);color:var(--accent)}
 
 .fotos-app{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 @media (max-width:640px){.fotos-app{grid-template-columns:minmax(0,1fr)}}
@@ -39,7 +41,7 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       <figure><img src="/ajuda/img/2fa.png" alt="Tela de ativação do 2FA com QR Code" loading="lazy"><figcaption>Ativação do 2FA no primeiro acesso do gestor.</figcaption></figure>
       <p>Perdeu o celular? Na tela do código, use "Perdi o celular: usar código de recuperação". Depois, gere novos códigos no menu com o seu nome. Se não tiver mais códigos, outro gestor ou o administrador redefine o seu 2FA.</p>
     </section>
-    <section id="painel"><h2>Dashboard e menus</h2><span class="perfil">Gestor</span>
+    <section id="painel"><h2>Dashboard e menus</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span></div>
       <p>O Dashboard mostra o que precisa de atenção: cinco indicadores (animais, vacinas vencidas, vacinas dos próximos 7 dias, gestações ativas e partos previstos para 30 dias), os próximos eventos, a composição do rebanho, a situação reprodutiva, a lista Atenção agora e os últimos registros feitos pelo caseiro.</p>
       <figure><img src="/ajuda/img/painel.png" alt="Dashboard do gestor" loading="lazy"><figcaption>Dashboard do gestor com o menu lateral.</figcaption></figure>
       <p>O menu fica na lateral, agrupado por módulo: Dashboard; Animais (Plantel, Importar ABCCMM); Sanidade (Vacinas e manejos, Protocolos); Reprodução; Agenda; Relatórios; Administração (Equipe, Parametrizações, Auditoria, Assistente, Plano) e Ajuda. Toque no nome do grupo para abrir ou fechar. No celular, o menu abre pelo botão ☰. No cabeçalho ficam o logotipo e o nome do haras, o sino com os avisos não lidos e o menu com o seu nome.</p>
@@ -48,16 +50,16 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
         <figure><img src="/ajuda/img/reproducao.png" alt="Reprodução" loading="lazy"><figcaption>Reprodução: coberturas, diagnósticos e partos previstos.</figcaption></figure>
       </div>
     </section>
-    <section id="importar"><h2>Importar o Relatório de Plantel ABCCMM</h2><span class="perfil">Gestor</span>
+    <section id="importar"><h2>Importar o Relatório de Plantel ABCCMM</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span></div>
       <ol><li>No Sistema de Gestão ABCCMM, gere o Relatório de Plantel em PDF.</li><li>Em Plantel › Importar ABCCMM, envie o PDF. A leitura acontece no seu navegador.</li><li>Confira a lista: o sistema compara com o total informado no relatório e marca animais novos, a atualizar e já cadastrados.</li><li>Clique em Importar. A agenda sanitária é calculada na hora.</li></ol>
       <figure><img src="/ajuda/img/importar.png" alt="Tela de importação do Relatório de Plantel" loading="lazy"><figcaption>Envio do PDF da ABCCMM.</figcaption></figure>
       <p>Animais sem registro ou sem exame de DNA geram pendências documentais. O CPF do associado não é gravado.</p>
     </section>
-    <section id="normas"><h2>Normas da ABCCMM</h2><span class="perfil">Gestor</span>
+    <section id="normas"><h2>Normas da ABCCMM</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span></div>
       <p>Em Ajuda › <b>Normas da ABCCMM</b> (e também acima do chat do Assistente, na tela Importar ABCCMM e, no app do gestor, em Mais) ficam os links para o Estatuto e o Regulamento do Serviço de Registro Genealógico no site da ABCCMM. Eles abrem em uma nova aba. Os documentos são mantidos pela ABCCMM: em caso de dúvida sobre a versão vigente, confirme com a associação. O administrador atualiza os links em Parametrizações › Normas da ABCCMM.</p>
       <figure><img src="/ajuda/img/normas.png" alt="Links para as normas da ABCCMM" loading="lazy"><figcaption>Ajuda › Normas da ABCCMM.</figcaption></figure>
     </section>
-    <section id="certificado"><h2>Certificado de registro da ABCCMM</h2><span class="perfil">Gestor</span>
+    <section id="certificado"><h2>Certificado de registro da ABCCMM</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span></div>
       <p>O Certificado de Registro Genealógico em PDF, emitido pela ABCCMM, preenche o cadastro de três formas:</p>
       <ul><li><b>Novo animal:</b> toque em <b>Preencher pelo certificado (PDF)</b>. Nome, sexo, nascimento, registro, microchip, livro, DNA e pelagem são preenchidos e ficam destacados para conferência.</li><li><b>Ficha do animal:</b> na aba Dados e genealogia, <b>Atualizar pelo certificado (PDF)</b> mostra o que muda (antes e depois). Escolha atualizar o cadastro ou só guardar o PDF e a genealogia.</li><li><b>Em lote:</b> em Importar ABCCMM › <b>Certificados de registro</b>, envie até 30 PDFs. Para cada um, escolha cadastrar no plantel, cadastrar como externo, atualizar, só guardar o PDF ou ignorar.</li></ul>
       <div class="fotos-app">
@@ -67,27 +69,27 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       <p>Além dos dados do cadastro, o Haras360 guarda a genealogia de 4 gerações (pais, avós, bisavós e trisavós, com registro e DNA), as mensurações, a classificação, as datas de resenha e de registro, o criador, o proprietário e o próprio PDF, que pode ser baixado na ficha. Só o gestor vê esses dados. Cada certificado gravado fica na auditoria. Um registro que já pertence a outro animal não é gravado.</p>
       <figure><img src="/ajuda/img/certificado-ficha.png" alt="Genealogia de 4 gerações na ficha" loading="lazy"><figcaption>Genealogia de 4 gerações e dados do certificado.</figcaption></figure>
     </section>
-    <section id="animais"><h2>Animais e prontuário</h2><span class="perfil">Gestor</span>
+    <section id="animais"><h2>Animais e prontuário</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span></div>
       <p>A ficha do animal tem três abas: Prontuário (histórico com fotos), Agenda (próximas etapas calculadas) e Dados e genealogia (cadastro, pai, mãe e avós, contato, genealogia de 4 gerações e dados do certificado, quando houver).</p>
       <figure><img src="/ajuda/img/ficha.png" alt="Ficha de uma égua gestante" loading="lazy"><figcaption>Ficha de uma égua gestante, com a barra de gestação.</figcaption></figure>
     </section>
-    <section id="externos"><h2>Animais externos</h2><span class="perfil">Gestor</span>
+    <section id="externos"><h2>Animais externos</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span></div>
       <p>O garanhão que cobre uma égua do haras, ou a égua de fora que recebe um garanhão do haras, pode ser cadastrado como <b>animal externo</b>: em Animais › Plantel, toque em <b>Novo externo</b> (ou use o certificado). Informe o nome, o sexo e, se quiser, registro, nascimento e o contato do proprietário.</p>
       <figure><img src="/ajuda/img/externo.png" alt="Cadastro de animal externo" loading="lazy"><figcaption>Cadastro de um garanhão de fora do haras.</figcaption></figure>
       <p>Externos não entram no plantel ativo, na agenda sanitária, no Dashboard nem no limite do plano, e o caseiro não os vê. Eles aparecem no filtro <b>Animais externos</b>, na lista de garanhões (marcados como "externo") e aceitam só registros de reprodução. Na <b>Inseminação</b>, informe também o tipo de sêmen (fresco, refrigerado ou congelado) e a central ou origem.</p>
       <figure><img src="/ajuda/img/inseminacao.png" alt="Inseminação com garanhão externo e tipo de sêmen" loading="lazy"><figcaption>Inseminação com garanhão externo e sêmen congelado.</figcaption></figure>
     </section>
-    <section id="baixa"><h2>Baixa de animais</h2><span class="perfil">Gestor</span>
+    <section id="baixa"><h2>Baixa de animais</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span></div>
       <p>Quando um animal sai do haras, abra a ficha e toque em <b>Dar baixa</b>. Informe a data, o motivo (venda, morte, doação ou transferência), o destino, se houver, e uma observação. Na venda, a janela pede também o comprador e a forma de pagamento (veja <a href="#vendas">Vendas e parcelas</a>).</p>
       <figure><img src="/ajuda/img/baixa.png" alt="Janela de baixa do animal com a venda parcelada" loading="lazy"><figcaption>Baixa por venda, com comprador e parcelas.</figcaption></figure>
       <p>O animal sai do plantel ativo, da agenda, do Dashboard e do app do caseiro, e deixa de contar no limite do plano. O prontuário continua guardado: em Animais › Plantel, escolha <b>Baixados</b> para consultar. Para corrigir um engano, use <b>Desfazer baixa</b> na ficha. A baixa e a volta ficam na auditoria. Se o animal aparecer de novo numa importação ABCCMM, ele continua baixado e o resumo da importação avisa.</p>
     </section>
-    <section id="agenda"><h2>Agenda sanitária e protocolos</h2><span class="perfil">Gestor</span>
+    <section id="agenda"><h2>Agenda sanitária e protocolos</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span></div>
       <p>O motor de regras calcula a próxima etapa de cada vacina e manejo a partir do nascimento, do último registro e dos protocolos. Exemplos: série inicial dos potros, primeiro reforço aos 12 meses, reinício da primovacinação quando o reforço vence além da tolerância, rinopneumonite no 5º, 7º e 9º mês da gestação.</p>
       <figure><img src="/ajuda/img/agenda.png" alt="Agenda sanitária" loading="lazy"><figcaption>Agenda agrupada por prazo.</figcaption></figure>
       <p>Em Sanidade › Protocolos você ajusta idades, séries, intervalos e ativa ou desativa cada item. Os padrões seguem a VetJr. UFMG para vacinas e práticas de mercado para os demais manejos; valide com o veterinário do plantel.</p>
     </section>
-    <section id="cio"><h2>Cio e reprodução</h2><span class="perfil">Gestor</span><span class="perfil">Caseiro</span>
+    <section id="cio"><h2>Cio e reprodução</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span><span class="perfil">Caseiro</span></div>
       <p>Registre o cio em Reprodução › Registrar, no Portal Campo ou no app (mesmo sem internet): escolha o tipo Reprodução e o evento <b>Cio</b>. Informe os sinais observados e, se houve exame, o ovário, o tamanho do folículo em milímetros e o edema uterino de 0 a 3.</p>
       <div class="fotos-app">
         <figure><img src="/ajuda/img/cio.png" alt="Registro de cio com os dados do exame" loading="lazy"><figcaption>Cio no Portal do Gestor, com os dados do exame.</figcaption></figure>
@@ -96,7 +98,7 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       <p><b>Previsão do próximo cio:</b> o Haras360 soma o ciclo (21 dias, ajustável) ao último cio, cobertura, inseminação ou aborto e cria a tarefa <b>Observar cio</b> na Agenda e na tela Hoje do caseiro. A previsão atrasada fica visível por até 3 dias e depois passa ao ciclo seguinte. A égua sai da previsão com o diagnóstico positivo e volta depois de um diagnóstico negativo, aborto ou parto.</p>
       <p><b>Cio do potro:</b> depois do parto, sem cio registrado, aparece a tarefa <b>Cio do potro</b> entre o 7º e o 12º dia. Em Administração › Parametrizações › Reprodução você liga ou desliga a previsão e ajusta o ciclo e essa janela.</p>
     </section>
-    <section id="vendas"><h2>Vendas e parcelas</h2><span class="perfil">Gestor</span>
+    <section id="vendas"><h2>Vendas e parcelas</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span></div>
       <p>Para vender um animal, abra a ficha, toque em <b>Dar baixa</b> e escolha o motivo <b>Venda</b>:</p>
       <ol><li><b>Comprador:</b> escolha um já cadastrado ou preencha nome, CPF ou CNPJ, nº de cadastro na ABCCMM, telefone, e-mail, cidade e UF. Ele fica salvo para as próximas vendas.</li><li><b>Valor e meio:</b> valor total e meio de pagamento (Pix, transferência, boleto, cheque, dinheiro ou cartão).</li><li><b>Forma:</b> à vista (já recebido ou não) ou parcelado, com entrada opcional, número de parcelas (2 a 60) e 1º vencimento. As parcelas são mensais e iguais; os centavos que sobram vão para a última. O plano de pagamento aparece antes de confirmar.</li></ol>
       <p>Em Animais › <b>Vendas</b>, cada venda mostra as parcelas com a situação (paga, em aberto, vence em 7 dias, atrasada). Use <b>Registrar pagamento</b> (data, valor e meio) e, se precisar corrigir, <b>Estornar</b>. Depois de comunicar a transferência de propriedade à ABCCMM, toque em <b>Marcar como comunicada</b>: até lá, a pendência aparece nos avisos.</p>
@@ -104,7 +106,7 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       <p>Os avisos do tipo <b>Parcelas de vendas a receber</b> chegam 7 dias antes do vencimento e quando a parcela atrasa, no portal (sino de notificações) e no celular do gestor (Mais › Vendas, onde também se registra o pagamento). O Dashboard mostra o total a receber. A aba <b>Vendas</b> de Relatórios traz vendas, recebimentos e parcelas em aberto do período, com Excel e CSV.</p>
       <p>Só o gestor vê valores e compradores. O CPF ou CNPJ é guardado cifrado e aparece mascarado; o botão <b>Ver</b> mostra o número completo e fica registrado na auditoria, como cada venda, pagamento e estorno. A baixa por venda só pode ser desfeita enquanto nenhum pagamento estiver registrado; desfeita, a venda é apagada. Um comprador só pode ser excluído se não tiver vendas.</p>
     </section>
-    <section id="relatorios"><h2>Relatórios</h2><span class="perfil">Gestor</span>
+    <section id="relatorios"><h2>Relatórios</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span></div>
       <p>Em <b>Relatórios</b>, cinco abas mostram indicadores, gráficos e tabelas do período escolhido (padrão: os últimos 12 meses), de um animal ou de uma categoria (éguas, machos, potros, outros):</p>
       <ul><li><b>Sanitário:</b> procedimentos feitos, atrasados hoje, animais em dia, vacinas aplicadas, pendências e resumo por protocolo.</li><li><b>Reprodutivo:</b> cios, coberturas e inseminações, taxa de prenhez (positivos sobre diagnósticos), partos, éguas prenhes e vazias, próximo cio de cada égua e intervalo médio entre partos.</li><li><b>Plantel:</b> composição por categoria e idade, entradas (nascimento, importação ou cadastro) e saídas por motivo.</li><li><b>Atividade do campo:</b> registros do caseiro por pessoa, tipo e origem (app ou Portal Campo), com fotos e áudios.</li><li><b>Vendas:</b> vendas e recebimentos por mês, valores a receber e em atraso, parcelas em aberto e recebimentos.</li></ul>
       <div class="fotos-app">
@@ -113,12 +115,12 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       </div>
       <p>Toque numa linha para abrir a ficha do animal. <b>Excel</b> baixa uma planilha com a aba Resumo e uma aba por tabela, com filtros e o link "Abrir" para a ficha. <b>CSV</b> baixa o mesmo conteúdo em texto separado por ponto e vírgula, que o Excel abre com acentos. Cada exportação fica na auditoria. O administrador libera ou bloqueia os relatórios por plano.</p>
     </section>
-    <section id="campo"><h2>Portal Campo do caseiro</h2><span class="perfil">Caseiro</span>
+    <section id="campo"><h2>Portal Campo do caseiro</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Caseiro</span></div>
       <p>Feito para o celular: tarefas do dia, fichas dos animais, registro com fotos e ocorrências. Ao tocar em Registrar em uma tarefa, o formulário já vem preenchido. O botão <b>Registrar ocorrência</b> fica no topo da tela Hoje. A barra de baixo tem Hoje, Animais, Agenda (próximos 30 dias) e Mais (avisos, assistente, instalar o app, senha, manual e sair).</p>
       <figure><img src="/ajuda/img/campo.png" alt="Portal Campo no celular" loading="lazy" style="max-width:420px"><figcaption>Portal Campo na largura de um celular.</figcaption></figure>
       <p>Para trabalhar sem internet no campo, use o app Android: toque em <b>Instalar o app Android</b>, no topo da tela Hoje.</p>
     </section>
-    <section id="app"><h2>App Android do caseiro</h2><span class="perfil">Caseiro</span><span class="perfil">Gestor</span>
+    <section id="app"><h2>App Android do caseiro</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Caseiro</span><span class="perfil">Gestor</span></div>
       <p>O app funciona sem internet: o caseiro registra no pasto e o celular envia sozinho quando chega ao Wi-Fi da sede. Dados móveis (3G/4G) não são usados. Android 8 ou superior.</p>
       <ol><li><b>Instalar:</b> no celular do caseiro, entre no Portal Campo e toque em Instalar o app Android, no topo da tela Hoje. O gestor também encontra o link e um QR Code de download na janela Vincular celular. Se o Android pedir, permita instalar apps desta origem.</li><li><b>Vincular:</b> o gestor abre Equipe e toca em Vincular celular na linha do caseiro. No app, toque em Ler QR Code. O código vale 10 minutos e uma única vez. Sem câmera, digite o servidor e o código mostrados abaixo do QR Code.</li><li><b>Trabalhar:</b> a tela Hoje mostra as tarefas atrasadas, de hoje e da semana. Toque em Registrar numa tarefa e o formulário já vem preenchido. Até 4 fotos por registro, comprimidas no celular, e um áudio de até 2 minutos: toque em Gravar áudio, fale e toque em Parar. Dá para ouvir e apagar antes de salvar.</li><li><b>Enviar:</b> a cada hora, e sempre que o app abre no Wi-Fi, os registros e as fotos vão para o servidor. Em Mais › Envio estão a fila, a hora da última sincronização e o botão Sincronizar agora.</li></ol>
       <p>A barra de baixo do app tem Hoje, Animais, Agenda (próximos 30 dias) e Mais (Avisos, Envio, versão do app e vincular de novo). O fundo e o logotipo do haras são baixados no Wi-Fi e ficam guardados no celular.</p>
@@ -136,7 +138,7 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       <p> O gestor pode encerrar o celular em Equipe › Sessões e aparelhos ativos; os registros que ainda estiverem no celular continuam guardados até um novo vínculo. Se o servidor recusar um registro (por exemplo, animal excluído), ele fica em Envio › Recusados pelo servidor, com Tentar de novo.</p>
       <p>Quando o servidor recebe uma versão nova, o app avisa em Mais › Envio e oferece o download. A atualização instala por cima, sem perder dados.</p>
     </section>
-    <section id="app-gestor"><h2>App do gestor no celular</h2><span class="perfil">Gestor</span>
+    <section id="app-gestor"><h2>App do gestor no celular</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span></div>
       <p>O mesmo app Haras360 tem a visão do gestor. Na abertura, toque em <b>Sou gestor: entrar com e-mail e 2FA</b>, informe o endereço do servidor, o e-mail e a senha do portal e, em seguida, o código do aplicativo autenticador. Um celular fica com um perfil só: para trocar entre caseiro e gestor, use <b>Mais › Sair</b> (com tudo enviado).</p>
       <p><b>Segurança:</b> o app do gestor só funciona com o servidor em HTTPS, porque a senha, o código do 2FA e os dados do haras passam pela internet do celular. Ao abrir, e ao voltar depois de 5 minutos, o app pede a digital ou o bloqueio de tela do Android. A sessão expira depois de 30 dias sem uso, e trocar a senha ou redefinir o 2FA encerra o app. O celular aparece em Equipe › Sessões e aparelhos ativos, onde pode ser encerrado.</p>
       <ul><li><b>Dashboard:</b> indicadores, Atenção agora, próximos 7 dias e os últimos registros do caseiro.</li><li><b>Animais:</b> plantel ativo, baixados ou todos; ficha com prontuário (fotos e áudios), gestação e próximo cio; Dar baixa (com internet).</li><li><b>Agenda</b> e <b>Registrar:</b> iguais ao caseiro, inclusive sem internet. O gestor envia pelo Wi-Fi ou pelos dados móveis.</li><li><b>Relatórios:</b> as quatro abas com indicadores, gráficos e tabelas. O botão de compartilhar envia a planilha Excel ou CSV por WhatsApp, e-mail ou Drive.</li><li><b>Mais:</b> avisos, envio, vendas (parcelas, pagamento e transferência, com internet), avisos no celular, versão e Sair.</li></ul>
@@ -147,31 +149,31 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
         <figure><img src="/ajuda/img/app-gestor-avisos.png" alt="Preferências dos avisos no celular" loading="lazy"><figcaption>Avisos no celular.</figcaption></figure>
       </div>
     </section>
-    <section id="equipe"><h2>Equipe e sessões</h2><span class="perfil">Gestor</span>
+    <section id="equipe"><h2>Equipe e sessões</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span></div>
       <p>Adicione gestores e caseiros com senha inicial. Para cada pessoa você pode redefinir a senha, redefinir o 2FA de outro gestor e desativar o acesso. Em Sessões e aparelhos ativos aparecem os navegadores e celulares conectados; encerre os que não reconhecer.</p>
       <figure><img src="/ajuda/img/equipe.png" alt="Equipe e sessões" loading="lazy"><figcaption>Usuários, situação do 2FA e sessões ativas.</figcaption></figure>
     </section>
-    <section id="parametros"><h2>Parametrizações do haras</h2><span class="perfil">Gestor</span>
+    <section id="parametros"><h2>Parametrizações do haras</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span></div>
       <p>Logotipo do haras, dados do haras, reforço da raiva anual ou semestral, dias de gestação usados na previsão de parto, tolerância para reiniciar a primovacinação e, em Reprodução, a previsão do cio (ligada ou desligada, duração do ciclo e janela do cio do potro).</p><p>O logotipo aparece na barra superior do Portal do Gestor e do Portal Campo. Envie PNG, JPG ou WebP com fundo branco ou transparente: o sistema recorta as margens vazias e reduz a imagem. O administrador também pode enviar ou trocar o logotipo ao cadastrar o haras.</p>
       <figure><img src="/ajuda/img/parametros.png" alt="Parametrizações do haras" loading="lazy"><figcaption>Parametrizações do haras.</figcaption></figure>
     </section>
-    <section id="imagens"><h2>Imagens do haras</h2><span class="perfil">Gestor</span>
+    <section id="imagens"><h2>Imagens do haras</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span></div>
       <p>Em Administração › Parametrizações › Imagens do haras, o gestor personaliza o portal e o app com imagens próprias:</p>
       <ul><li><b>Imagem do cabeçalho:</b> faixa no topo do Portal do Gestor e do Portal Campo.</li><li><b>Banner do Dashboard:</b> imagem larga no Dashboard.</li><li><b>Fundo do app:</b> fundo da tela de abertura e do topo da tela Hoje no app Android.</li></ul>
       <p>Envie PNG, JPG ou WebP de até 3 MB. O navegador reduz a imagem antes do envio. Escolha o foco (centro, topo ou base) para indicar que parte aparece quando a imagem é recortada. <b>Usar a padrão</b> volta para a imagem da plataforma. Cada troca fica na auditoria. O app baixa a imagem nova na próxima sincronização pelo Wi-Fi.</p>
       <figure><img src="/ajuda/img/imagens.png" alt="Imagens do haras" loading="lazy"><figcaption>Imagens do haras com um banner próprio.</figcaption></figure>
     </section>
-    <section id="auditoria"><h2>Auditoria</h2><span class="perfil">Gestor</span><span class="perfil">Administrador</span>
+    <section id="auditoria"><h2>Auditoria</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span><span class="perfil">Administrador</span></div>
       <p>Registra logins (inclusive recusados), 2FA, importações, exclusões com o conteúdo excluído, mudanças de protocolo e de parametrização, usuários, atualizações e backups. Filtre por ação, texto e período.</p>
       <figure><img src="/ajuda/img/auditoria.png" alt="Auditoria" loading="lazy"><figcaption>Consulta da auditoria.</figcaption></figure>
     </section>
-    <section id="assinatura"><h2>Minha assinatura</h2><span class="perfil">Gestor</span>
+    <section id="assinatura"><h2>Minha assinatura</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Gestor</span></div>
       <p>Em Administração › <b>Minha assinatura</b>, o gestor vê a situação do contrato (teste ou ativo), o plano, os animais ativos, o dia de vencimento e o valor da próxima mensalidade com o cálculo. A mensalidade é gerada alguns dias antes do vencimento, pelos animais ativos naquele dia.</p>
       <p>Para cada cobrança em aberto aparecem o <b>QR Code Pix</b> e o <b>Pix copia e cola</b>, já com o valor e o identificador da cobrança, e os dados bancários. Depois de pagar, o financeiro do Haras360 registra o pagamento. O histórico mostra todas as cobranças.</p>
       <figure><img src="/ajuda/img/assinatura.png" alt="Minha assinatura com Pix copia e cola" loading="lazy"><figcaption>Minha assinatura com o QR Code Pix.</figcaption></figure>
       <p>Avisos do tipo <b>Mensalidade do Haras360</b> chegam 7 dias antes, no dia do vencimento e no atraso, no portal e no celular do gestor. Com a mensalidade atrasada além do prazo combinado (15 dias, por padrão), o portal e o app do gestor ficam <b>só para consulta</b>: tudo continua visível, mas nada pode ser alterado até o pagamento. O caseiro continua registrando normalmente, para não perder o trabalho do campo.</p>
     </section>
-    <section id="admin"><h2>Administração da plataforma</h2><span class="perfil">Administrador</span>
+    <section id="admin"><h2>Administração da plataforma</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Administrador</span></div>
       <p>O administrador cria haras e gestores, define o plano de cada haras e mantém as parametrizações globais: planos e módulos, faixas de preço, login e sessões (inclusive a sessão do app do gestor e a liberação de teste do app do gestor sem HTTPS, que deve ficar Bloqueada em produção), e-mail.</p>
       <figure><img src="/ajuda/img/admin-haras.png" alt="Lista de haras" loading="lazy"><figcaption>Haras, planos e usuários.</figcaption></figure>
       <figure><img src="/ajuda/img/admin-parametros.png" alt="Planos e módulos" loading="lazy"><figcaption>Grade de planos e módulos. Por padrão tudo vem liberado.</figcaption></figure>
@@ -179,7 +181,7 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       <p>Em Administração › Administradores, crie outros administradores, redefina a senha ou o 2FA de outro administrador e desative quem não deve mais entrar. Cada ação pede a sua senha e fica na auditoria. Ninguém desativa a própria conta, e a plataforma nunca fica sem administrador ativo. Para a sua conta, use o menu com o seu nome.</p>
       <figure><img src="/ajuda/img/admin-administradores.png" alt="Lista de administradores" loading="lazy"><figcaption>Administradores da plataforma.</figcaption></figure>
     </section>
-    <section id="financeiro"><h2>Financeiro da plataforma</h2><span class="perfil">Administrador</span><span class="perfil">Financeiro</span>
+    <section id="financeiro"><h2>Financeiro da plataforma</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Administrador</span><span class="perfil">Financeiro</span></div>
       <p>O menu <b>Financeiro</b> controla os clientes (os haras que contratam a plataforma) e as mensalidades. Além do administrador, a área pode ser usada por um usuário com o perfil <b>Financeiro</b>, criado em Administradores › Novo usuário da plataforma: ele entra com senha e 2FA e só vê o Financeiro.</p>
       <ul><li><b>Painel:</b> clientes por situação, novos e cancelados no mês, animais na plataforma, receita recorrente mensal (MRR), faturado, recebido, a receber, em atraso, inadimplência por faixa de dias e o gráfico de 12 meses.</li>
         <li><b>Clientes:</b> cada haras tem um cliente, criado automaticamente em <b>Teste</b> (30 dias, sem cobrança). Em <b>Editar</b>, preencha a situação (Teste, Ativo, Suspenso ou Cancelado), o dia de vencimento (1 a 28), o contratante com CPF ou CNPJ, o contato financeiro, o endereço e, se houver, um ajuste de preço: desconto em % ou valor fixo combinado, com validade opcional. Ao fim do teste, o cliente passa sozinho para Ativo.</li>
@@ -193,7 +195,7 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       <figure><img src="/ajuda/img/financeiro-cliente.png" alt="Cadastro do cliente" loading="lazy"><figcaption>Contrato, contratante, endereço e ajuste de preço.</figcaption></figure>
       <p>Clientes, cobranças e recebimentos podem ser exportados em Excel e CSV. O CPF ou CNPJ é guardado cifrado e aparece mascarado; ver o número completo, cada pagamento, estorno, cancelamento, liberação e exportação ficam na auditoria. A baixa é manual nesta versão; a integração com um gateway de pagamento (Pix e boleto com baixa automática) está prevista para uma próxima versão.</p>
     </section>
-    <section id="marca"><h2>Marca e imagens da plataforma</h2><span class="perfil">Administrador</span>
+    <section id="marca"><h2>Marca e imagens da plataforma</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Administrador</span></div>
       <p>Em Marca e imagens, o administrador troca o logotipo da plataforma e as imagens padrão: imagem da tela de entrada, cabeçalho, banner do Dashboard e fundo do app. As imagens padrão valem para todos os haras que não enviaram a sua. Sem nenhuma imagem enviada, o Haras360 usa a sua ilustração própria.</p>
       <div class="fotos-app">
         <figure><img src="/ajuda/img/admin-marca.png" alt="Marca e imagens" loading="lazy"><figcaption>Logotipo e imagens padrão da plataforma.</figcaption></figure>
@@ -201,7 +203,7 @@ kbd{font-family:var(--f-mono);font-size:.84em;background:var(--surface-2);border
       </div>
       <p>As imagens ficam em <code>/opt/haras360/compartilhado/imagens</code> e entram no backup diário.</p>
     </section>
-    <section id="atualizacao"><h2>Atualização e backup</h2><span class="perfil">Administrador</span>
+    <section id="atualizacao"><h2>Atualização e backup</h2><div class="perfis" aria-label="Perfis desta seção"><span class="perfil">Administrador</span></div>
       <ol><li>Na Release da versão no GitHub, baixe <span class="mono">haras360-X.Y.Z.tar.gz</span> e anote o SHA-256.</li><li>No Windows, rode <kbd>python assinar-pacote.py haras360-X.Y.Z.tar.gz</kbd> e digite a senha da chave (a mesma do Journey). Sai o arquivo <span class="mono">.sig</span>.</li><li>Em Administração › Atualização e backup, envie o pacote e a assinatura.</li></ol>
       <p>O servidor confere o SHA-256 e a assinatura, faz backup, aplica as migrações, troca de versão e testa. Se falhar, volta sozinho. As três últimas versões ficam guardadas para voltar com um clique.</p>
       <figure><img src="/ajuda/img/admin-atualizacao.png" alt="Atualização e backup" loading="lazy"><figcaption>Envio do pacote assinado, versões guardadas e backup.</figcaption></figure>
