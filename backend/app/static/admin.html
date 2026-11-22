@@ -414,6 +414,25 @@ hr.div{border:0;border-top:1px solid var(--line-2);margin:14px 0}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:2px}
 .kpi b{font-family:var(--f-display);font-size:1.8rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
 .kpi span{font-size:.84rem;color:var(--muted)}
+/* v1.7.0: financeiro */
+.fin-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.fin-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.acoes-v{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.fin-kpis .kpi b{font-size:1.45rem}
+.barras{display:flex;flex-direction:column;gap:8px}
+.barras .b{display:grid;grid-template-columns:120px minmax(0,1fr) 120px;gap:10px;align-items:center;font-size:.86rem}
+.barras .t{height:10px;border-radius:99px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line-2)}
+.barras .t i{display:block;height:100%;background:var(--accent)}
+.barras .b b{text-align:right;font-variant-numeric:tabular-nums}
+.meses{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;align-items:end;padding-top:6px}
+.meses .m{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.7rem;color:var(--muted)}
+.meses .m .cols{display:flex;gap:2px;align-items:flex-end;height:120px}
+.meses .m .cols i{width:9px;border-radius:3px 3px 0 0;background:var(--accent);min-height:1px}
+.meses .m .cols i.r{background:#D5A064}
+.leg2{display:flex;gap:14px;font-size:.8rem;color:var(--muted)}
+.leg2 i{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--accent);margin-right:5px;vertical-align:-1px}
+.leg2 i.r{background:#D5A064}
+.calc{font-size:.8rem;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -1203,10 +1222,15 @@ const UI = (function () {
 </script>
 <script>
 (function () {
-  let S = null, view = 'haras', poll = null;
+  let S = null, F = null, perfil = 'admin', view = 'haras', poll = null;
   const $ = s => document.querySelector(s);
   const esc = H.esc, IC = UI.ICON;
-  async function recarregar() { S = await API.get('/api/admin/painel'); }
+  /* v1.7.0: o perfil Financeiro só carrega o financeiro; o administrador carrega o painel e, no Financeiro, os dados dele */
+  async function recarregar() {
+    if (perfil === 'financeiro') { F = await API.get('/api/financeiro/painel'); S = { usuario: F.usuario, marca: F.marca, versao: F.versao }; return; }
+    S = await API.get('/api/admin/painel');
+    if (view === 'financeiro') F = await API.get('/api/financeiro/painel');
+  }
   async function executar(el, fn, ok) {
     if (el && el.disabled) return null;
     const txt = el ? el.innerHTML : '';
@@ -1215,8 +1239,12 @@ const UI = (function () {
     catch (e) { UI.toast(e.message); return null; }
     finally { if (el && el.isConnected) { el.disabled = false; el.innerHTML = txt; } }
   }
-  const menu = () => [
+  const menu = () => perfil === 'financeiro' ? [
+    { id: 'financeiro', rotulo: 'Financeiro', ic: 'graf' },
+    { grupo: 'Ajuda', ic: 'ajuda', itens: [{ href: '/ajuda#financeiro', rotulo: 'Manual' }] }
+  ] : [
     { id: 'haras', rotulo: 'Haras e gestores', ic: 'cavalo' },
+    { id: 'financeiro', rotulo: 'Financeiro', ic: 'graf' },
     { id: 'administradores', rotulo: 'Administradores', ic: 'escudo' },
     { id: 'marca', rotulo: 'Marca e imagens', ic: 'imagem' },
     { id: 'parametros', rotulo: 'Parametrizações', ic: 'engr' },
@@ -1224,14 +1252,18 @@ const UI = (function () {
     { id: 'atualizacao', rotulo: 'Atualização e backup', ic: 'graf' },
     { grupo: 'Ajuda', ic: 'ajuda', itens: [{ id: 'sobre', rotulo: 'Sobre' }, { href: '/ajuda', rotulo: 'Manual' }, { id: 'glossario', rotulo: 'Glossário' }] }
   ];
-  const TITULOS = { haras: ['Plataforma', 'Haras e gestores'], marca: ['Administração', 'Marca e imagens da plataforma'], administradores: ['Administração', 'Administradores da plataforma'], parametros: ['Administração', 'Parametrizações globais'], auditoria: ['Administração', 'Auditoria'], atualizacao: ['Administração', 'Atualização e backup'], sobre: ['Ajuda', 'Sobre o Haras360'], glossario: ['Ajuda', 'Glossário'] };
-  function go(v) { view = v; render(); window.scrollTo(0, 0); }
+  const TITULOS = { financeiro: ['Plataforma', 'Financeiro: clientes e mensalidades'], haras: ['Plataforma', 'Haras e gestores'], marca: ['Administração', 'Marca e imagens da plataforma'], administradores: ['Administração', 'Administradores da plataforma'], parametros: ['Administração', 'Parametrizações globais'], auditoria: ['Administração', 'Auditoria'], atualizacao: ['Administração', 'Atualização e backup'], sobre: ['Ajuda', 'Sobre o Haras360'], glossario: ['Ajuda', 'Glossário'] };
+  async function go(v) {
+    view = v;
+    if (v === 'financeiro' && perfil === 'admin') { $('#view').innerHTML = '<div class="empty">Carregando o financeiro...</div>'; try { F = await API.get('/api/financeiro/painel'); } catch (e) { UI.toast(e.message); return; } }
+    render(); window.scrollTo(0, 0);
+  }
   function render() {
-    $('#topbar').innerHTML = UI.topbar({ menu: menu(), atual: view, home: '/admin', sub: 'Administração da plataforma', marca: S.marca.logo, cabecalho: S.marca.cabecalho, usuario: S.usuario, perfilTxt: 'Administrador',
+    $('#topbar').innerHTML = UI.topbar({ menu: menu(), atual: view, home: '/admin', sub: 'Administração da plataforma', marca: S.marca.logo, cabecalho: S.marca.cabecalho, usuario: S.usuario, perfilTxt: perfil === 'financeiro' ? 'Financeiro' : 'Administrador',
       usuarioItens: [{ act: 'minha-senha', rotulo: 'Alterar minha senha' }, { act: 'novos-codigos', rotulo: 'Novos códigos de recuperação do 2FA' }] });
     const [eb, ti] = TITULOS[view];
     $('#v-eyebrow').textContent = eb; $('#v-title').textContent = ti; document.title = 'Haras360 · ' + ti;
-    $('#v-acts').innerHTML = view === 'haras' ? '<button class="btn pri" data-act="novo-haras">' + IC.plus + 'Novo haras</button>' : view === 'administradores' ? '<button class="btn pri" data-act="novo-admin">' + IC.plus + 'Novo administrador</button>' : '';
+    $('#v-acts').innerHTML = view === 'haras' ? '<button class="btn pri" data-act="novo-haras">' + IC.plus + 'Novo haras</button>' : view === 'administradores' ? '<button class="btn pri" data-act="novo-admin">' + IC.plus + 'Novo usuário da plataforma</button>' : '';
     const v = $('#view'); v.classList.remove('view-in'); void v.offsetWidth; v.classList.add('view-in');
     v.innerHTML = VIEWS[view]();
     if (AFTER[view]) AFTER[view]();
@@ -1258,16 +1290,16 @@ const UI = (function () {
   /* ================= PARAMETRIZAÇÕES ================= */
   let planosEd = null, faixasEd = null;
   function vAdministradores() {
-    const ativos = S.administradores.filter(a => a.ativo).length;
-    return '<div class="stack"><p class="small muted">Administradores têm acesso total: haras, planos, parametrizações, atualização e backup. Toda ação aqui pede a sua senha e fica na auditoria. A plataforma nunca fica sem administrador ativo.</p>' +
-      '<div class="card flush"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Nome</th><th>E-mail</th><th>2FA</th><th>Situação</th><th></th></tr></thead><tbody>' +
-      S.administradores.map(a => '<tr><td><b>' + esc(a.nome) + '</b>' + (a.eu ? ' <span class="chip nodot c-info">Você</span>' : '') + '</td><td class="small">' + esc(a.email) + '</td>' +
+    const ativos = S.administradores.filter(a => a.ativo && a.perfil === 'admin').length;
+    return '<div class="stack"><p class="small muted">Administradores têm acesso total: haras, planos, parametrizações, financeiro, atualização e backup. O perfil Financeiro vê só o Financeiro (clientes e mensalidades). Toda ação aqui pede a sua senha e fica na auditoria. A plataforma nunca fica sem administrador ativo.</p>' +
+      '<div class="card flush"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Nome</th><th>Perfil</th><th>E-mail</th><th>2FA</th><th>Situação</th><th></th></tr></thead><tbody>' +
+      S.administradores.map(a => '<tr><td><b>' + esc(a.nome) + '</b>' + (a.eu ? ' <span class="chip nodot c-info">Você</span>' : '') + '</td><td>' + (a.perfil === 'financeiro' ? '<span class="chip nodot c-soon">Financeiro</span>' : '<span class="chip nodot c-accent">Administrador</span>') + '</td><td class="small">' + esc(a.email) + '</td>' +
         '<td>' + (a.doisFatores ? '<span class="chip c-ok">Ativo</span>' : '<span class="chip c-soon">Pendente</span>') + '</td>' +
         '<td>' + (a.ativo ? '<span class="chip c-ok">Ativo</span>' : '<span class="chip c-muted">Desativado</span>') + '</td>' +
         '<td class="num">' + (a.eu ? '<span class="small muted">Use o menu com o seu nome</span>' : '<div class="row" style="gap:4px;justify-content:flex-end">' +
           '<button class="btn ghost sm" data-act="adm-senha" data-id="' + a.id + '">Redefinir senha</button>' +
           (a.doisFatores ? '<button class="btn ghost sm" data-act="adm-2fa" data-id="' + a.id + '">Redefinir 2FA</button>' : '') +
-          (a.ativo && ativos < 2 ? '' : '<button class="btn ghost sm' + (a.ativo ? ' danger' : '') + '" data-act="adm-ativo" data-id="' + a.id + '">' + (a.ativo ? 'Desativar' : 'Reativar') + '</button>') +
+          (a.ativo && a.perfil === 'admin' && ativos < 2 ? '' : '<button class="btn ghost sm' + (a.ativo ? ' danger' : '') + '" data-act="adm-ativo" data-id="' + a.id + '">' + (a.ativo ? 'Desativar' : 'Reativar') + '</button>') +
           '</div>') + '</td></tr>').join('') + '</tbody></table></div></div></div>';
   }
 
@@ -1375,8 +1407,118 @@ const UI = (function () {
       UI.editorImagens(['logo', 'entrada', 'cabecalho', 'banner', 'app'], S.marca, 'plataforma') + '</div>' +
       '<p class="note">A tela de entrada e o logotipo são públicos, porque aparecem antes do login. O ícone do app no celular continua sendo o do Haras360.</p></div>';
   }
-  const VIEWS = { marca: vMarca, haras: vHaras, administradores: vAdministradores, parametros: vParametros, auditoria: vAuditoria, atualizacao: vAtualizacao, sobre: vSobre, glossario: vGlossario };
+  /* ================= FINANCEIRO (v1.7.0) ================= */
+  let finAba = 'painel', cobF = 'abertas', cliBusca = '';
+  const reais = c => c === null || c === undefined ? 'A definir' : H.moeda(c / 100);
+  const SIT_CLI = { Teste: 'c-info', Ativo: 'c-ok', Suspenso: 'c-soon', Cancelado: 'c-muted' };
+  const SIT_COB = { paga: ['Paga', 'c-ok'], aberta: ['Em aberto', 'c-muted'], vence: ['Vence em 7 dias', 'c-soon'], atrasada: ['Atrasada', 'c-late'], cancelada: ['Cancelada', 'c-muted'] };
+  const chipCob = x => '<span class="chip ' + SIT_COB[x.situacao][1] + '">' + SIT_COB[x.situacao][0] + (x.situacao === 'atrasada' ? ' · ' + x.diasAtraso + ' dia' + (x.diasAtraso === 1 ? '' : 's') : '') + '</span>';
+  function calcTxt(c) {
+    if (!c) return '';
+    if (c.avulsa) return 'Cobrança avulsa';
+    if (c.ajuste && /^Valor fixo/.test(c.ajuste)) return c.animais + ' animais ativos · ' + c.ajuste;
+    const fx = (c.faixas || []).map(f => f.qtd + ' animal(is) de ' + f.de + ' a ' + f.ate + (f.valor === null ? ' (sem preço)' : ' × ' + H.moeda(Number(f.valor)))).join(' + ');
+    return c.animais + ' animais ativos' + (fx ? ': ' + fx : '') + (c.ajuste ? ' · ' + c.ajuste : '');
+  }
+  function vFinanceiro() {
+    const abas = [['painel', 'Painel'], ['clientes', 'Clientes'], ['cobrancas', 'Cobranças'], ['config', 'Configurações']];
+    const tabs = '<div class="tabs" role="tablist">' + abas.map(([k, l]) => '<button role="tab" aria-selected="' + (finAba === k) + '" data-act="fin-aba" data-t="' + k + '">' + l + '</button>').join('') + '</div>';
+    const exp = (t, rot) => '<a class="btn sm" href="/api/financeiro/exportar?tipo=' + t + '&formato=xlsx" download>' + IC.file + (rot ? rot + ' (Excel)' : 'Excel') + '</a><a class="btn sm" href="/api/financeiro/exportar?tipo=' + t + '&formato=csv" download>' + IC.file + (rot ? rot + ' (CSV)' : 'CSV') + '</a>';
+    let corpo = '';
+    if (finAba === 'painel') corpo = finPainel();
+    else if (finAba === 'clientes') corpo = '<div class="spread" style="margin:14px 0 8px"><input id="cli-busca" class="inp" style="width:min(320px,100%)" placeholder="Buscar haras ou contratante" value="' + esc(cliBusca) + '"><div class="row">' + exp('clientes') + '</div></div><div id="cli-lista">' + finClientes() + '</div>';
+    else if (finAba === 'cobrancas') corpo = '<div class="spread" style="margin:14px 0 8px"><div class="row">' + [['abertas', 'Em aberto'], ['atrasadas', 'Atrasadas'], ['pagas', 'Pagas'], ['todas', 'Todas']].map(([k, l]) => '<button class="btn sm' + (cobF === k ? ' pri' : ' ghost') + '" data-act="cob-f" data-f="' + k + '">' + l + '</button>').join('') + '</div><div class="row">' + exp('cobrancas') + exp('recebimentos', 'Recebimentos') + '</div></div>' + finCobrancas();
+    else corpo = finConfig();
+    return '<div class="sec"><div class="card">' + tabs + '<div style="padding-top:14px">' + corpo + '</div></div></div>';
+  }
+  function finPainel() {
+    const i = F.indicadores, max = Math.max(1, ...i.meses.map(m => Math.max(m.faturado, m.recebido))), maxI = Math.max(1, ...i.inadimplencia.map(x => x.valor));
+    const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    const kpi = (rot, val, sub) => '<div class="kpi"><span>' + rot + '</span><b>' + val + '</b><span>' + sub + '</span></div>';
+    return '<div class="stack"><div class="fin-kpis">' +
+      kpi('Clientes ativos', i.clientes.Ativo, i.total + ' haras · ' + i.clientes.Teste + ' em teste') +
+      kpi('Receita recorrente (MRR)', reais(i.mrr), 'próximas mensalidades dos ativos') +
+      kpi('Faturado no mês', reais(i.faturadoMes), 'vencimentos deste mês') +
+      kpi('Recebido no mês', reais(i.recebidoMes), 'pagamentos deste mês') +
+      kpi('A receber', reais(i.aReceber), 'cobranças em aberto') +
+      kpi('Em atraso', reais(i.emAtraso), i.clientesEmAtraso + ' cliente(s) · ' + i.bloqueados + ' bloqueado(s)') + '</div>' +
+      '<div class="grid2"><div class="card"><div class="card-h"><h3>Clientes</h3></div><dl class="facts">' + Object.keys(i.clientes).map(k => '<div><dt>' + k + '</dt><dd>' + i.clientes[k] + '</dd></div>').join('') +
+        '<div><dt>Novos no mês</dt><dd>' + i.novosMes + '</dd></div><div><dt>Cancelados no mês</dt><dd>' + i.canceladosMes + '</dd></div><div><dt>Animais na plataforma</dt><dd>' + i.animais + '</dd></div></dl></div>' +
+      '<div class="card"><div class="card-h"><h3>Inadimplência</h3></div><div class="barras">' + i.inadimplencia.map(x => '<div class="b"><span>' + x.faixa + '</span><div class="t"><i style="width:' + (x.valor / maxI * 100).toFixed(1) + '%;background:var(--late)"></i></div><b>' + reais(x.valor) + '</b></div>').join('') + '</div></div></div>' +
+      '<div class="card"><div class="card-h"><h3>Faturado e recebido (12 meses)</h3><div class="leg2"><span><i></i>Faturado</span><span><i class="r"></i>Recebido</span></div></div><div class="meses" role="img" aria-label="' + esc(i.meses.map(m => m.mes + ': faturado ' + reais(m.faturado) + ', recebido ' + reais(m.recebido)).join('; ')) + '">' +
+        i.meses.map(m => '<div class="m"><div class="cols"><i style="height:' + (m.faturado / max * 100).toFixed(1) + '%" title="Faturado ' + reais(m.faturado) + '"></i><i class="r" style="height:' + (m.recebido / max * 100).toFixed(1) + '%" title="Recebido ' + reais(m.recebido) + '"></i></div>' + MES[+m.mes.slice(5) - 1] + '/' + m.mes.slice(2, 4) + '</div>').join('') + '</div></div></div>';
+  }
+  function finClientes() {
+    const q = H.norm(cliBusca);
+    const lst = F.clientes.filter(c => !q || H.norm(c.haras + ' ' + c.nome).includes(q));
+    if (!lst.length) return '<div class="empty">Nenhum cliente encontrado.</div>';
+    return '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Haras</th><th>Situação</th><th>Contratante</th><th>Animais</th><th>Próxima mensalidade</th><th>A receber</th><th><span class="sr">Ações</span></th></tr></thead><tbody>' +
+      lst.map(c => '<tr><td><b>' + esc(c.haras) + '</b>' + (c.harasAtivo ? '' : ' <span class="chip c-muted">Haras desativado</span>') + '<br><span class="small muted">Vence todo dia ' + c.diaVencimento + '</span></td>' +
+        '<td><span class="chip ' + SIT_CLI[c.situacao] + '">' + c.situacao + '</span>' + (c.situacao === 'Teste' && c.testeAte ? '<br><span class="small muted">até ' + H.br(c.testeAte) + '</span>' : '') +
+          (c.bloqueado ? '<br><span class="chip c-late">Só consulta</span>' : '') + (c.liberadoAte ? '<br><span class="chip c-info">Liberado até ' + H.br(c.liberadoAte) + '</span>' : '') + '</td>' +
+        '<td>' + esc(c.nome || '-') + '<br><span class="mono small muted">' + esc(c.documento || 'sem CPF/CNPJ') + '</span></td><td>' + c.animais + '</td>' +
+        '<td>' + reais(c.proxima.valor) + '<br><span class="calc">' + esc(calcTxt(c.proxima)) + '</span></td>' +
+        '<td>' + reais(c.aReceber) + (c.emAtraso ? '<br><span class="small" style="color:var(--late)">' + reais(c.emAtraso) + ' em atraso</span>' : '') + '</td>' +
+        '<td><div class="acoes-v"><button class="btn ghost sm" data-act="cli-editar" data-id="' + c.harasId + '">Editar</button><button class="btn ghost sm" data-act="cli-avulsa" data-id="' + c.harasId + '">Cobrança avulsa</button><button class="btn ghost sm" data-act="cli-liberar" data-id="' + c.harasId + '">Liberar bloqueio</button></div></td></tr>').join('') +
+      '</tbody></table></div>';
+  }
+  function finCobrancas() {
+    const f = { abertas: x => x.situacao !== 'paga' && x.situacao !== 'cancelada', atrasadas: x => x.situacao === 'atrasada', pagas: x => x.situacao === 'paga', todas: () => true }[cobF];
+    const lst = F.cobrancas.filter(f);
+    if (!lst.length) return '<div class="empty">Nenhuma cobrança neste filtro. As mensalidades são geradas ' + F.parametros.antecedenciaDias + ' dias antes do vencimento de cada cliente ativo.</div>';
+    return '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Vencimento</th><th>Haras</th><th>Descrição</th><th>Valor</th><th>Situação</th><th>Pagamento</th><th><span class="sr">Ações</span></th></tr></thead><tbody>' +
+      lst.map(x => '<tr><td class="mono">' + H.br(x.vencimento) + '</td><td><b>' + esc(x.haras) + '</b></td><td>' + esc(x.descricao) + '<br><span class="calc">' + esc(calcTxt(x.calculo)) + '</span></td><td class="mono">' + reais(x.valor) + '</td><td>' + chipCob(x) + '</td>' +
+        '<td class="small">' + (x.pagoEm ? H.br(x.pagoEm) + ' · ' + reais(x.valorPago) + (x.meio ? ' · ' + esc(x.meio) : '') : x.canceladaEm ? 'Cancelada em ' + H.br(x.canceladaEm) + ': ' + esc(x.motivoCancelamento) : '-') + '</td>' +
+        '<td><div class="acoes-v">' + (x.situacao === 'paga' ? '<button class="btn ghost sm" data-act="cob-estornar" data-id="' + x.id + '">Estornar</button>' : x.situacao === 'cancelada' ? '' :
+          '<button class="btn sm pri" data-act="cob-pagar" data-id="' + x.id + '">Registrar pagamento</button>' + (x.competencia && x.situacao !== 'atrasada' ? '<button class="btn ghost sm" data-act="cob-recalcular" data-id="' + x.id + '">Recalcular</button>' : '') + '<button class="btn ghost sm danger" data-act="cob-cancelar" data-id="' + x.id + '">Cancelar</button>') + '</div></td></tr>').join('') +
+      '</tbody></table></div>';
+  }
+  function finConfig() {
+    const p = F.parametros, adm = perfil === 'admin', dis = adm ? '' : ' disabled';
+    const num = (id, l, v, min, max, aj) => '<div class="field"><label for="' + id + '">' + l + '</label><input id="' + id + '" class="inp mono" type="number" min="' + min + '" max="' + max + '" value="' + v + '"' + dis + '>' + (aj ? '<span class="small muted">' + aj + '</span>' : '') + '</div>';
+    const txt = (id, l, v, ph) => '<div class="field"><label for="' + id + '">' + l + '</label><input id="' + id + '" class="inp" value="' + esc(v || '') + '" placeholder="' + (ph || '') + '"' + dis + '></div>';
+    return '<div class="stack" style="max-width:900px">' + (adm ? '' : '<p class="note">Só o administrador altera estas configurações.</p>') +
+      '<h3>Cobrança</h3><div class="fgrid">' + num('fp-teste', 'Período de teste de um haras novo (dias)', p.testeDias, 0, 180, 'Sem cobrança enquanto durar.') + num('fp-ant', 'Gerar a mensalidade antes do vencimento (dias)', p.antecedenciaDias, 1, 25) +
+        num('fp-bloq', 'Bloqueio (só consulta) com atraso de (dias)', p.bloqueioDias, 1, 120, 'O caseiro continua registrando.') + num('fp-dia', 'Dia de vencimento de um cliente novo', p.diaPadrao, 1, 28) + '</div>' +
+      '<h3>Como o cliente paga</h3><div class="fgrid">' + txt('fp-chave', 'Chave Pix', p.pixChave, 'CNPJ, e-mail, telefone ou chave aleatória') + txt('fp-nome', 'Nome do recebedor (até 25 letras)', p.pixNome) + txt('fp-cidade', 'Cidade do recebedor (até 15 letras)', p.pixCidade) +
+        '<div class="field full"><label for="fp-banco">Dados bancários e instruções</label><textarea id="fp-banco" class="inp"' + dis + '>' + esc(p.dadosBancarios || '') + '</textarea></div></div>' +
+      '<p class="small muted">Com a chave Pix preenchida, o gestor vê em Minha assinatura um QR Code e o Pix copia e cola com o valor e o identificador de cada cobrança. A baixa continua manual, aqui em Cobranças.</p>' +
+      (adm ? '<div class="row" style="justify-content:flex-end"><button class="btn pri" data-act="fin-salvar-config">' + IC.check + 'Salvar configurações</button></div>' : '') + '</div>';
+  }
+  async function recarregarFin() { F = await API.get('/api/financeiro/painel'); if (perfil === 'financeiro') S = { usuario: F.usuario, marca: F.marca, versao: F.versao }; }
+  async function finExec(el, fn, ok) {
+    if (el && el.disabled) return null;
+    const t = el ? el.innerHTML : ''; if (el) { el.disabled = true; el.innerHTML = 'Salvando...'; }
+    try { const r = await fn(); await recarregarFin(); UI.toast(typeof ok === 'string' ? ok : (r && r.resumo) || 'Alteração salva.'); return r || true; }
+    catch (e) { UI.toast(e.message); return null; }
+    finally { if (el && el.isConnected) { el.disabled = false; el.innerHTML = t; } }
+  }
+  const UFS = 'AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ');
+  function formCliente(c) {
+    const e = c.endereco || {};
+    const f = (id, l, v, extra, attrs) => '<div class="field' + (extra || '') + '"><label for="cl-' + id + '">' + l + '</label><input id="cl-' + id + '" class="inp" value="' + esc(v === null || v === undefined ? '' : v) + '"' + (attrs || '') + '></div>';
+    const ajusteV = c.ajusteTipo === 'fixo' ? (c.ajusteValor / 100).toFixed(2).replace('.', ',') : c.ajusteTipo === 'desconto' ? c.ajusteValor : '';
+    return '<form class="fgrid" novalidate>' +
+      '<h3 class="full">Contrato</h3>' +
+      '<div class="field"><label for="cl-sit">Situação</label><select id="cl-sit" class="inp">' + F.situacoes.map(x => '<option' + (x === c.situacao ? ' selected' : '') + '>' + x + '</option>').join('') + '</select></div>' +
+      f('dia', 'Dia de vencimento (1 a 28)', c.diaVencimento, '', ' type="number" min="1" max="28"') + f('inicio', 'Início do contrato', c.inicio, '', ' type="date"') + f('teste', 'Teste até', c.testeAte, '', ' type="date"') +
+      '<h3 class="full">Contratante</h3>' + f('nome', 'Nome ou razão social', c.nome, ' full') + f('doc', 'CPF ou CNPJ', c.documento) +
+      f('cnome', 'Contato financeiro', c.contatoNome) + f('cemail', 'E-mail do contato', c.contatoEmail, '', ' type="email"') + f('ctel', 'Telefone do contato', c.contatoTelefone) +
+      '<h3 class="full">Endereço</h3>' + f('log', 'Logradouro', e.logradouro, ' full') + f('num', 'Número', e.numero) + f('comp', 'Complemento', e.complemento) + f('bairro', 'Bairro', e.bairro) + f('cidade', 'Cidade', e.cidade) +
+      '<div class="field"><label for="cl-uf">UF</label><select id="cl-uf" class="inp"><option value="">-</option>' + UFS.map(u => '<option' + (e.uf === u ? ' selected' : '') + '>' + u + '</option>').join('') + '</select></div>' + f('cep', 'CEP', e.cep, '', ' inputmode="numeric"') +
+      '<h3 class="full">Preço</h3><p class="full small muted">Pelas faixas de preço: ' + esc(calcTxt(c.proxima)) + ' = ' + reais(c.proxima.base) + ' por mês.</p>' +
+      '<div class="field"><label for="cl-ajt">Ajuste</label><select id="cl-ajt" class="inp">' + [['nenhum', 'Nenhum (pelas faixas)'], ['desconto', 'Desconto em %'], ['fixo', 'Valor fixo combinado (R$)']].map(([k, l]) => '<option value="' + k + '"' + (c.ajusteTipo === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></div>' +
+      f('ajv', 'Valor do ajuste (% ou R$)', ajusteV, '', ' inputmode="decimal"') + f('aja', 'Ajuste válido até (opcional)', c.ajusteAte, '', ' type="date"') +
+      '<div class="field full"><label for="cl-obs">Observações</label><textarea id="cl-obs" class="inp">' + esc(c.obs || '') + '</textarea></div>' +
+      '<p class="note full" id="cl-erro" hidden></p></form>' +
+      (c.documento ? '<p class="small muted">O CPF ou CNPJ aparece mascarado. <button class="btn ghost sm" data-act="cli-doc" data-id="' + c.harasId + '">Ver o número completo</button> (fica na auditoria). Para trocar, apague e digite o novo.</p>' : '');
+  }
+
+  const VIEWS = { financeiro: vFinanceiro, marca: vMarca, haras: vHaras, administradores: vAdministradores, parametros: vParametros, auditoria: vAuditoria, atualizacao: vAtualizacao, sobre: vSobre, glossario: vGlossario };
   const AFTER = {
+    financeiro() {
+      const b = $('#cli-busca'); if (b) b.addEventListener('input', e => { cliBusca = e.target.value; $('#cli-lista').innerHTML = finClientes(); });
+    },
     parametros() { desenharPlanos(); desenharFaixas(); },
     marca() { UI.ligarEditorImagens('/api/admin/marca', async () => { await recarregar(); render(); }); },
     auditoria() {
@@ -1408,8 +1550,49 @@ const UI = (function () {
   const minhaSenhaForm = () => '<div class="field"><label for="ms">Sua senha, para confirmar</label><input id="ms" type="password" class="inp" autocomplete="current-password"></div>';
   const admPor = el => S.administradores.find(x => String(x.id) === el.dataset.id);
   const senhaForm = (id, rot) => '<div class="field"><label for="' + id + '">' + rot + '</label><input id="' + id + '" type="password" class="inp" autocomplete="new-password" minlength="8"></div>';
+  const cliPor = id => F.clientes.find(c => String(c.harasId) === String(id));
+  const cobPor = id => F.cobrancas.find(c => c.id === id);
   const ACT = {
     nav: el => go(el.dataset.v),
+    'fin-aba': el => { finAba = el.dataset.t; render(); },
+    'cob-f': el => { cobF = el.dataset.f; render(); },
+    'cli-editar': el => { const c = cliPor(el.dataset.id); UI.abrir({ titulo: 'Cliente: ' + esc(c.haras), largo: true, corpo: formCliente(c), rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="cli-salvar" data-id="' + c.harasId + '">' + IC.check + 'Salvar</button>' }); },
+    'cli-salvar': async el => {
+      const v = id => (document.getElementById('cl-' + id) || {}).value || '';
+      const err = m => { const x = $('#cl-erro'); x.textContent = m; x.className = 'note bad full'; x.hidden = false; };
+      if (!v('nome').trim()) return err('Informe o nome ou a razão social do contratante.');
+      const corpo = { situacao: v('sit'), diaVencimento: Number(v('dia')), inicio: v('inicio'), testeAte: v('teste'), nome: v('nome'), documento: v('doc'), contatoNome: v('cnome'), contatoEmail: v('cemail'), contatoTelefone: v('ctel'),
+        endereco: { logradouro: v('log'), numero: v('num'), complemento: v('comp'), bairro: v('bairro'), cidade: v('cidade'), uf: v('uf'), cep: v('cep') }, ajusteTipo: v('ajt'), ajusteValor: v('ajv'), ajusteAte: v('aja'), obs: v('obs') };
+      try { el.disabled = true; const r = await API.put('/api/financeiro/clientes/' + el.dataset.id, corpo); await recarregarFin(); UI.fechar(); render(); UI.toast(r.resumo); }
+      catch (e) { el.disabled = false; err(e.message); }
+    },
+    'cli-doc': async el => { try { const r = await API.post('/api/financeiro/clientes/' + el.dataset.id + '/documento'); $('#cl-doc').value = r.documento; el.remove(); } catch (e) { UI.toast(e.message); } },
+    'cli-avulsa': el => { const c = cliPor(el.dataset.id); UI.abrir({ titulo: 'Cobrança avulsa: ' + esc(c.haras), corpo: '<form class="fgrid" novalidate><div class="field full"><label for="av-desc">Descrição</label><input id="av-desc" class="inp" placeholder="Ex.: Implantação e treinamento"></div><div class="field"><label for="av-valor">Valor (R$)</label><input id="av-valor" class="inp" inputmode="decimal"></div><div class="field"><label for="av-venc">Vencimento</label><input id="av-venc" type="date" class="inp" value="' + H.iso(H.addDias(H.hoje(), 10)) + '"></div></form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="cli-avulsa-ok" data-id="' + c.harasId + '">Criar cobrança</button>' }); },
+    'cli-avulsa-ok': async el => { if (await finExec(el, () => API.post('/api/financeiro/clientes/' + el.dataset.id + '/avulsa', { descricao: $('#av-desc').value, valor: $('#av-valor').value, vencimento: $('#av-venc').value }))) { UI.fechar(); render(); } },
+    'cli-liberar': el => {
+      const c = cliPor(el.dataset.id);
+      UI.abrir({ titulo: 'Liberar ' + esc(c.haras), corpo: '<form class="fgrid" novalidate><p class="full small muted">Com mensalidade atrasada há ' + F.parametros.bloqueioDias + ' dias ou mais, o gestor fica só para consulta. A liberação suspende o bloqueio até a data escolhida (no máximo 60 dias) e fica na auditoria.' + (c.liberadoAte ? ' Hoje está liberado até ' + H.br(c.liberadoAte) + ' (' + esc(c.liberadoMotivo) + ').' : '') + '</p>' +
+        '<div class="field"><label for="lb-ate">Liberado até</label><input id="lb-ate" type="date" class="inp" value="' + H.iso(H.addDias(H.hoje(), 7)) + '"></div><div class="field full"><label for="lb-mot">Motivo</label><input id="lb-mot" class="inp" placeholder="Ex.: pagamento combinado para sexta"></div></form>',
+        rodape: '<button class="btn" data-act="fechar">Cancelar</button>' + (c.liberadoAte ? '<button class="btn danger" data-act="cli-liberar-ok" data-id="' + c.harasId + '" data-remover="1">Remover liberação</button>' : '') + '<button class="btn pri" data-act="cli-liberar-ok" data-id="' + c.harasId + '">Liberar</button>' });
+    },
+    'cli-liberar-ok': async el => { const corpo = el.dataset.remover ? {} : { ate: $('#lb-ate').value, motivo: $('#lb-mot').value }; if (await finExec(el, () => API.post('/api/financeiro/clientes/' + el.dataset.id + '/liberar', corpo))) { UI.fechar(); render(); } },
+    'cob-pagar': el => {
+      const x = cobPor(el.dataset.id);
+      UI.abrir({ titulo: 'Registrar pagamento', corpo: '<form class="fgrid" novalidate><p class="full small muted">' + esc(x.haras) + ' · ' + esc(x.descricao) + ' · vencimento ' + H.br(x.vencimento) + '</p>' +
+        '<div class="field"><label for="pg-data">Pago em</label><input id="pg-data" type="date" class="inp" value="' + H.iso(H.hoje()) + '" max="' + H.iso(H.hoje()) + '"></div>' +
+        '<div class="field"><label for="pg-valor">Valor recebido (R$)</label><input id="pg-valor" class="inp" inputmode="decimal" value="' + (x.valor / 100).toFixed(2).replace('.', ',') + '"></div>' +
+        '<div class="field"><label for="pg-meio">Meio</label><select id="pg-meio" class="inp">' + F.meios.map(m => '<option>' + m + '</option>').join('') + '</select></div><div class="field"><label for="pg-obs">Observação</label><input id="pg-obs" class="inp"></div></form>',
+        rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="cob-pagar-ok" data-id="' + x.id + '">' + IC.check + 'Registrar</button>' });
+    },
+    'cob-pagar-ok': async el => { if (await finExec(el, () => API.post('/api/financeiro/cobrancas/' + el.dataset.id + '/pagar', { data: $('#pg-data').value, valor: $('#pg-valor').value, meio: $('#pg-meio').value, obs: $('#pg-obs').value }))) { UI.fechar(); render(); } },
+    'cob-estornar': el => UI.confirmar(el, 'Confirmar estorno', async () => { if (await finExec(el, () => API.post('/api/financeiro/cobrancas/' + el.dataset.id + '/estornar'))) render(); }),
+    'cob-recalcular': async el => { if (await finExec(el, () => API.post('/api/financeiro/cobrancas/' + el.dataset.id + '/recalcular'))) render(); },
+    'cob-cancelar': el => { const x = cobPor(el.dataset.id); UI.abrir({ titulo: 'Cancelar cobrança', corpo: '<form class="stack" novalidate><p class="small muted">' + esc(x.haras) + ' · ' + esc(x.descricao) + ' · ' + reais(x.valor) + '. A cobrança cancelada não volta a ser gerada.</p><div class="field"><label for="cc-mot">Motivo</label><input id="cc-mot" class="inp" placeholder="Ex.: cortesia, cobrança em duplicidade"></div></form>', rodape: '<button class="btn" data-act="fechar">Voltar</button><button class="btn pri danger" data-act="cob-cancelar-ok" data-id="' + x.id + '">Cancelar cobrança</button>' }); },
+    'cob-cancelar-ok': async el => { if (await finExec(el, () => API.post('/api/financeiro/cobrancas/' + el.dataset.id + '/cancelar', { motivo: $('#cc-mot').value }))) { UI.fechar(); render(); } },
+    'fin-salvar-config': async el => {
+      const n = id => Number($(id).value);
+      if (await finExec(el, () => API.put('/api/financeiro/parametros', { testeDias: n('#fp-teste'), antecedenciaDias: n('#fp-ant'), bloqueioDias: n('#fp-bloq'), diaPadrao: n('#fp-dia'), pixChave: $('#fp-chave').value, pixNome: $('#fp-nome').value, pixCidade: $('#fp-cidade').value, dadosBancarios: $('#fp-banco').value }))) render();
+    },
     fechar: () => UI.fechar(),
     sair: async () => { try { await API.post('/api/logout'); } catch (e) { } location.href = '/entrar'; },
     'img-padrao': el => UI.confirmar(el, 'Confirmar', async () => { if (await executar(el, () => API.del('/api/admin/marca/' + el.dataset.tipo))) render(); }),
@@ -1441,8 +1624,8 @@ const UI = (function () {
     'remover-logo': el => UI.confirmar(el, 'Confirmar remoção', async () => { if (await executar(el, () => API.patch('/api/admin/haras/' + el.dataset.id, { logo: null }), 'Logotipo removido.')) render(); }),
     rollback: el => UI.confirmar(el, 'Confirmar volta', async () => { if (await executar(el, () => API.post('/api/admin/rollback', { versao: el.dataset.v }))) render(); }),
     'backup-agora': async el => { if (await executar(el, () => API.post('/api/admin/backup'))) render(); },
-    'novo-admin': () => UI.abrir({ titulo: 'Novo administrador', corpo: '<form class="stack" novalidate><div class="field"><label for="na-nome">Nome</label><input id="na-nome" class="inp"></div><div class="field"><label for="na-email">E-mail (login)</label><input id="na-email" type="email" class="inp"></div>' + senhaForm('na-senha', 'Senha inicial (mín. 8)') + minhaSenhaForm() + '</form><p class="small muted">No primeiro acesso ele cadastra o 2FA.</p>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="criar-admin">Criar administrador</button>' }),
-    'criar-admin': async el => { if (await executar(el, () => API.post('/api/admin/administradores', { nome: $('#na-nome').value, email: $('#na-email').value, senha: $('#na-senha').value, minhaSenha: $('#ms').value }))) { UI.fechar(); render(); } },
+    'novo-admin': () => UI.abrir({ titulo: 'Novo usuário da plataforma', corpo: '<form class="stack" novalidate><div class="field"><label for="na-perfil">Perfil</label><select id="na-perfil" class="inp"><option value="admin">Administrador (acesso total)</option><option value="financeiro">Financeiro (só clientes e mensalidades)</option></select></div><div class="field"><label for="na-nome">Nome</label><input id="na-nome" class="inp"></div><div class="field"><label for="na-email">E-mail (login)</label><input id="na-email" type="email" class="inp"></div>' + senhaForm('na-senha', 'Senha inicial (mín. 8)') + minhaSenhaForm() + '</form><p class="small muted">No primeiro acesso ele cadastra o 2FA.</p>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="criar-admin">Criar usuário</button>' }),
+    'criar-admin': async el => { if (await executar(el, () => API.post('/api/admin/administradores', { perfil: $('#na-perfil').value, nome: $('#na-nome').value, email: $('#na-email').value, senha: $('#na-senha').value, minhaSenha: $('#ms').value }))) { UI.fechar(); render(); } },
     'adm-senha': el => { const a = admPor(el); UI.abrir({ titulo: 'Redefinir a senha de ' + esc(a.nome), corpo: '<form class="stack" novalidate>' + senhaForm('as-senha', 'Nova senha (mín. 8)') + minhaSenhaForm() + '</form><p class="small muted">As sessões dele são encerradas.</p>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri" data-act="adm-senha-ok" data-id="' + a.id + '">Redefinir</button>' }); },
     'adm-senha-ok': async el => { if (await executar(el, () => API.post('/api/admin/administradores/' + el.dataset.id + '/senha', { senha: $('#as-senha').value, minhaSenha: $('#ms').value }))) { UI.fechar(); render(); } },
     'adm-2fa': el => { const a = admPor(el); UI.abrir({ titulo: 'Redefinir o 2FA de ' + esc(a.nome), corpo: '<form class="stack" novalidate><p>Ele perde o autenticador atual e os códigos de recuperação, e cadastra o 2FA de novo no próximo acesso.</p>' + minhaSenhaForm() + '</form>', rodape: '<button class="btn" data-act="fechar">Cancelar</button><button class="btn pri danger" data-act="adm-2fa-ok" data-id="' + a.id + '">Redefinir 2FA</button>' }); },
@@ -1475,7 +1658,12 @@ const UI = (function () {
   });
   (async () => {
     $('#view').innerHTML = '<div class="empty">Carregando...</div>';
-    try { await recarregar(); render(); }
+    try {
+      const me = await API.get('/api/me');
+      if (me.perfil !== 'admin' && me.perfil !== 'financeiro') { location.href = me.destino || '/entrar'; return; }
+      perfil = me.perfil; if (perfil === 'financeiro') view = 'financeiro';
+      await recarregar(); render();
+    }
     catch (e) { if (/administrador/.test(e.message)) { location.href = '/entrar'; return; } $('#view').innerHTML = '<div class="note bad">' + esc(e.message) + '</div>'; }
   })();
 })();

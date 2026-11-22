@@ -22,7 +22,8 @@ A especificação aprovada está em [`docs/ESPECIFICACAO.md`](docs/ESPECIFICACAO
 | v1.5.0 | 21/11/2026 | etapa/1.5-app-gestor | App do gestor no Android (mesmo app, por perfil): entrada com 2FA, digital ou PIN, Dashboard, Relatórios com envio da planilha, registros offline no 4G e avisos no celular; exige HTTPS | Publicada |
 | v1.5.1 | 21/11/2026 | etapa/1.5.1-normas-abccmm | Links para as normas oficiais da ABCCMM no Assistente, em Ajuda, em Importar ABCCMM e no app do gestor, parametrizáveis pelo administrador | Publicada |
 | v1.5.2 | 22/11/2026 | etapa/1.5.2-correcoes | Prontuário legível (ocorrência quebrava letra por letra), vários animais sem registro na ABCCMM, origem "Portal Campo" | Publicada |
-| v1.6.0 | 22/11/2026 | etapa/1.6-certificado-venda-externos | Leitura do certificado de registro da ABCCMM (novo animal, ficha e lote, genealogia de 4 gerações, PDF guardado), animais externos com tipo de sêmen, venda com comprador, parcelas, avisos de vencimento e relatório | Em teste (PR) |
+| v1.6.0 | 22/11/2026 | etapa/1.6-certificado-venda-externos | Leitura do certificado de registro da ABCCMM (novo animal, ficha e lote, genealogia de 4 gerações, PDF guardado), animais externos com tipo de sêmen, venda com comprador, parcelas, avisos de vencimento e relatório | Publicada |
+| v1.7.0 | 22/11/2026 | etapa/1.7-financeiro | Financeiro da plataforma: perfil Financeiro, clientes e contratos, mensalidades pelas faixas com ajuste, pagamentos, bloqueio por atraso, Minha assinatura com Pix copia e cola, painel e exportação | Em teste (PR) |
 
 Notas de cada versão: [`docs/HISTORICO.md`](docs/HISTORICO.md).
 
