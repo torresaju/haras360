@@ -2,6 +2,12 @@
 
 Uma nota por versão, da mais recente para a mais antiga.
 
+## v1.5.2 · 22/11/2026 · Correções do prontuário e do cadastro sem registro
+* **Prontuário desconfigurado:** a lista "Próximos eventos" do Dashboard (v1.3.0) usava o mesmo nome de estilo da linha do prontuário e espremia o texto numa coluna estreita, quebrando ocorrências letra por letra. Os estilos foram separados; as observações mantêm as quebras de linha.
+* **Vários animais sem registro:** caixa "Sem registro na ABCCMM" no Novo animal e na ficha. O servidor passa a tratar como vazio qualquer registro ou chip sem números ("sem registro", "*****"), que antes contava como registro repetido. Registros de verdade continuam únicos.
+* **Origem dos registros:** o prontuário mostra "Portal Campo", "Portal do Gestor", "App do caseiro" e "App do gestor".
+* **Testes:** 1 teste novo da API (88 no total) e verificação visual com ocorrência longa e dois animais sem registro.
+
 ## v1.5.1 · 21/11/2026 · Links para as normas da ABCCMM
 * O assistente com IA ficou para depois (card no Backlog). Para facilitar as consultas, o gestor tem links diretos para o Estatuto e o Regulamento do Registro Genealógico no site da ABCCMM:
   * Administração › Assistente (quadro acima do chat), Ajuda › Normas da ABCCMM, atalho em Importar ABCCMM e Mais › Normas da ABCCMM no app do gestor;

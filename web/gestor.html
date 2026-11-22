@@ -153,7 +153,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     const partes = [{ rot: 'Éguas', n: cat.eguas, cor: '#193D30' }, { rot: 'Machos', n: cat.machos, cor: '#4E8A66' }, { rot: 'Potros', n: cat.potros, cor: '#D5A064' }, { rot: 'Outros', n: cat.outros, cor: '#82978A' }];
     const pct = x => n ? Math.round(x / n * 100) + '%' : '0%';
     const kpi = (cls, ic, num, rot, act) => '<button class="kpi2 ' + cls + '" ' + act + '><span class="kpi-ic">' + UI.ICON[ic] + '</span><span><b>' + num + '</b><span>' + rot + '</span></span></button>';
-    const evento = t => { const dd = t.due || ''; return '<button class="ev" data-act="ver-animal" data-id="' + t.animalId + '"><span class="ev-d"><b>' + dd.slice(8, 10) + '</b><small>' + (H.brCurta(dd).split(' ')[1] || '').toUpperCase() + '</small></span><span class="ev-ic">' + UI.ICON[t.cat === 'vacina' ? 'vacina' : t.cat === 'reprodutivo' ? 'repro' : 'escudo'] + '</span><span class="ev-t"><b>' + esc(t.titulo) + '</b><small>' + esc(t.animal) + (t.status === 'hoje' ? ' · hoje' : '') + '</small></span></button>'; };
+    const evento = t => { const dd = t.due || ''; return '<button class="pev" data-act="ver-animal" data-id="' + t.animalId + '"><span class="ev-d"><b>' + dd.slice(8, 10) + '</b><small>' + (H.brCurta(dd).split(' ')[1] || '').toUpperCase() + '</small></span><span class="ev-ic">' + UI.ICON[t.cat === 'vacina' ? 'vacina' : t.cat === 'reprodutivo' ? 'repro' : 'escudo'] + '</span><span class="ev-t"><b>' + esc(t.titulo) + '</b><small>' + esc(t.animal) + (t.status === 'hoje' ? ' · hoje' : '') + '</small></span></button>'; };
     return '<div class="sec">' +
       '<div class="spread"><p class="muted">' + saudacao() + ', ' + esc(primeiroNome()) + '.</p><span class="data-chip">' + UI.ICON.agenda + new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + '</span></div>' +
       '<div class="kpis5">' +
@@ -164,7 +164,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       kpi('k-info', 'cavalo', partos.length, 'Previsão de parto (30 dias)', 'data-act="nav" data-v="reproducao"') +
       '</div>' +
       '<div class="grid3">' +
-      '<div class="card"><div class="card-h"><h3>' + UI.ICON.agenda + 'Próximos eventos</h3><button class="btn ghost sm" data-act="nav" data-v="agenda">Ver agenda →</button></div>' + (proximos.length ? '<div class="evs">' + proximos.map(evento).join('') + '</div>' : '<p class="muted small">Nada previsto.</p>') + '</div>' +
+      '<div class="card"><div class="card-h"><h3>' + UI.ICON.agenda + 'Próximos eventos</h3><button class="btn ghost sm" data-act="nav" data-v="agenda">Ver agenda →</button></div>' + (proximos.length ? '<div class="pevs">' + proximos.map(evento).join('') + '</div>' : '<p class="muted small">Nada previsto.</p>') + '</div>' +
       '<div class="card"><div class="card-h"><h3>Rebanho por categoria</h3></div><div class="rosca-w">' + rosca(partes, n) + '<ul class="leg">' + partes.map(p => '<li><i style="background:' + p.cor + '"></i>' + p.rot + '<b>' + p.n + ' <small>(' + pct(p.n) + ')</small></b></li>').join('') + '</ul></div><p class="small muted">Potros: até 2 anos. Outros: sem data de nascimento.</p></div>' +
       '<div class="card"><div class="card-h"><h3>' + UI.ICON.repro + 'Situação reprodutiva</h3></div><dl class="lst">' +
       '<div><dt>Gestações ativas</dt><dd>' + gest.length + '</dd></div><div><dt>Coberturas no mês</dt><dd>' + conta('Cobertura') + '</dd></div><div><dt>Inseminações no mês</dt><dd>' + conta('Inseminação') + '</dd></div><div><dt>Previsão de parto (30 dias)</dt><dd>' + partos.length + '</dd></div></dl></div>' +
@@ -311,7 +311,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       const f = (id, lab, val, extra) => '<div class="field' + (extra || '') + '"><label for="d-' + id + '">' + lab + '</label><input id="d-' + id + '" class="inp" value="' + esc(val || '') + '"></div>';
       corpo = '<form id="fd" class="stack" novalidate><h3>Dados cadastrais</h3><div class="fgrid">' +
         f('nome', 'Nome', a.nome) + f('pelagem', 'Pelagem', a.pelagem) +
-        f('registro', 'Registro ABCCMM', a.registro) + f('livro', 'Livro', a.livro) +
+        '<div class="field"><label for="d-registro">Registro ABCCMM</label><input id="d-registro" class="inp" value="' + esc(a.registro || '') + '"' + (a.registro ? '' : ' disabled') + '>' +
+        '<label class="chk"><input type="checkbox" id="d-semreg" data-chg="semreg" data-alvo="d-registro"' + (a.registro ? '' : ' checked') + '> Sem registro na ABCCMM</label></div>' + f('livro', 'Livro', a.livro) +
         '<div class="field"><label for="d-sexo">Sexo</label><select id="d-sexo" class="inp"><option value="F"' + (a.sexo === 'F' ? ' selected' : '') + '>Fêmea</option><option value="M"' + (a.sexo === 'M' ? ' selected' : '') + '>Macho</option></select></div>' +
         '<div class="field"><label for="d-nasc">Nascimento</label><input id="d-nasc" type="date" class="inp" value="' + esc(a.nascimento) + '"></div>' +
         f('chip', 'Microchip', a.chip) +
@@ -682,7 +683,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
           '<div class="field full"><label for="n-nome">Nome</label><input id="n-nome" class="inp"></div>' +
           '<div class="field"><label for="n-sexo">Sexo</label><select id="n-sexo" class="inp"><option value="F">Fêmea</option><option value="M">Macho</option></select></div>' +
           '<div class="field"><label for="n-nasc">Nascimento</label><input id="n-nasc" type="date" class="inp" max="' + H.iso(H.hoje()) + '"></div>' +
-          '<div class="field"><label for="n-reg">Registro ABCCMM</label><input id="n-reg" class="inp" placeholder="Deixe vazio se ainda não registrado"></div>' +
+          '<div class="field"><label for="n-reg">Registro ABCCMM</label><input id="n-reg" class="inp" inputmode="numeric" placeholder="Ex.: 0185916">' +
+          '<label class="chk"><input type="checkbox" id="n-semreg" data-chg="semreg" data-alvo="n-reg"> Sem registro na ABCCMM</label></div>' +
           '<div class="field"><label for="n-chip">Microchip</label><input id="n-chip" class="inp" inputmode="numeric"></div>' +
           '<div class="field"><label for="n-livro">Livro</label><input id="n-livro" class="inp" placeholder="Ex.: MM6 - DEFINITIVO FECHADO FÊMEA"></div>' +
           '<div class="field"><label for="n-dna">DNA</label><select id="n-dna" class="inp"><option>Sem exame</option><option>DNA - VP</option></select></div>' +
@@ -695,7 +697,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       const err = m => { const e = $('#n-erro'); e.textContent = m; e.className = 'note bad full'; e.hidden = false; };
       if (!v('n-nome')) return err('Informe o nome do animal.');
       if (!v('n-nasc')) return err('Informe a data de nascimento. Ela é a base da agenda sanitária.');
-      const r = await executar(el, () => API.post('/api/animais', { nome: v('n-nome'), sexo: v('n-sexo'), nascimento: v('n-nasc'), registro: v('n-reg'), chip: v('n-chip'), livro: v('n-livro'), dna: v('n-dna'), vivo: true, bloqueado: false }));
+      const r = await executar(el, () => API.post('/api/animais', { nome: v('n-nome'), sexo: v('n-sexo'), nascimento: v('n-nasc'), registro: $('#n-semreg').checked ? '' : v('n-reg'), chip: v('n-chip'), livro: v('n-livro'), dna: v('n-dna'), vivo: true, bloqueado: false }));
       if (r) { UI.fechar(); fichaTab = 'agenda'; go('ficha', r.id); }
     },
     'salvar-dados': async el => {
@@ -704,7 +706,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       if (!v('nome')) { UI.toast('O nome não pode ficar vazio.'); return; }
       if (!v('nasc')) { UI.toast('Informe a data de nascimento.'); return; }
       const genealogia = {}; ['pai', 'mae', 'avoPaterno', 'avoPaterna', 'avoMaterno', 'avoMaterna'].forEach(k => { genealogia[k] = v(k); });
-      if (await executar(el, () => API.put('/api/animais/' + a.id, { nome: v('nome'), pelagem: v('pelagem'), registro: v('registro'), livro: v('livro'), sexo: v('sexo'), nascimento: v('nasc'), chip: v('chip'), dna: v('dna'), vivo: v('vivo') === '1', bloqueado: v('bloq') === '1', genealogia }))) render();
+      if (await executar(el, () => API.put('/api/animais/' + a.id, { nome: v('nome'), pelagem: v('pelagem'), registro: $('#d-semreg').checked ? '' : v('registro'), livro: v('livro'), sexo: v('sexo'), nascimento: v('nasc'), chip: v('chip'), dna: v('dna'), vivo: v('vivo') === '1', bloqueado: v('bloq') === '1', genealogia }))) render();
     },
     'imp-cancelar': () => { importacao = null; render(); },
     'imp-confirmar': el => confirmarImportacao(el),
@@ -788,6 +790,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   });
   document.addEventListener('change', async e => {
     const el = e.target.closest('[data-chg]'); if (!el) return;
+    if (el.dataset.chg === 'semreg') { const alvo = document.getElementById(el.dataset.alvo); alvo.disabled = el.checked; if (el.checked) alvo.value = ''; else alvo.focus(); }
     if (el.dataset.chg === 'imp-sel') { const i = Number(el.dataset.i); el.checked ? importacao.sel.add(i) : importacao.sel.delete(i); render(); }
     if (el.dataset.chg === 'pref') {
       const p = JSON.parse(JSON.stringify(S.notifPrefs)); p[el.dataset.t][el.dataset.k] = el.checked;

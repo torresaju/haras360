@@ -138,6 +138,33 @@ with sync_playwright() as pw:
     foto(g, "cio")
     g.click('[data-act="salvar-registro"]')
     g.wait_for_selector("#modal", state="hidden")
+    # v1.5.2: ocorrência com texto longo fica legível no prontuário (antes a linha era espremida)
+    ir(g, "animais")
+    g.click("tr:has-text('BRISA DA SERRA AZUL')")
+    g.wait_for_selector(".gest")
+    g.click('[data-act="tab"][data-t="prontuario"]')
+    g.click('[data-act="registrar"][data-id]')
+    g.select_option("#f-tipo", "ocorrencia")
+    g.fill("#f-titulo", "Ferimento na mão direita")
+    g.fill("#f-obs", "Veterinário fez a remoção da pele e curativo, deve ficar com a pata protegida e voltar para revisão em sete dias.")
+    g.click('[data-act="salvar-registro"]')
+    g.wait_for_selector("#modal", state="hidden")
+    g.wait_for_selector(".ev:has-text('Ferimento na mão direita')")
+    larg = g.evaluate("document.querySelector(\".ev:has(strong) .body\").getBoundingClientRect().width")
+    assert larg > 400, f"linha do prontuário espremida ({larg}px)"
+    foto(g, "prontuario")
+    # v1.5.2: vários animais sem registro na ABCCMM
+    for nome in ("POTRA SEM REGISTRO UM", "POTRA SEM REGISTRO DOIS"):
+        ir(g, "animais")
+        g.click('[data-act="novo-animal"]')
+        g.fill("#n-nome", nome)
+        g.fill("#n-nasc", "2025-10-01")
+        g.fill("#n-reg", "sem registro")
+        g.check("#n-semreg")
+        assert g.is_disabled("#n-reg") and g.input_value("#n-reg") == ""
+        g.click('[data-act="salvar-novo-animal"]')
+        g.wait_for_selector("#modal", state="hidden")
+        g.wait_for_selector(f"h1:has-text('{nome}'), .gest, [data-t='agenda']")
     # baixa (v1.4.0): filtro Baixados e janela de baixa
     ir(g, "animais")
     g.select_option("#sitF", "baixados")

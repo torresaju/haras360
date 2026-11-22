@@ -151,6 +151,8 @@ def _aplicar_animal(a: Animal, b: dict, db, haras_id, limite):
     if nasc > R.hoje():
         erro(400, "A data de nascimento não pode ser futura.")
     registro = _txt(b.get("registro"), 20)
+    if not re.search(r"\d", registro):
+        registro = ""  # "sem registro", "*****" e afins: o animal fica sem registro (v1.5.2)
     if registro:
         dup = db.scalar(select(Animal).where(Animal.haras_id == haras_id, Animal.registro == registro, Animal.id != (a.id or "")))
         if dup:
@@ -163,6 +165,8 @@ def _aplicar_animal(a: Animal, b: dict, db, haras_id, limite):
     a.bloqueado = bool(b.get("bloqueado", False))
     a.dna = _txt(b.get("dna"), 40)
     a.chip = _txt(b.get("chip"), 30)
+    if not re.search(r"\d", a.chip):
+        a.chip = ""
     a.pelagem = _txt(b.get("pelagem"), 60)
     g = b.get("genealogia") or {}
     a.genealogia = {k: _txt(g.get(k), 160).upper() for k in ("pai", "mae", "avoPaterno", "avoPaterna", "avoMaterno", "avoMaterna")}
